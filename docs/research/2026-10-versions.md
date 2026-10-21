@@ -39,6 +39,8 @@
 
 ## JavaScript
 
+> После ADR-015 (демо на Streamlit) JS-стек проекту не нужен; таблица оставлена для справки. Из неё используется только **bpmn-js**: подключается с CDN внутри `components.html`, версия закрепляется в URL (`bpmn-js@18.31.1`).
+
 | Пакет | Последняя | Дата | Лицензия | Расходится с docs? | Что поменять |
 |---|---|---|---|---|---|
 | next | 16.4.2 | 2026-10-15 | MIT | нет; Node ≥ 20.9 | T-001: `create-next-app@16.4.2`, App Router, TS strict |
@@ -48,7 +50,7 @@
 | bpmn-js | 18.31.1 | 2026-10-21 | MIT **с условием**: водяной знак bpmn.io на диаграмме нельзя убирать или перекрывать | в docs не упомянуто | T-505: не скрывать логотип bpmn.io в `BpmnViewer` |
 | @xyflow/react | 12.12.0 | 2026-09-24 | MIT | нет | T-505 |
 | @supabase/supabase-js | 2.118.0 | 2026-10-15 | MIT | требует **Node ≥ 22** | Node 22/24 на всех машинах (VM: 22.22, ноутбук: 24 LTS) |
-| supabase (CLI) | 2.121.0 | 2026-10-14 | MIT | нет | devDependency в корне (T-004), запуск `pnpm supabase …` |
+| supabase (CLI) | 2.121.0 | 2026-10-14 | MIT | нет | только в CI: `supabase/setup-cli` + `supabase db push` (T-503, ADR-015); локально не нужен |
 | @tanstack/react-query | 5.104.5 | 2026-10-19 | MIT | нет | S5 |
 | tailwindcss | 4.3.3 | 2026-07-16 | MIT | нет | S5 (не ставить в T-001) |
 | @playwright/test | 1.64.1 | 2026-10-14 | Apache-2.0 | нет | S5; в VM Chromium уже есть |
