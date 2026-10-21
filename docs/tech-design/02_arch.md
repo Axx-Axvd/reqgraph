@@ -11,7 +11,7 @@ flowchart LR
   analyst([Аналитик<br/>ведёт проект, правит граф]) -->|веб / CLI| S
   client([Заказчик<br/>отвечает на вопросы или симулятор]) -->|чат интервью| S
   S[reqgraph<br/>интервью -> требования -> модели -> CI -> SRS / ТЗ]
-  S -->|OpenAI API| LLM[(LLM-провайдеры<br/>OpenRouter · Groq · Cerebras · Ollama)]
+  S -->|OpenAI API| LLM[(LLM-провайдеры<br/>OpenRouter · Groq · Ollama)]
   S -->|SQL| SB[(Supabase<br/>Postgres, Auth, Storage, Realtime)]
   S -->|HTTP| K[Kroki<br/>SVG из BPMN, DBML, PlantUML, C4]
   S -.-> J[Jira / Confluence<br/>через MCP, v1.x]

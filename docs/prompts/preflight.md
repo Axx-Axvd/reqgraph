@@ -63,13 +63,13 @@
 
 ## Этап 5. Ключи и сервисы
 
-1. Чек-лист для автора с прямыми ссылками: что завести сейчас (OpenRouter, Groq, Cerebras, Google AI Studio) и позже (Supabase — 2 проекта в S5, Render и Vercel — в S5). Где создаётся ключ и какие лимиты бесплатного тарифа на сегодня (проверь на официальных страницах).
+1. Чек-лист для автора с прямыми ссылками: что завести сейчас (OpenRouter, Groq, Google AI Studio) и позже (Supabase — 2 проекта в S5, Render и Vercel — в S5). Где создаётся ключ и какие лимиты бесплатного тарифа на сегодня (проверь на официальных страницах).
 2. scripts/doctor.py (`uv run python scripts/doctor.py`) — проверка готовности окружения: версии инструментов, Docker, Ollama (если есть), доступность kroki.io и каждого провайдера моделей одним минимальным бесплатным запросом. Ключи не выводит. Работает и в облаке (network secrets), и на Windows (.env). Результат — таблица OK / FAIL / SKIP с подсказкой, как починить.
 
 ## Этап 6. Smoke-проверки
 
 1. Docker и Supabase CLI в VM (без supabase init — это T-004).
-2. Доступность хостов из VM: openrouter.ai, api.groq.com, api.cerebras.ai, generativelanguage.googleapis.com, kroki.io, supabase.com, pypi.org, registry.npmjs.org, github.com (релизы). Что недоступно — в отчёт.
+2. Доступность хостов из VM: openrouter.ai, api.groq.com, generativelanguage.googleapis.com, kroki.io, supabase.com, pypi.org, registry.npmjs.org, github.com (релизы). Что недоступно — в отчёт.
 3. Ollama и офлайн-стенд — подготовь инструкцию для ноутбука автора: какую маленькую модель взять (проверь актуальные теги и размер), как проверить скорость на CPU.
 
 ## Этап 7. Актуализация технических решений
@@ -79,7 +79,7 @@
 1. Актуальные стабильные версии и ключевые API: langgraph (StateGraph, interrupt / Command, PostgresSaver, пакет langgraph-checkpoint-postgres), instructor, openai SDK, pydantic, fastapi, pm4py (BPMN -> сеть Петри, проверка soundness), pydbml, docxtpl, reqif, typer, Next.js, bpmn-js, @xyflow/react, supabase-js, Supabase CLI. Для каждой отметь, расходится ли что-то с docs/tech-design, и что поменять.
 2. Сколько памяти занимает импорт тяжёлых зависимостей (langgraph, pm4py, openai, instructor) — важно для Render Free, 512 МБ.
 
-Сведи в docs/research/2026-10-models.md: точные идентификаторы моделей для ролей из docs/tech-design/06_models.md на OpenRouter, Groq, Cerebras; цены за 1M токенов; поддержка tool calling и structured output; какие :free модели есть сейчас. Сведи лимиты бесплатных тарифов Supabase, Render, Vercel на сегодня. Если находка меняет архитектурное решение — предложи новый ADR, принятые не меняй.
+Сведи в docs/research/2026-10-models.md: точные идентификаторы моделей для ролей из docs/tech-design/06_models.md на OpenRouter и Groq; цены за 1M токенов; поддержка tool calling и structured output; какие :free модели есть сейчас. Сведи лимиты бесплатных тарифов Supabase, Render, Vercel на сегодня. Если находка меняет архитектурное решение — предложи новый ADR, принятые не меняй.
 
 ## Этап 8. Правила проекта в CLAUDE.md
 

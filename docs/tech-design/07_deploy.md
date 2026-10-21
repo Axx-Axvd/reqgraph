@@ -29,7 +29,7 @@ flowchart LR
   A -->|pooler :5432, IPv4| PG
   WK --> PG
   WK -.-> OR[OpenRouter]
-  WK -.-> GQ[Groq / Cerebras]
+  WK -.-> GQ[Groq]
   WK -.-> KR[Kroki]
   WK -.-> LF[Langfuse, опц.]
 ```
@@ -94,7 +94,7 @@ flowchart LR
 | `SUPABASE_SERVICE_ROLE_KEY` | api | запись прогонов и ревизий; никогда не попадает в браузер |
 | `DATABASE_URL` | api | Supavisor session pooler :5432 |
 | `SUPABASE_JWKS_URL` | api | проверка JWT пользователя |
-| `OPENROUTER_API_KEY, GROQ_API_KEY, CEREBRAS_API_KEY, GEMINI_API_KEY` | api, evals | провайдеры моделей |
+| `OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY` | api, evals | провайдеры моделей |
 | `REQGRAPH_PROFILE, REQGRAPH_RUN_BUDGET_USD` | api, cli | профиль моделей и бюджет прогона |
 | `KROKI_URL` | api | https://kroki.io или свой контейнер |
 | `DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP` | api | лимиты публичного демо |
@@ -132,6 +132,6 @@ flowchart LR
 | `Frontend` | Vercel Hobby | Vercel Hobby |
 | `Backend` | Render Free | Render Free или Railway / Fly ~$5 |
 | `Данные` | Supabase Free x2 (staging, prod) | Supabase Free x2 |
-| `Модели` | :free + Groq + Cerebras + AI Studio | + $10 разово в OpenRouter, ~$5-10/мес на DeepSeek / Qwen в январе-феврале |
+| `Модели` | :free + Groq + AI Studio | + $10 разово в OpenRouter, ~$5-10/мес на DeepSeek / Qwen в январе-феврале |
 | `Диаграммы` | kroki.io | kroki.io или контейнер |
 | `Итого` | $0 | $10-20 в месяц только в период экспериментов |

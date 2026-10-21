@@ -27,7 +27,7 @@
 | `Modeler` | логика процессов, валидный DSL | gpt-oss-120b:free | DeepSeek V4 Flash | DeepSeek V4 Pro, Kimi K2.7 |
 | `Standards` | связный деловой текст, стиль ГОСТ | Gemma 4 31B:free | Qwen Flash, GLM Flash | DeepSeek V4 Pro |
 | `Reviewer` | рассуждение по отчёту CI | gpt-oss-120b:free | DeepSeek V4 Flash (thinking) | DeepSeek V4 Pro |
-| `Stakeholder sim` | другая семья, живой стиль | Gemini Flash (AI Studio), Llama 3.3 70B (Cerebras) | Qwen Flash | — |
+| `Stakeholder sim` | другая семья, живой стиль | Gemini Flash (AI Studio), Llama 3.3 70B (Groq) | Qwen Flash | — |
 | `Judge (ISO-002, recall)` | другая семья, стабильность | Gemini Flash (AI Studio) | GLM Flash | + ручная проверка 20% |
 | `Локально (CPU)` | офлайн-разработка, smoke | Ollama: qwen3 1.7B / 4B | — | — |
 
@@ -70,7 +70,6 @@
 |---|---|---|---|
 | `OpenRouter :free` | 20 RPM, 50 RPD (1000 RPD после $10) | без карты; модели исчезают без предупреждения | разработка, бейзлайны |
 | `Groq` | 30 RPM, ~1000 RPD | без карты, данные не обучают | Interviewer / симулятор в dev |
-| `Cerebras` | 30 RPM, ~1M токенов в день | без карты | симулятор, пакетные прогоны |
 | `Google AI Studio` | 5-15 RPM, 20-1500 RPD | вне ЕС промпты могут идти в обучение | судья, симулятор (не для личных данных) |
 | `GitHub Models` | 15 RPM, 150-1000 RPD | аккаунт GitHub | запасной |
 | `Mistral Experiment` | ~1 млрд токенов в месяц | согласие на обучение на данных | запасной |

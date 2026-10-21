@@ -13,8 +13,9 @@
 - **Docker в VM** не запускается сам: демон стартует вручную (`dockerd &`). `hello-world` работает через `mirror.gcr.io/library/hello-world`.
 - **Защита ветки main** откладывается до T-003: нужен хотя бы один зелёный прогон `ci.yml`. **Задача на потом:** в T-003 включить правило для main — PR обязателен, статус-чек `ci` обязателен, запрет force-push.
 - **DoD** отмечается только в `docs/backlog.md`. В `08_plan.md` и `10_claude.md` теперь стоит ссылка туда.
+- **Cerebras исключён из проекта** (решение автора: платный). Убран из `.env.example`, 02_arch, 06_models, 07_deploy и docs/prompts/preflight.md. Симулятор заказчика «другой семьи» теперь Groq (Llama 3.3 70B) или Gemini Flash (AI Studio). `docs/tech-design.pdf` пока со старым текстом, Markdown-версия главнее.
 - **Постоянные инструкции сессий** лежат в `docs/prompts/` (preflight, task, review, debug).
 
 **Проблемы**
 
-- Сеть облачного окружения не пускает `openrouter.ai`, `api.groq.com`, `api.cerebras.ai`, `kroki.io`, `supabase.com`, `ollama.com` и сайты документации (403 на CONNECT). Network secrets провайдеров проверить нельзя, пока автор не добавит хосты в Allowed domains.
+- Сеть облачного окружения не пускает `openrouter.ai`, `api.groq.com`, `kroki.io`, `supabase.com`, `ollama.com` и сайты документации (403 на CONNECT). Network secrets провайдеров проверить нельзя, пока автор не добавит хосты в Allowed domains.
