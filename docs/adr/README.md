@@ -4,17 +4,19 @@
 
 | № | Решение | Статус |
 |---|---|---|
-| [001](001-monorepo.md) | Монорепозиторий с открытой лицензией MIT | принято |
+| [001](001-monorepo.md) | Монорепозиторий с открытой лицензией MIT | принято, уточнено 015 |
 | [002](002-langgraph.md) | Оркестрация агентов на LangGraph | принято |
-| [003](003-llm-router.md) | Тонкий роутер моделей над openai SDK и instructor | принято |
+| [003](003-llm-router.md) | Тонкий роутер моделей над openai SDK и instructor | принято, уточнено 013 |
 | [004](004-artifact-graph.md) | ArtifactGraph как единый источник правды, изменения только патчами | принято |
 | [005](005-process-dsl.md) | LLM пишет JSON DSL процесса, BPMN XML генерирует компилятор | принято |
 | [006](006-deterministic-checks.md) | Детерминированные проверки без LLM | принято |
-| [007](007-supabase.md) | Хранение и авторизация в Supabase | принято |
-| [008](008-deploy.md) | Деплой: Vercel для web, Render для api и worker, docker compose локально | принято |
-| [009](009-pg-queue.md) | Очередь фоновых задач в Postgres (SKIP LOCKED) | принято |
+| [007](007-supabase.md) | Хранение и авторизация в Supabase | принято, сужено 015 |
+| [008](008-deploy.md) | Деплой: Vercel для web, Render для api и worker, docker compose локально | заменено 015 |
+| [009](009-pg-queue.md) | Очередь фоновых задач в Postgres (SKIP LOCKED) | заменено 015 |
 | [010](010-diagrams.md) | bpmn-js в браузере и Kroki для остальных нотаций | принято |
 | [011](011-models.md) | Open-weight модели по ролям, выбор по своему мини-бенчмарку | принято |
 | [012](012-no-standard-texts.md) | Тексты стандартов в репозиторий не кладутся | принято |
-| [013](013-structured-output-without-instructor.md) | Structured output через openai SDK без instructor | предложено |
-| [014](014-own-soundness-check.md) | Своя проверка soundness по DSL, pm4py — только в тестах | предложено |
+| [013](013-llm-layer-pydantic-ai.md) | LLM-слой на pydantic-ai | принято |
+| [014](014-soundness-pm4py-adapter.md) | Soundness через pm4py с переводчиком DSL | принято |
+| [015](015-demo-streamlit.md) | Демо — одно Streamlit-приложение, Supabase только как Postgres | принято |
+| [016](016-export-pandoc.md) | Экспорт DOCX через pandoc | принято |

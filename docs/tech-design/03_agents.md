@@ -86,15 +86,15 @@ def build_graph(cfg: RunConfig, checkpointer) -> CompiledStateGraph:
 
 ```python
 PROMPT = load_prompt("analyst/extract.md")      # Jinja2-шаблон
-ALLOWED = {NodeKind.BR, NodeKind.UR, NodeKind.FR, NodeKind.NFR, NodeKind.CON}
+ALLOWED = {NodeKind.BR, NodeKind.UR, NodeKind.FR, NodeKind.NFR, NodeKind.CON, NodeKind.ACT}
 
 async def analyst(state: RunState, rt: Runtime) -> dict:
     tasks = [t for t in state["tasks"] if t.owner == "analyst"]
     ctx = render(PROMPT, graph=state["graph"].view(ALLOWED),
                  transcript=state["transcript"], tasks=tasks)
-    patch: GraphPatch = await rt.llm.structured(
-        role="analyst", messages=ctx, response_model=GraphPatch,
-        max_retries=2)                         # ошибки схемы -> модели
+    patch: GraphPatch = await rt.llm.structured(  # pydantic-ai Agent (ADR-013)
+        role="analyst", prompt=ctx, output_type=GraphPatch,
+        retries=2)                             # ошибка схемы -> повтор с текстом ошибки
     patch = guard(patch, allowed=ALLOWED, locked=state["graph"].approved_ids())
     graph = state["graph"].apply(patch, ids=rt.ids)  # id выдаёт код
     await rt.events.emit("agent_end", agent="analyst", stats=patch.stats())
@@ -192,7 +192,7 @@ async def analyst(state: RunState, rt: Runtime) -> dict:
 
 | Риск | Механизм |
 |---|---|
-| невалидный JSON | instructor + Pydantic, 2 ретрая с текстом ошибки, затем фолбэк-модель |
+| невалидный JSON | pydantic-ai: `output_type` + 2 ретрая с текстом ошибки, затем `FallbackModel` (ADR-013) |
 | выдуманные id и ссылки | id выдаёт IdAllocator; ссылки на несуществующие узлы отклоняет guard() до применения |
 | агент стирает чужую работу | ALLOWED-типы узлов на агента; approved-узлы заблокированы; удаление только по RepairTask |
 | бесконечный ремонт | MAX_ITER=5, детектор повторов по отпечаткам, бюджет токенов на прогон |
