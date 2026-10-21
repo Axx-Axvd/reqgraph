@@ -7,6 +7,7 @@
 - План по разделам: docs/tech-design/*.md (PDF-версия: docs/tech-design.pdf).
 - Решения: docs/adr/. Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
+- Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug); дневник — docs/journal.md.
 - Состояние: кода ещё нет, начинать с T-001.
 
 ## Команды

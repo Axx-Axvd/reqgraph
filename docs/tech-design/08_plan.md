@@ -4,6 +4,8 @@
 
 *8 спринтов по 2 недели до 21.02 + буферы; вехи M0-M7*
 
+> Чек-листы Definition of Done ниже — копия для чтения. Отмечать выполнение нужно в [docs/backlog.md](../backlog.md).
+
 ```mermaid
 gantt
   dateFormat YYYY-MM-DD

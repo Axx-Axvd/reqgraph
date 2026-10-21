@@ -66,6 +66,8 @@
             ["G01","T03","да"], ["G01","T02","нет"], ["T03","T05"], ["T05","E"]] }
 ```
 
+> Пример иллюстративный и упрощён. Источник правды — эталон [examples/garage61](../../examples/garage61/models/processes/).
+
 <sub>Типы узлов DSL v1: start, end, task, user_task, service_task, timer, message, xor, and, event_based. Компилятор строит BPMN 2.0 XML с дорожками и DI-раскладкой (слои по топологической сортировке, дорожки по lane), затем XSD и PM4Py-проверку soundness.</sub>
 
 ```mermaid
