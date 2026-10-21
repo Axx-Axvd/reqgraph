@@ -13,7 +13,7 @@
 ## Команды
 - uv run python scripts/doctor.py   # готовность окружения: OK / FAIL / SKIP (--chat, --offline)
 - uv sync                           # зависимости Python
-- uv run pytest -q                  # тесты без сети (кассеты в tests/cassettes)
+- uv run pytest -q                  # тесты без сети (кассеты в packages/core/tests/cassettes)
 - uv run ruff check . && uv run ruff format --check .
 - uv run mypy packages/core
 - uv run reqgraph check examples/garage61

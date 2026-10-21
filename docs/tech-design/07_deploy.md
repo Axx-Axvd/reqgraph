@@ -96,6 +96,8 @@ flowchart LR
 | `SUPABASE_JWKS_URL` | api | проверка JWT пользователя |
 | `OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY` | api, evals | провайдеры моделей |
 | `REQGRAPH_PROFILE, REQGRAPH_RUN_BUDGET_USD` | api, cli | профиль моделей и бюджет прогона |
+| `OLLAMA_BASE_URL` | api, cli (local) | офлайн-профиль `local` (Ollama) |
+| `PYDANTIC_AI_NO_BANNER` | api, cli, evals | отключает баннер pydantic-ai в консоли |
 | `KROKI_URL` | api | https://kroki.io или свой контейнер |
 | `DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP` | api | лимиты публичного демо |
 | `NEXT_PUBLIC_API_URL` | web | адрес API на Render |
