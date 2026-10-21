@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Технический проект
+    url: https://github.com/Axx-Axvd/reqgraph/tree/main/docs/tech-design
+    about: Архитектура, данные, проверки, план — перед новой задачей прочитайте нужный раздел.

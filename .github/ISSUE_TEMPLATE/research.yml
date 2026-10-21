@@ -1,0 +1,28 @@
+name: Исследование
+description: Вопрос, который надо выяснить до решения (версии, модели, методика)
+title: "research: "
+labels: ["type:research"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Вопрос
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Зачем и что от ответа зависит
+      description: Задачи, ADR или гипотезы H1–H4.
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Как проверяем
+      description: Источники (официальные), эксперимент, критерий решения.
+  - type: textarea
+    id: result
+    attributes:
+      label: Итог
+      description: Заполняется по завершении; ссылка на docs/research/*.md или новый ADR.

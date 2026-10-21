@@ -1,0 +1,15 @@
+{
+  // Id проверены по marketplace.visualstudio.com 2026-10-21.
+  // Mermaid в превью Markdown встроен в VS Code (1.121+), отдельное расширение не нужно.
+  "recommendations": [
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "ms-python.mypy-type-checker",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "redhat.vscode-yaml",
+    "jebbs.plantuml",
+    "bpmn-io.vs-code-bpmn-io",
+    "EditorConfig.EditorConfig"
+  ]
+}
