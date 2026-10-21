@@ -15,7 +15,9 @@
 - **DoD** отмечается только в `docs/backlog.md`. В `08_plan.md` и `10_claude.md` теперь стоит ссылка туда.
 - **Cerebras исключён из проекта** (решение автора: платный). Убран из `.env.example`, 02_arch, 06_models, 07_deploy и docs/prompts/preflight.md. Симулятор заказчика «другой семьи» теперь Groq (Llama 3.3 70B) или Gemini Flash (AI Studio). `docs/tech-design.pdf` пока со старым текстом, Markdown-версия главнее.
 - **Постоянные инструкции сессий** лежат в `docs/prompts/` (preflight, task, review, debug).
+- **Network secrets проверены.** Запросы через openai SDK 3.36.0 к OpenRouter, Groq и Google AI Studio (OpenAI-совместимый endpoint) проходят с `api_key="placeholder"`: прокси подставляет ключ сам. `scripts/doctor.py --chat` получает HTTP 200 у всех трёх.
+- **Модели из 06_models устарели.** Нет `gpt-oss-120b:free` на OpenRouter, `llama-3.3-70b-versatile` на Groq, `gemini-2.5-flash` для новых ключей. Живые списки — в docs/research/2026-10-models.md.
 
 **Проблемы**
 
-- Сеть облачного окружения не пускает `openrouter.ai`, `api.groq.com`, `kroki.io`, `supabase.com`, `ollama.com` и сайты документации (403 на CONNECT). Network secrets провайдеров проверить нельзя, пока автор не добавит хосты в Allowed domains.
+- (решено в тот же день: автор открыл хосты) Сеть облачного окружения не пускала `openrouter.ai`, `api.groq.com`, `kroki.io`, `supabase.com`, `ollama.com` и сайты документации (403 на CONNECT).
