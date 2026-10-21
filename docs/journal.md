@@ -60,3 +60,5 @@
 **Проблемы:**
 - docs.streamlit.io и huggingface.co закрыты прокси облачной VM, поэтому лимиты Streamlit Cloud взяты из поиска (данные 2024 года) — перепроверить в T-504.
 - `docs/tech-design.pdf` не пересобран и отстаёт от Markdown.
+
+**Итог этапа 0:** [docs/preflight-report.md](preflight-report.md). Задачи в GitHub: 41 issue, 8 вех, 23 метки. Дальше — T-001 (монорепо на uv) по команде автора.
