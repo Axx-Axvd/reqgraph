@@ -5,6 +5,8 @@
     "ms-python.python",
     "charliermarsh.ruff",
     "ms-python.mypy-type-checker",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
     "redhat.vscode-yaml",
     "jebbs.plantuml",
     "bpmn-io.vs-code-bpmn-io",

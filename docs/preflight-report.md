@@ -4,7 +4,7 @@
 
 **Итог в трёх строках**
 - Окружение, ключи и GitHub готовы.
-- По запросу автора проект переведён на готовые средства. pydantic-ai заменяет свой роутер моделей, pm4py с переводчиком — свою сеть Петри, pandoc — DOCX-шаблоны, Streamlit — связку Next.js + FastAPI + воркер + Vercel + Render. Это записано в ADR-013…016.
+- По запросу автора ядро и эксперименты переведены на готовые средства: pydantic-ai заменяет свой роутер моделей, pm4py с переводчиком — свою сеть Петри, pandoc — DOCX-шаблоны (ADR-013, 014, 016). Переход веб-части на Streamlit (ADR-015) автор отменил: остаются Next.js + FastAPI + воркер + Vercel + Render + Supabase.
 - Вопросов, блокирующих S0, нет; можно начинать T-001 — монорепо на uv.
 
 ---
@@ -19,14 +19,14 @@
 | Python | системный 3.13.16; **`uv python install 3.12` → 3.12.13** — фиксируем 3.12 |
 | uv / gh / git | 0.11.32 / 2.89.0 / 2.43.0 |
 | Docker | 29.9.1; демон сам не стартует (`dockerd &`); `hello-world` OK через mirror.gcr.io, позже и через Docker Hub и ECR |
-| Supabase CLI | `pnpm dlx supabase --version` → 2.121.0. После ADR-015 локально не нужен, миграции применяет CI |
-| Node / pnpm | 22.22 / 10.28 — после ADR-015 проекту не нужны |
+| Supabase CLI | `pnpm dlx supabase --version` → 2.121.0; `supabase db reset` (T-004) — в GitHub Actions и на ноутбуке автора |
+| Node / pnpm | 22.22 / 10.28 |
 
 ### Ноутбук автора (Windows)
 
 Чек-лист — [docs/setup/windows.md](setup/windows.md).
 - Обязательно: Git, uv (через него Python 3.12), Ollama, gh, VS Code; настройки git (`autocrlf=false`, `longpaths=true`, SSH-ключ); UTF-8 в консоли.
-- **Не нужны:** Node, pnpm, Docker Desktop + WSL2, Supabase CLI.
+- Также нужны Node.js LTS + pnpm, Docker Desktop с WSL2 и Supabase CLI (для T-004 и офлайн-стенда).
 - Офлайн-профиль — [docs/setup/offline.md](setup/offline.md): `qwen3:4b` (2.5 ГБ) основной, `qwen3:1.7b` (1.4 ГБ) для smoke, замер через `ollama run --verbose`.
 
 ### `scripts/doctor.py` — проверка готовности окружения
@@ -70,9 +70,9 @@ OK 11 · FAIL 0 · SKIP 2
 
 | Объект | Количество | Ссылка |
 |---|---|---|
-| Метки | 23: `epic:E0…E7`, `type:*` (5), `area:*` (8), `needs:you`, `blocked` | [labels](https://github.com/Axx-Axvd/reqgraph/labels) |
+| Метки | 24: `epic:E0…E7`, `type:*` (5), `area:*` (9), `needs:you`, `blocked` | [labels](https://github.com/Axx-Axvd/reqgraph/labels) |
 | Вехи | 8: M0 01.11.2026 … M7 21.02.2027 | [milestones](https://github.com/Axx-Axvd/reqgraph/milestones) |
-| Задачи | 41 (по одной на каждую T-xxx; 8 с `needs:you`; зависимости — ссылками `#N`) | [issues](https://github.com/Axx-Axvd/reqgraph/issues) |
+| Задачи | 44 (по одной на каждую T-xxx; 8 с `needs:you`; зависимости — ссылками `#N`) | [issues](https://github.com/Axx-Axvd/reqgraph/issues) |
 
 Замечания:
 - Ссылки на docs в задачах ведут в `main` и откроются после мержа этого PR.
@@ -88,18 +88,18 @@ OK 11 · FAIL 0 · SKIP 2
 | Groq | OK, 1000 запросов в день и **8000 токенов в минуту** на модель | — |
 | Google AI Studio | OK, `gemini-3.5-flash-lite`; `3.5-flash` 21.10 отвечал 503 | посмотреть RPM и RPD в AI Studio → Rate limits |
 | Kroki | OK; все модели garage61 компилируются | — |
-| Supabase | понадобится в S5: 1 проект, только Postgres | завести в январе ([accounts.md](setup/accounts.md)) |
-| Streamlit Community Cloud | понадобится в S5 | вход через GitHub в январе |
+| Supabase | понадобится в S0 (T-004 — миграции): 2 проекта, staging и prod | завести staging сейчас или к T-004 ([accounts.md](setup/accounts.md)) |
+| Render, Vercel | понадобятся в S5 | завести в январе ([accounts.md](setup/accounts.md)) |
 | Cerebras | исключён (решение автора) | — |
 
 **Network secrets работают:** запросы через openai SDK и pydantic-ai с `api_key="placeholder"` проходят, прокси подставляет ключ сам.
 
 **Хосты, закрытые прокси облачной VM.** Для текущей работы ничего не блокируют:
 - `api.supabase.com`, `registry.ollama.ai`, `huggingface.co`;
-- `docs.streamlit.io`, `ai.google.dev`, `console.groq.com`;
+- `ai.google.dev`, `console.groq.com`;
 - `mcp.context7.com`, `mcp.supabase.com`, `unpkg.com`, `cdn.jsdelivr.net`.
 
-Если хочется точных лимитов Streamlit и Gemini прямо из VM — добавьте `docs.streamlit.io` и `ai.google.dev` в Allowed domains.
+Если хочется точных лимитов Gemini прямо из VM — добавьте `ai.google.dev` в Allowed domains.
 
 ## 4. Противоречия и пробелы (B)
 
@@ -116,14 +116,14 @@ OK 11 · FAIL 0 · SKIP 2
 | 5 | 06_models, .env, 07_deploy | Cerebras есть в переменных, но не в ролях | Cerebras убран (решение автора) | косм. |
 | 6 | 02_arch | instructor несовместим с openai ≥ 3.36; tiktoken не нужен | ADR-013: pydantic-ai | S0 (T-005) |
 | 7 | 05_ci ↔ garage61 | pm4py не понимает событийный шлюз PRC-02 | ADR-014: переводчик DSL | позже: S1 (T-106 — проверки схем и soundness) |
-| 8 | 07_deploy | 512 МБ Render против 132–250 МБ импортов | ADR-015: Streamlit | позже: S5 |
+| 8 | 07_deploy | 512 МБ Render против 132–250 МБ импортов | предлагался ADR-015 (Streamlit) — **отклонён автором**; остаются меры 07_deploy: ленивые импорты (pm4py только в SND-002), замер в T-506, план Б — Railway или Fly | позже: S5 |
 | 9 | 03_agents ↔ 04_data | ACT создаёт Analyst, но ACT нет в его ALLOWED | ACT добавлен в ALLOWED | позже: S2 (T-202 — агент Analyst) |
 | 10 | 04_data ↔ garage61 | префикса `C4-EXT-01` нет в таблице | добавлен | позже: S1 (T-101 — граф и патчи) |
 | 11 | 02_arch ↔ 05_ci, backlog | разные имена файлов стандартов (`iso29148_rules` / `iso29148_srs`, `gost34_sections` / `gost34_602`) | единые: `iso29148_srs.yaml`, `gost34_602.yaml` | косм. |
 | 12 | 06_models ↔ 09_eval | матрица «15 × 3 × 6 = 270», а методов 8 (B1–B3, M1, M2, A1–A3), отчёт строится по 12 test-сценариям | пересчитано: 12 × 3 × 8 = 288 + повторы; **подтвердить с руководителем** | позже: S6 |
 | 13 | 09_eval, backlog | «каппа Коэна» для 3 экспертов (она для двух оценщиков) | каппа Флейса (statsmodels) | позже: S6 |
 | 14 | backlog T-002 ↔ adr/README | «MADR» и «облегчённый MADR» | «облегчённый MADR» | косм. |
-| 15 | 02_arch, 04_data | `SupabaseStore`, Auth/Storage/Realtime, таблицы profiles и usage_daily | `PostgresStore`, 4 таблицы, RLS без политик (ADR-015) | позже: S5 |
+| 15 | 02_arch, 04_data | `SupabaseStore` и таблицы Supabase | без изменений (ADR-015 отклонён) | — |
 
 ### Ждёт решения автора
 
@@ -155,10 +155,10 @@ OK 11 · FAIL 0 · SKIP 2
 | C3 | техн. | OpenRouter: 50 бесплатных запросов в день — медленная разработка агентов | кассеты (запись один раз), маленькие dev-брифы, Gemini и Groq как основа |
 | C4 | техн. | pydantic-ai выпускается очень часто (2.59) — возможны ломающие изменения | версия закреплена в uv.lock, обновление через Dependabot с прогоном кассет |
 | C5 | техн. | переводчик для pm4py (`event_based` → xor) может исказить soundness | golden-тесты: тот же процесс с xor и с event_based даёт одинаковый вердикт |
-| C6 | техн. | Streamlit перезапускает скрипт; долгий прогон блокирует сессию; обрыв WebSocket | `st.cache_resource`, чекпоинт после каждого узла, продолжение по `run_id` |
-| C7 | техн. | лимиты Streamlit Cloud не перепроверены (данные 2024), доступ из РФ неизвестен | замер в T-504; запасной вариант — Render; защита — офлайн |
+| C6 | техн. | Render Free засыпает через 15 минут, холодный старт до минуты; прогон без наблюдателя может прерваться | прогон продолжается из чекпоинта; прогоны без наблюдателя — локально или в GitHub Actions (07_deploy) |
+| C7 | техн. | Vercel и Supabase из РФ доступны нестабильно | защита — на офлайн-стенде (docker compose), демо по записи (replay) |
 | C8 | техн. | Supabase Free засыпает через неделю; GitHub отключает cron через 60 дней без активности | keepalive.yml + напоминание в journal после релиза |
-| C9 | техн. | PostgresSaver создаёт таблицы без схемы | `search_path to lg` на пуле чекпоинтера, тест в T-503 |
+| C9 | техн. | PostgresSaver создаёт таблицы без схемы | `search_path to lg` на пуле чекпоинтера, тест в T-502 |
 | C10 | техн. | Windows: кодировка cp1251, длинные пути, скорость Ollama на CPU | `PYTHONUTF8=1`, короткий путь клона, replay на защите |
 | C11 | техн. | ключи могут утечь в кассеты | `filter_headers` (authorization, x-goog-api-key) + secret scanning GitHub |
 | C12 | метод. | самоподтверждение: автор и строит систему, и размечает скрытые требования | часть требований из PURE; вторая разметка 20% (эксперт или однокурсник) |
@@ -180,7 +180,7 @@ OK 11 · FAIL 0 · SKIP 2
 - **pm4py** — AGPL, +160 МБ, событийный шлюз пропускает;
 - **Kroki** — компилирует DBML, Structurizr и PlantUML эталона;
 - **pandoc** — DOCX из Markdown;
-- **Streamlit** +36 МБ, **Gradio** +159 МБ; HF Spaces для Gradio требуют PRO;
+- **Streamlit** +36 МБ, **Gradio** +159 МБ; HF Spaces для Gradio требуют PRO (рассмотрено, ADR-015 отклонён);
 - **instructor** тянет openai 3.3.0 вместо 3.36;
 - **PostgresSaver** создаёт таблицы без схемы.
 
@@ -190,10 +190,10 @@ OK 11 · FAIL 0 · SKIP 2
 |---|---|---|
 | [013](adr/013-llm-layer-pydantic-ai.md) | LLM-слой на pydantic-ai | T-005 (LLM-слой): около 200 строк → около 50; минус instructor, tiktoken, prices.yaml |
 | [014](adr/014-soundness-pm4py-adapter.md) | pm4py + переводчик DSL примерно на 20 строк | T-106 (проверки схем и soundness): своя сеть Петри не нужна; лицензия AGPL — в README |
-| [015](adr/015-demo-streamlit.md) | демо — одно Streamlit-приложение, Supabase только как Postgres | E5: 7 задач → 5; без TypeScript, FastAPI, очереди, Vercel, Render; T-004 (база) упразднена, база — в T-503; ноутбуку не нужен Docker |
+| [015](adr/015-demo-streamlit.md) | демо на Streamlit | **отклонено автором** 21.10: веб-стек и E5 (T-501…T-507) остаются как были |
 | [016](adr/016-export-pandoc.md) | DOCX через pandoc из Markdown | T-401 / T-402 (выгрузка SRS и ТЗ): без вёрстки DOCX-шаблонов |
 
-Заменены ADR-008 (Vercel + Render) и ADR-009 (очередь в Postgres); сужены ADR-001, 003 и 007. Оценка трудоёмкости: ~190–260 ч → ~170–240 ч.
+ADR-003 уточнён ADR-013; ADR-001, 007, 008, 009 действуют без изменений. Оценка трудоёмкости: ~190–260 ч → ~185–255 ч (экономия в S0 на LLM-слое и в S4 на pandoc).
 
 **Не заменено готовым** — ядро и новизна диплома: граф и патчи, IdAllocator, компилятор DSL → BPMN (раскладка своя: готовая bpmn-auto-layout работает только на Node), 21 проверка, трекер покрытия, агенты и промпты.
 
@@ -209,13 +209,14 @@ S0 не блокирует ничего. Перед S1 нужен один от�
 
 ## 8. План S0 (19.10 – 01.11, веха M0)
 
-Порядок: **T-001 → T-003 → T-002 → T-005 → T-006**. Всего около 10–15 ч.
+Порядок: **T-001 → T-003 → T-002 → T-004 → T-005 → T-006**. Всего около 12–16 ч.
 
 | Задача | Суть | Файлы и интерфейсы | Проверка | Критерий приёмки | Часы |
 |---|---|---|---|---|---|
-| [T-001](https://github.com/Axx-Axvd/reqgraph/issues/1) | монорепо на uv | `pyproject.toml` (workspace: packages/core, apps/demo); `.python-version` = 3.12; `packages/core/src/reqgraph/{graph,dsl,checks,agents,llm,exporters,sim}/__init__.py`, `cli.py` (typer: `reqgraph --version` из `importlib.metadata`), `py.typed`; `apps/demo/pyproject.toml` (заглушка без зависимостей); конфиг ruff, mypy strict, pytest (`--strict-markers --disable-socket`, pytest-cov только отчёт); `.pre-commit-config.yaml`; `tests/test_smoke.py` | `uv sync`; `uv run pytest -q`; `uv run ruff check . && uv run ruff format --check .`; `uv run mypy packages/core`; `uv run reqgraph --version` | всё зелёное на Linux, автор подтверждает на Windows | 3–4 |
-| [T-003](https://github.com/Axx-Axvd/reqgraph/issues/3) | CI | `.github/workflows/ci.yml`: push и PR, матрица ubuntu + windows, `astral-sh/setup-uv`, `uv sync --locked`, ruff, mypy, pytest; затем правило для main через REST | зелёный прогон в Actions | PR нельзя смержить без зелёного ci | 1–2 |
+| [T-001](https://github.com/Axx-Axvd/reqgraph/issues/1) | монорепо на uv и pnpm | `pyproject.toml` (workspace: packages/core, apps/api); `.python-version` = 3.12; `packages/core/src/reqgraph/{graph,dsl,checks,agents,llm,exporters,sim}/__init__.py`, `cli.py` (typer: `reqgraph --version` из `importlib.metadata`), `py.typed`; `apps/api/pyproject.toml` (заглушка, FastAPI не ставим до T-501); `apps/web` — Next.js 16 (TS strict, ESLint, без UI-библиотек), `pnpm-workspace.yaml`; конфиг ruff, mypy strict, pytest (`--strict-markers --disable-socket`, pytest-cov только отчёт); `.pre-commit-config.yaml`; `tests/test_smoke.py` | `uv sync`; `uv run pytest -q`; ruff; mypy; `uv run reqgraph --version`; `pnpm -C apps/web build` (проверить TypeScript 7, иначе закрепить 6.x) | всё зелёное на Linux, автор подтверждает на Windows | 4–5 |
+| [T-003](https://github.com/Axx-Axvd/reqgraph/issues/3) | CI | `.github/workflows/ci.yml`: push и PR, матрица ubuntu + windows, `astral-sh/setup-uv`, `uv sync --locked`, ruff, mypy, pytest; `pnpm install --frozen-lockfile`, `pnpm -C apps/web lint build`; затем правило для main через REST | зелёный прогон в Actions | PR нельзя смержить без зелёного ci | 1–2 |
 | [T-002](https://github.com/Axx-Axvd/reqgraph/issues/2) | документы | сверить CLAUDE.md, README (лицензии зависимостей уже есть), ADR 001–016, LICENSE | просмотр | ADR в облегчённом MADR | 0.5–1 |
+| [T-004](https://github.com/Axx-Axvd/reqgraph/issues/43) | база | `supabase/config.toml`, `migrations/0001_init.sql` (схема 04_data), `0002_rls.sql`, `seed.sql`; Supabase CLI — devDependency в корне; шаг `supabase db reset` в ci.yml; тест RLS (чужой проект не виден) | `supabase db reset` в GitHub Actions; на ноутбуке — `pnpm supabase start` | миграции без ошибок, тест RLS зелёный | 2–3 |
 | [T-005](https://github.com/Axx-Axvd/reqgraph/issues/4) | LLM-слой | `llm/roles.yaml` (из 06_models); `llm/router.py`: `load_roles()`, `model_for(role) -> FallbackModel`, `async structured(role, prompt, output_type, limits) -> (obj, CallStats)`, стоимость 0 для `free: true`; зависимости: `pydantic-ai-slim[openai]`, `pyyaml`; dev: `pytest-recording` | юнит-тесты на `TestModel` и `FunctionModel` (фолбэк, лимит, стоимость); 3 кассеты (OpenRouter, Groq, Gemini) записаны один раз через network secrets, без заголовков ключей | одна функция — три провайдера; фолбэк по 429; токены и $ в логе | 3–4 |
 | [T-006](https://github.com/Axx-Axvd/reqgraph/issues/5) | probe моделей | `evals/probe/cases.yaml` (20 задач: 4 блока по 5); оценщики pydantic-evals: валидность схемы, размытые слова (временный список до ISO-001 из T-107), F1 по эталону; `reqgraph probe --models … --repeat 3` → `evals/reports/probe-YYYY-MM-DD.csv` | прогон на 3–4 бесплатных моделях из 06_models | отчёт сохранён; **[you]** автор утверждает стартовый профиль | 3–4 |
 
@@ -226,8 +227,8 @@ S0 не блокирует ничего. Перед S1 нужен один от�
 - [x] Python 3.12 через uv в облаке; на ноутбуке — по [windows.md](setup/windows.md)
 - [x] `CLAUDE.md` с инвариантами и правилами процесса; `docs/prompts/task.md` — порядок работы над задачей
 - [x] ключи OpenRouter, Groq и Google AI Studio работают (network secrets); `doctor.py`: 0 FAIL
-- [x] версии зависимостей и модели проверены 21.10.2026; ADR-013…016 приняты
-- [x] метки, вехи и 41 задача в GitHub; доска Projects — вручную по инструкции
+- [x] версии зависимостей и модели проверены 21.10.2026; ADR-013, 014, 016 приняты, ADR-015 отклонён
+- [x] метки, вехи и 44 задачи в GitHub; доска Projects — вручную по инструкции
 - [x] `.gitattributes` (LF), `.editorconfig`, шаблоны PR и issue, Dependabot
 - [x] `examples/garage61` не тронут; секретов в диффе нет
 - [ ] мерж PR `chore/preflight` → `main` (автор)

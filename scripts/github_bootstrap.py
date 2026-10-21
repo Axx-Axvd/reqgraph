@@ -45,9 +45,10 @@ LABELS: dict[str, tuple[str, str]] = {
     "area:checks": ("bfdadc", "checks/"),
     "area:dsl": ("bfdadc", "dsl/"),
     "area:exporters": ("bfdadc", "exporters/"),
-    "area:demo": ("bfdadc", "apps/demo (Streamlit)"),
+    "area:api": ("bfdadc", "apps/api (FastAPI, worker)"),
+    "area:web": ("bfdadc", "apps/web (Next.js)"),
     "area:evals": ("bfdadc", "evals/, sim/"),
-    "area:infra": ("bfdadc", ".github/, supabase/, деплой"),
+    "area:infra": ("bfdadc", ".github/, supabase/, docker, деплой"),
     "needs:you": ("e99695", "Нужно решение или участие автора"),
     "blocked": ("000000", "Заблокировано зависимостью или внешним фактором"),
 }
@@ -69,6 +70,7 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-001": ("infra", "infra"),
     "T-002": ("docs", "infra"),
     "T-003": ("infra", "infra"),
+    "T-004": ("infra", "infra"),
     "T-005": ("feature", "core"),
     "T-006": ("research", "evals"),
     "T-101": ("feature", "core"),
@@ -94,17 +96,19 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-404": ("feature", "checks"),
     "T-405": ("feature", "evals"),
     "T-406": ("infra", "evals"),
-    "T-501": ("feature", "demo"),
-    "T-502": ("feature", "demo"),
-    "T-503": ("feature", "demo"),
-    "T-504": ("infra", "infra"),
-    "T-505": ("infra", "demo"),
+    "T-501": ("feature", "api"),
+    "T-502": ("feature", "api"),
+    "T-503": ("feature", "api"),
+    "T-504": ("feature", "web"),
+    "T-505": ("feature", "web"),
+    "T-506": ("infra", "infra"),
+    "T-507": ("infra", "infra"),
     "T-601": ("research", "evals"),
     "T-602": ("research", "evals"),
     "T-603": ("research", "evals"),
     "T-604": ("research", "evals"),
     "T-605": ("research", "evals"),
-    "T-701": ("feature", "demo"),
+    "T-701": ("feature", "web"),
     "T-702": ("docs", None),
     "T-703": ("docs", None),
 }
@@ -122,6 +126,7 @@ EPIC_DOCS: dict[str, list[str]] = {
 TASK_DOCS: dict[str, list[str]] = {
     "T-002": ["docs/adr/README.md"],
     "T-003": ["docs/tech-design/07_deploy.md"],
+    "T-004": ["docs/tech-design/04_data.md", "docs/tech-design/07_deploy.md", "docs/adr/007-supabase.md"],
     "T-005": [
         "docs/tech-design/06_models.md",
         "docs/adr/013-llm-layer-pydantic-ai.md",
@@ -140,11 +145,10 @@ TASK_DOCS: dict[str, list[str]] = {
     "T-401": ["docs/adr/016-export-pandoc.md"],
     "T-402": ["docs/adr/016-export-pandoc.md"],
     "T-405": ["docs/research/2026-10-versions.md"],
-    "T-501": ["docs/adr/015-demo-streamlit.md"],
-    "T-502": ["docs/adr/015-demo-streamlit.md", "docs/adr/010-diagrams.md"],
-    "T-503": ["docs/adr/015-demo-streamlit.md", "docs/adr/007-supabase.md"],
-    "T-504": ["docs/adr/015-demo-streamlit.md", "docs/setup/accounts.md"],
-    "T-505": ["docs/adr/015-demo-streamlit.md", "docs/setup/offline.md"],
+    "T-502": ["docs/adr/009-pg-queue.md", "docs/adr/002-langgraph.md"],
+    "T-505": ["docs/adr/010-diagrams.md"],
+    "T-506": ["docs/adr/008-deploy.md", "docs/setup/accounts.md"],
+    "T-507": ["docs/setup/offline.md"],
 }
 
 MARKER = "<!-- reqgraph-bootstrap:{tid} -->"
@@ -345,6 +349,11 @@ def sync_milestones(gh: GitHub, goals: dict[str, str], update: bool) -> dict[str
     return numbers
 
 
+def issue_state(it: dict[str, Any]) -> tuple[str, str, list[str], int | None]:
+    labels = sorted(lb["name"] for lb in it.get("labels", []))
+    return it["title"], strip_footer(it.get("body")).strip(), labels, (it.get("milestone") or {}).get("number")
+
+
 def sync_issues(gh: GitHub, tasks: list[Task], ms: dict[str, int], update: bool) -> None:
     existing: dict[str, dict[str, Any]] = {}
     for it in gh.list_all("issues?state=all"):
@@ -354,49 +363,57 @@ def sync_issues(gh: GitHub, tasks: list[Task], ms: dict[str, int], update: bool)
             existing.setdefault(m.group(1), it)
     numbers = {tid: it["number"] for tid, it in existing.items()}
 
-    created: list[Task] = []
+    # first pass: create missing issues (dependency links are filled in the second pass)
+    created: set[str] = set()
     for t in tasks:
+        if t.tid in existing:
+            continue
         title = f"{t.tid}: {t.title}"
+        deps = ",".join(t.depends) or "—"
+        print(f"  + issue {title}")
+        print(f"        {t.sprint} | {', '.join(t.labels)} | deps: {deps}" + (" | частично" if t.status else ""))
         payload = {
             "title": title,
             "body": render_body(t, gh.repo, numbers),
             "labels": t.labels,
             "milestone": ms[t.sprint],
         }
-        cur = existing.get(t.tid)
-        if cur is None:
-            deps = ",".join(t.depends) or "—"
-            print(f"  + issue {title}")
-            print(f"        {t.sprint} | {', '.join(t.labels)} | deps: {deps}" + (" | частично" if t.status else ""))
-            res = gh.write("POST", "issues", payload)
-            if res:
-                numbers[t.tid] = res["number"]
-                created.append(t)
-        elif update:
-            print(f"  ~ issue #{cur['number']} {title}")
-            created.append(t)
-        else:
-            print(f"  = issue #{cur['number']} {title}")
+        res = gh.write("POST", "issues", payload)
+        if res:
+            numbers[t.tid] = res["number"]
+        created.add(t.tid)
 
-    # second pass: dependency links need the final issue numbers
-    for t in created:
-        if t.depends:
-            body = render_body(t, gh.repo, numbers)
-            payload: dict[str, Any] = {"body": body}
-            if update:
-                payload |= {"title": f"{t.tid}: {t.title}", "labels": t.labels, "milestone": ms[t.sprint]}
-            gh.write("PATCH", f"issues/{numbers[t.tid]}", payload)
-        elif update and t.tid in existing:
-            gh.write(
-                "PATCH",
-                f"issues/{numbers[t.tid]}",
-                {
-                    "title": f"{t.tid}: {t.title}",
-                    "body": render_body(t, gh.repo, numbers),
-                    "labels": t.labels,
-                    "milestone": ms[t.sprint],
-                },
+    # second pass: compare every issue with the backlog, now that issue numbers are known
+    for t in tasks:
+        want = {
+            "title": f"{t.tid}: {t.title}",
+            "body": render_body(t, gh.repo, numbers),
+            "labels": t.labels,
+            "milestone": ms[t.sprint],
+        }
+        if t.tid in created:
+            if t.depends and t.tid in numbers:
+                gh.write("PATCH", f"issues/{numbers[t.tid]}", {"body": want["body"]})
+            continue
+        cur = existing[t.tid]
+        have = issue_state(cur)
+        fields = [
+            name
+            for name, a, b in zip(
+                ("title", "body", "labels", "milestone"),
+                have,
+                (want["title"], str(want["body"]).strip(), sorted(t.labels), want["milestone"]),
+                strict=True,
             )
+            if a != b
+        ]
+        if not fields:
+            print(f"  = issue #{cur['number']} {t.tid}")
+        elif update:
+            print(f"  ~ issue #{cur['number']} {t.tid}: {', '.join(fields)}")
+            gh.write("PATCH", f"issues/{cur['number']}", want)
+        else:
+            print(f"  ! issue #{cur['number']} {t.tid} differs ({', '.join(fields)}); run with --update")
 
 
 def main() -> int:

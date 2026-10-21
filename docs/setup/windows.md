@@ -9,11 +9,14 @@
 | 1 | Git | `winget install --id Git.Git -e` | `git --version` | 2.4x+ |
 | 2 | uv | `winget install --id astral-sh.uv -e` (или `irm https://astral.sh/uv/install.ps1 \| iex`) | `uv --version` | 0.11+ |
 | 3 | Python 3.12 (через uv) | `uv python install 3.12` | `uv python find 3.12` | путь к python.exe 3.12.x |
-| 4 | Ollama | `winget install --id Ollama.Ollama -e` | `ollama --version`, затем `ollama list` | версия печатается; сервис слушает `http://localhost:11434` |
-| 5 | GitHub CLI | `winget install --id GitHub.cli -e`, затем `gh auth login` | `gh auth status` | Logged in to github.com |
-| 6 | VS Code | `winget install --id Microsoft.VisualStudioCode -e` | `code --version` | 1.12x |
-
-**Не нужны** (после ADR-015 — демо на Streamlit): Node.js и pnpm, Docker Desktop с WSL2, Supabase CLI. Миграции базы применяет GitHub Actions, офлайн-стенд запускается без Docker. Ставить их стоит, только если захочется поднять свой Kroki в контейнере.
+| 4 | Node.js LTS | `winget install --id OpenJS.NodeJS.LTS -e` | `node --version` | v24.x (текущая LTS Krypton; v22 тоже подходит) |
+| 5 | pnpm (corepack) | `corepack enable` и `corepack prepare pnpm@latest --activate` | `pnpm --version` | 10.x |
+| 6 | WSL2 | `wsl --install` (нужна перезагрузка; в BIOS включить виртуализацию) | `wsl --status` | «Версия по умолчанию: 2» |
+| 7 | Docker Desktop | `winget install --id Docker.DockerDesktop -e`; в настройках включить «Use the WSL 2 based engine» | `docker run --rm hello-world` | «Hello from Docker!» |
+| 8 | Supabase CLI | вариант A (рекомендую): CLI в devDependencies репозитория появится в T-004, запуск через `pnpm supabase ...`; вариант B: `scoop bucket add supabase https://github.com/supabase/scoop-bucket.git` и `scoop install supabase` | `pnpm dlx supabase --version` или `supabase --version` | 2.12x |
+| 9 | Ollama | `winget install --id Ollama.Ollama -e` | `ollama --version`, затем `ollama list` | версия печатается; сервис слушает `http://localhost:11434` |
+| 10 | GitHub CLI | `winget install --id GitHub.cli -e`, затем `gh auth login` | `gh auth status` | Logged in to github.com |
+| 11 | VS Code | `winget install --id Microsoft.VisualStudioCode -e` | `code --version` | 1.12x |
 
 Расширения VS Code ставятся из рекомендаций репозитория (`.vscode/extensions.json`): после открытия папки VS Code предложит их установить.
 
