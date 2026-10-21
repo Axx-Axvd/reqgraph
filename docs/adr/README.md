@@ -16,3 +16,5 @@
 | [010](010-diagrams.md) | bpmn-js в браузере и Kroki для остальных нотаций | принято |
 | [011](011-models.md) | Open-weight модели по ролям, выбор по своему мини-бенчмарку | принято |
 | [012](012-no-standard-texts.md) | Тексты стандартов в репозиторий не кладутся | принято |
+| [013](013-structured-output-without-instructor.md) | Structured output через openai SDK без instructor | предложено |
+| [014](014-own-soundness-check.md) | Своя проверка soundness по DSL, pm4py — только в тестах | предложено |
