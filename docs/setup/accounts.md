@@ -1,6 +1,6 @@
 # Ключи и сервисы: чек-лист автора
 
-Проверено 2026-10-21. Источники: живые ответы API из облачной VM (`GET /api/v1/key` у OpenRouter, заголовки `x-ratelimit-*` у Groq), официальные страницы тарифов Supabase и Streamlit. Лимиты меняются, поэтому перед S6 их нужно перепроверить командой `uv run python scripts/doctor.py --chat`.
+Проверено 2026-10-21. Источники: живые ответы API из облачной VM (`GET /api/v1/key` у OpenRouter, заголовки `x-ratelimit-*` у Groq), официальные страницы тарифов Supabase, Render и Vercel. Лимиты меняются, поэтому перед S6 их нужно перепроверить командой `uv run python scripts/doctor.py --chat`.
 
 Cerebras исключён из проекта (решение автора, см. docs/journal.md).
 
@@ -21,12 +21,13 @@ Cerebras исключён из проекта (решение автора, см
 - **Облачная сессия Claude Code:** network secrets в настройках окружения. Значения в VM нет, прокси подставляет `Authorization` сам. Проверено 21.10: `doctor.py` получает HTTP 200 у всех трёх провайдеров с плейсхолдером вместо ключа.
 - **Ноутбук (Windows):** `copy .env.example .env` и вписать ключи. `.env` в git не попадает (см. `.gitignore`).
 
-## Позже (S5, деплой демо — ADR-015)
+## Позже (S5, деплой)
 
 | Сервис | Где | Что завести | Бесплатно на 21.10.2026 (официальные страницы) |
 |---|---|---|---|
-| Supabase | https://supabase.com/dashboard | 1 проект `reqgraph-prod` (регион eu-central); нужен только Postgres и строка Supavisor session pooler :5432 | 500 МБ базы на проект, 500 МБ RAM (shared CPU), 5 ГБ egress; **пауза после 1 недели неактивности; максимум 2 активных проекта** |
-| Streamlit Community Cloud | https://share.streamlit.io (вход через GitHub) | приложение из `Axx-Axvd/reqgraph`, файл `apps/demo/app.py`; ключи — в Secrets приложения | $0 для публичных репозиториев; ресурсы по docs (данные 2024 года): до ~2.7 ГБ RAM, сон после 12 ч без трафика — перепроверить в T-504 (docs.streamlit.io из облачной VM закрыт) |
+| Supabase | https://supabase.com/dashboard | 2 проекта: `reqgraph-staging`, `reqgraph-prod` (регион eu-central) | 500 МБ базы на проект, 500 МБ RAM (shared CPU), 5 ГБ egress, 1 ГБ Storage, 50 000 MAU; **пауза после 1 недели неактивности; максимум 2 активных проекта** — ровно staging + prod, третий (например, для экспериментов) не поместится |
+| Render | https://dashboard.render.com | Web Service `reqgraph-api` (Docker, план Free) | 512 МБ RAM; засыпает через 15 мин без входящего трафика, просыпается ~1 мин; 750 инстанс-часов в месяц на workspace; файловая система эфемерная; фоновые воркеры и cron на Free недоступны — worker внутри того же web-процесса (ADR-009) |
+| Vercel | https://vercel.com/signup | проект `reqgraph-web` из `apps/web` | Hobby: только некоммерческое использование; 100 ГБ Fast Data Transfer, 1 млн вызовов функций, 4 CPU-часа Active CPU, функция до 300 с |
 
 ## Не нужно
 

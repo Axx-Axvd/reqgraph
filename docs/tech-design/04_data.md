@@ -2,7 +2,7 @@
 
 # 04 Data
 
-*граф артефактов, форматы файлов, DSL процессов, схема Postgres демо*
+*граф артефактов, форматы файлов, DSL процессов, схема Supabase*
 
 ## Узлы графа
 
@@ -114,20 +114,36 @@ garage61/
 └── exports/                   # SRS_ISO29148.docx TZ_GOST34_602.docx req.reqif
 ```
 
-<sub>FileStore читает и пишет эту папку (CLI, тесты, git). PostgresStore (демо) хранит тот же граф целиком в `graph_revisions.graph` (jsonb) — проект 100-300 требований занимает сотни килобайт, поэтому 500 МБ бесплатной базы хватает на тысячи ревизий; старые ревизии и чекпоинты чистит ежедневная задача.</sub>
+<sub>FileStore читает и пишет эту папку (CLI, тесты, git). SupabaseStore хранит тот же граф целиком в `graph_revisions.graph` (jsonb) — проект 100-300 требований занимает сотни килобайт, поэтому 500 МБ бесплатной базы хватает на тысячи ревизий; старые ревизии и чекпоинты чистит ежедневная задача.</sub>
 
-## Схема Postgres (Supabase, только для демо)
-
-По ADR-015 Supabase используется только как Postgres: без Auth, Storage, Realtime и пользовательских таблиц. Локально и офлайн тот же контракт хранилища реализуют FileStore и SQLite (`langgraph-checkpoint-sqlite`).
+## Схема Supabase
 
 ```mermaid
 erDiagram
+  profiles ||--o{ projects : owns
+  profiles ||--o{ usage_daily : has
   projects ||--o{ graph_revisions : has
   projects ||--o{ runs : has
+  projects ||--o{ exports : has
   runs ||--o{ run_events : emits
+  runs ||--o{ interview_turns : has
+  profiles {
+    uuid id PK "= auth.uid"
+    text display_name
+    text role
+    timestamptz created_at
+  }
+  usage_daily {
+    uuid user_id PK,FK
+    date day PK
+    int runs
+    int tokens_in
+    int tokens_out
+    numeric cost_usd
+  }
   projects {
     uuid id PK
-    text session_id "сессия демо, без входа"
+    uuid owner_id FK
     text name
     text_arr standards
     text_arr langs
@@ -143,40 +159,55 @@ erDiagram
     text author "agent|user"
     timestamptz created_at
   }
+  exports {
+    uuid id PK
+    uuid project_id FK
+    int rev
+    text format
+    text storage_path
+  }
   runs {
     uuid id PK
     uuid project_id FK
-    text kind "interview|brief|check"
+    text kind
     text status
     int iteration
     text model_profile
     numeric cost_usd
-    int tokens_in
-    int tokens_out
     text error
-    timestamptz created_at
   }
   run_events {
     bigint id PK
     uuid run_id FK
     text type
-    jsonb payload "роль, модель, провайдер, токены, $, латентность"
+    jsonb payload
     timestamptz ts
   }
+  interview_turns {
+    bigint id PK
+    uuid run_id FK
+    text role "agent|client"
+    text content
+    jsonb coverage
+  }
 ```
-Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes, checkpoint_migrations) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. Таблицы чекпоинтера создаются без схемы, поэтому пул соединений чекпоинтера выставляет `search_path to lg` (проверка в T-503). Ответы интервью хранятся в чекпоинте и в `run_events`, отдельная таблица `interview_turns` не нужна. Дневной лимит демо считается по `runs.created_at` и `runs.cost_usd`.
+Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. RLS: всё через `projects.owner_id = auth.uid()`.
 
 *рис.7 - таблицы public и служебная схема lg для чекпоинтов LangGraph*
 
-**`supabase/migrations/0001_init.sql (фрагмент)`**
+**`supabase/migrations/0002_rls.sql (фрагмент)`**
 
 ```sql
-alter table projects        enable row level security;
-alter table graph_revisions enable row level security;
-alter table runs            enable row level security;
-alter table run_events      enable row level security;
--- политик для anon и authenticated нет: всё читает и пишет только сервер демо
--- (роль postgres через session pooler :5432); anon-ключ не видит ни одной строки
+alter table projects enable row level security;
+create policy owner_all on projects for all to authenticated
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+alter table runs enable row level security;
+create policy via_project on runs for select to authenticated
+  using (exists (select 1 from projects p
+                 where p.id = runs.project_id and p.owner_id = auth.uid()));
+-- запись в runs, run_events, graph_revisions делает только backend (service_role)
+alter publication supabase_realtime add table run_events;
 ```
 
-<sub>Правила версий: каждый применённый патч -> новая ревизия; ручная правка в демо -> ревизия author=user; diff ревизий показывается в демо; удаление проекта каскадно удаляет ревизии и прогоны. Ежедневная очистка: чекпоинты старше 14 дней, ревизии сверх 50 на проект.</sub>
+<sub>Правила версий: каждый применённый патч -> новая ревизия; ручная правка в UI -> ревизия author=user; diff ревизий показывается в UI; удаление проекта каскадно удаляет ревизии, прогоны и файлы в Storage.</sub>

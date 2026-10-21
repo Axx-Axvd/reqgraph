@@ -8,11 +8,11 @@
 
 ```mermaid
 flowchart LR
-  analyst([Аналитик<br/>ведёт проект, правит граф]) -->|демо Streamlit / CLI| S
+  analyst([Аналитик<br/>ведёт проект, правит граф]) -->|веб / CLI| S
   client([Заказчик<br/>отвечает на вопросы или симулятор]) -->|чат интервью| S
   S[reqgraph<br/>интервью -> требования -> модели -> CI -> SRS / ТЗ]
   S -->|OpenAI API| LLM[(LLM-провайдеры<br/>OpenRouter · Groq · Ollama)]
-  S -->|SQL| SB[(Supabase Postgres<br/>проекты, ревизии, чекпоинты)]
+  S -->|SQL| SB[(Supabase<br/>Postgres, Auth, Storage, Realtime)]
   S -->|HTTP| K[Kroki<br/>SVG из BPMN, DBML, PlantUML, C4]
   S -.-> J[Jira / Confluence<br/>через MCP, v1.x]
   S -.-> G[Git-репозиторий<br/>проект как docs-as-code]
@@ -22,12 +22,12 @@ flowchart LR
 
 ## Слои ядра
 
-Ядро — Python-пакет `reqgraph`. Его используют CLI, демо на Streamlit и харнес экспериментов, поэтому вся логика живёт в пакете, а приложения остаются тонкими. Детерминированная часть (граф, DSL, проверки, экспорт) не знает про LLM и тестируется без сети.
+Ядро — Python-пакет `reqgraph`. Его используют CLI, API и харнес экспериментов, поэтому вся логика живёт в пакете, а приложения остаются тонкими. Детерминированная часть (граф, DSL, проверки, экспорт) не знает про LLM и тестируется без сети.
 
 ```mermaid
 flowchart TB
   subgraph entry
-    cli[cli.py] ~~~ demo[apps/demo] ~~~ ev[evals/harness]
+    cli[cli.py] ~~~ api[apps/api] ~~~ ev[evals/harness]
   end
   subgraph orchestration
     lg[agents/graph.py · LangGraph]
@@ -42,7 +42,7 @@ flowchart TB
     g[graph/ · ArtifactGraph]
   end
   subgraph storage
-    fs[FileStore] ~~~ ss[PostgresStore]
+    fs[FileStore] ~~~ ss[SupabaseStore]
   end
   entry --> orchestration --> agents --> services --> domain --> storage
 ```
@@ -64,23 +64,24 @@ flowchart TB
 
 ## Стек
 
-<p align="right"><sub>Таблица 3 - версии закрепляются в uv.lock в S0 (проверены 21.10.2026, см. docs/research/2026-10-versions.md); готовые средства — ADR-013…016; ниже — минимальные требования</sub></p>
+<p align="right"><sub>Таблица 3 - версии закрепляются в uv.lock и pnpm-lock.yaml в S0 (проверены 21.10.2026, см. docs/research/2026-10-versions.md); готовые средства — ADR-013…016; ниже — минимальные требования</sub></p>
 
 | Слой | Технологии | Зачем |
 |---|---|---|
 | `Язык и сборка` | Python 3.12, uv, ruff, mypy (strict для core) | быстрые установки, единый линтер |
 | `Домен` | Pydantic v2, networkx | модели графа, алгоритмы на графах (достижимость, сироты) |
-| `Агенты` | langgraph, langgraph-checkpoint-postgres / -sqlite, psycopg 3 | граф состояний, interrupt, чекпоинты (Postgres в облаке, SQLite локально) |
+| `Агенты` | langgraph, langgraph-checkpoint-postgres, psycopg 3 | граф состояний, interrupt, чекпоинты |
 | `LLM` | pydantic-ai-slim[openai], genai-prices | структурный вывод в Pydantic, ретраи, FallbackModel, лимиты, цена вызова (ADR-013) |
 | `Модели как код` | lxml (BPMN XSD), pm4py (soundness, ленивый импорт, ADR-014), pydbml, httpx -> Kroki | компиляция, валидация, soundness, SVG (BPMN — bpmn-js, остальное — Kroki) |
 | `Текст и правила` | pymorphy3, rapidfuzz, PyYAML | лемматизация для ISO-правил, нечёткое сопоставление сущностей |
 | `Экспорт` | Jinja2, pypandoc-binary (pandoc), reqif | Markdown → DOCX по reference.docx (ADR-016), ReqIF 1.2 |
+| `API` | FastAPI, uvicorn, pydantic-settings, PyJWT | REST, проверка JWT Supabase |
 | `CLI` | typer, rich | reqgraph init / interview / run / check / export / probe |
-| `Демо` | Streamlit (chat, graphviz_chart, download_button), bpmn-js с CDN в components.html | интервью, граф, BPMN, отчёт CI, выгрузка (ADR-015) |
-| `Данные` | Supabase Postgres (облако), SQLite + FileStore (локально и офлайн); Supabase CLI только в CI | ревизии графа, прогоны, чекпоинты |
+| `Frontend` | Next.js (App Router, TS), Tailwind, shadcn/ui, TanStack Query, supabase-js, bpmn-js, @xyflow/react | интервью, граф, BPMN, отчёт CI |
+| `Данные` | Supabase: Postgres + pgvector, Auth, Storage, Realtime; Supabase CLI | облако и такой же локальный стек |
 | `Тесты` | pytest, pytest-recording (VCR), pytest-socket, hypothesis | LLM-ответы записаны в кассеты, сеть в юнит-тестах закрыта |
 | `Эксперименты` | pydantic-evals, scipy, statsmodels | probe, харнес, метрики, LLM-судья, статистика |
-| `Инфра` | GitHub Actions, Streamlit Community Cloud, Kroki | CI, деплой; офлайн-стенд без Docker (ADR-015) |
+| `Инфра` | Docker, docker compose, GitHub Actions, Render, Vercel, Kroki | CI, деплой, офлайн-стенд |
 | `Наблюдаемость` | run_events (Postgres или JSONL); опционально Logfire / OpenTelemetry из pydantic-ai | стоимость и трейсы каждого вызова |
 
 ## Структура репозитория
@@ -90,11 +91,11 @@ flowchart TB
 ```text
 reqgraph/
 ├── CLAUDE.md                  # правила для Claude Code (см. 10_claude)
-├── README.md  LICENSE  CHANGELOG.md  .env.example
-├── pyproject.toml             # uv workspace: packages/core, apps/demo
+├── README.md  LICENSE  .env.example  docker-compose.yml
+├── pyproject.toml             # uv workspace: packages/*, apps/api
 ├── packages/core/src/reqgraph/
 │   ├── graph/                 # models.py nodes.py edges.py patch.py ids.py
-│   │   └── store/             # base.py file_store.py postgres_store.py
+│   │   └── store/             # base.py file_store.py supabase_store.py
 │   ├── dsl/                   # process.py bpmn_compile.py layout.py soundness.py
 │   │                          # dbml.py plantuml.py c4.py kroki.py idef0.py
 │   ├── checks/                # base.py registry.py schema.py sound.py
@@ -117,13 +118,18 @@ reqgraph/
 **`tree -L 3 reqgraph/   (2/2)`**
 
 ```text
-├── apps/demo/                 # Streamlit (ADR-015)
-│   ├── app.py                 # проекты, интервью-чат, граф, BPMN, отчёт CI, выгрузка
-│   ├── components/            # bpmn_viewer.html (bpmn-js с CDN)
-│   └── pyproject.toml
+├── apps/api/                  # FastAPI
+│   ├── app/main.py  deps.py  auth.py  settings.py
+│   ├── app/routers/           # projects.py runs.py graph.py exports.py
+│   ├── app/worker.py          # очередь jobs, запуск LangGraph
+│   └── Dockerfile
+├── apps/web/                  # Next.js
+│   ├── app/(auth)/login  app/projects/[id]/{interview,graph,models,ci,export}
+│   ├── components/            # InterviewChat BpmnViewer TraceGraph CIReport
+│   └── lib/                   # supabase.ts api.ts types.ts (из schemas/)
 ├── supabase/
-│   ├── migrations/            # 0001_init.sql (таблицы + RLS без политик для anon)
-│   └── config.toml
+│   ├── migrations/            # 0001_init.sql 0002_rls.sql 0003_quotas.sql ...
+│   ├── seed.sql  config.toml
 ├── evals/
 │   ├── scenarios/<id>/        # brief.md hidden.yaml persona.yaml gold/
 │   ├── harness/  baselines/  metrics/  probe/

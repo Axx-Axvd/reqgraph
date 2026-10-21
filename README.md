@@ -24,7 +24,7 @@ flowchart LR
 |---|---|
 | [docs/tech-design/](docs/tech-design/README.md) | технический проект по разделам: архитектура, агенты, данные, проверки, модели, деплой, план, оценка |
 | [docs/tech-design.pdf](docs/tech-design.pdf) | то же в виде PDF с инфографикой (снимок 20.10.2026; при расхождении главнее Markdown) |
-| [docs/adr/](docs/adr/README.md) | 16 архитектурных решений |
+| [docs/adr/](docs/adr/README.md) | 16 записей о решениях (15 принято, 1 отклонено) |
 | [docs/backlog.md](docs/backlog.md) | задачи T-001 … T-703 с критериями приёмки (и issues на GitHub) |
 | [docs/setup/](docs/setup/) | окружение Windows, ключи и сервисы, офлайн-профиль, доска GitHub Projects |
 | [docs/research/](docs/research/) | проверенные версии зависимостей и моделей (21.10.2026) |
@@ -35,18 +35,18 @@ flowchart LR
 
 | Спринт | Даты | Результат |
 |---|---|---|
-| S0 | 19.10 – 01.11.2026 | репозиторий, CI, LLM-слой, probe моделей |
+| S0 | 19.10 – 01.11.2026 | репозиторий, CI, база, LLM-слой, probe моделей |
 | S1 | 02.11 – 15.11 | граф, DSL процессов, 21 проверка |
 | S2 | 16.11 – 29.11 | агенты и цикл ремонта, v0.1 (CLI) |
 | S3 | 30.11 – 13.12 | интервьюер, симулятор заказчика, 15 сценариев |
 | S4 | 14.12 – 27.12 | SRS, ТЗ, ReqIF, evals v1, v0.5 |
-| S5 | 11.01 – 24.01.2027 | демо на Streamlit, деплой, офлайн-стенд |
+| S5 | 11.01 – 24.01.2027 | веб-демо и деплой |
 | S6 | 25.01 – 07.02 | эксперименты и экспертная оценка |
 | S7 | 08.02 – 21.02 | релиз v1.0, техотчёт |
 
 ## Стек
 
-Python 3.12 · LangGraph · pydantic-ai · PM4Py · Kroki · pandoc · Streamlit · Supabase Postgres · bpmn-js · open-weight LLM через OpenRouter / Groq / Google AI Studio / Ollama.
+Python 3.12 · LangGraph · pydantic-ai · FastAPI · PM4Py · Kroki · pandoc · Next.js · Supabase · bpmn-js · open-weight LLM через OpenRouter / Groq / Google AI Studio / Ollama.
 
 ## Лицензия
 

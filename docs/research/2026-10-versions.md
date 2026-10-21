@@ -39,7 +39,7 @@
 
 ## JavaScript
 
-> После ADR-015 (демо на Streamlit) JS-стек проекту не нужен; таблица оставлена для справки. Из неё используется только **bpmn-js**: подключается с CDN внутри `components.html`, версия закрепляется в URL (`bpmn-js@18.31.1`).
+> JS-стек нужен для apps/web (Next.js на Vercel, ADR-008). bpmn-js закрепляется точной версией (`bpmn-js@18.31.1`); водяной знак bpmn.io не скрываем.
 
 | Пакет | Последняя | Дата | Лицензия | Расходится с docs? | Что поменять |
 |---|---|---|---|---|---|
@@ -50,14 +50,14 @@
 | bpmn-js | 18.31.1 | 2026-10-21 | MIT **с условием**: водяной знак bpmn.io на диаграмме нельзя убирать или перекрывать | в docs не упомянуто | T-505: не скрывать логотип bpmn.io в `BpmnViewer` |
 | @xyflow/react | 12.12.0 | 2026-09-24 | MIT | нет | T-505 |
 | @supabase/supabase-js | 2.118.0 | 2026-10-15 | MIT | требует **Node ≥ 22** | Node 22/24 на всех машинах (VM: 22.22, ноутбук: 24 LTS) |
-| supabase (CLI) | 2.121.0 | 2026-10-14 | MIT | нет | только в CI: `supabase/setup-cli` + `supabase db push` (T-503, ADR-015); локально не нужен |
+| supabase (CLI) | 2.121.0 | 2026-10-14 | MIT | нет | devDependency в корне (T-004), запуск `pnpm supabase …`; `supabase db reset` — в GitHub Actions и на ноутбуке |
 | @tanstack/react-query | 5.104.5 | 2026-10-19 | MIT | нет | S5 |
 | tailwindcss | 4.3.3 | 2026-07-16 | MIT | нет | S5 (не ставить в T-001) |
 | @playwright/test | 1.64.1 | 2026-10-14 | Apache-2.0 | нет | S5; в VM Chromium уже есть |
 
 ## Память импорта
 
-> Замеры делались под прежний план (Render Free, 512 МБ). После ADR-015 демо идёт на Streamlit Community Cloud, и запас памяти больше, но ленивые импорты тяжёлых библиотек остаются правилом.
+> Замеры важны для Render Free (512 МБ, ADR-008): api и воркер работают в одном процессе.
 
 Пустой интерпретатор Python 3.12 — 11 МБ RSS. Прирост RSS после импорта:
 
@@ -77,7 +77,7 @@
 | **всё вместе** (включая pm4py, instructor, docxtpl, reqif, pymorphy3) | **+239 МБ → 250 МБ** | 3,4 с |
 
 **Вывод.** Импорты занимают от 132 до 250 МБ ещё до первого запроса, а рабочая память прогона (граф, промпты, ответы LLM, DOCX) добавится сверху.
-- Без pm4py и instructor запас до 512 МБ был бы ~380 МБ. После ADR-013/014/015: instructor не нужен, pm4py импортируется лениво только в SND-002, а у Streamlit Cloud лимит выше.
+- Без instructor (ADR-013) и с ленивым импортом pm4py только в SND-002 (ADR-014) остаётся ~380 МБ запаса до 512 МБ на обычных шагах; шаг SND-002 добавляет ~160 МБ — замер в T-506, план Б из 07_deploy.
 - С pm4py бюджет 450 МБ из DoD S5 под угрозой.
 - Тяжёлое импортируем лениво: `docxtpl` — внутри экспорта, `pymorphy3` — при первом ISO-001.
 
@@ -102,8 +102,8 @@ uv venv -p 3.12 /tmp/mem && uv pip install -p /tmp/mem langgraph langgraph-check
 | Экспорт DOCX (T-401/402) | docxtpl + DOCX-шаблоны | **pypandoc-binary 1.17** (pandoc 3.9 внутри; wheels для Windows, Linux, macOS) | `convert_text(md, "docx")` с таблицей — OK | ADR-016 |
 | Evals (T-006, T-304, T-405) | свой probe, метрики, харнес | **pydantic-evals 2.59.0** (MIT): Dataset, Case, Evaluator, LLMJudge, отчёты | установка вместе с pydantic-ai без конфликтов; импорт +51 МБ (только в evals, не в демо) | backlog |
 | Статистика (T-605) | не выбрано | scipy (BSD), statsmodels (BSD): Wilcoxon, Holm, каппа Флейса | лицензии по PyPI; pingouin и krippendorff — GPL, не берём | backlog |
-| Демо (E5) | Next.js + FastAPI + воркер + Vercel + Render | **Streamlit 1.66.1** (Apache-2.0) на Community Cloud | импорт +36 МБ; Gradio 6.30 — +159 МБ; HF Spaces для Gradio/Docker требуют PRO (docs HF); Streamlit Cloud: до ~2.7 ГБ RAM, сон после 12 ч (docs 2024, перепроверить) | ADR-015 |
-| Чекпоинты локально | Supabase CLI в Docker | **langgraph-checkpoint-sqlite 3.1.2** (MIT) | импорт +36 МБ; не нужен Docker на ноутбуке | ADR-015 |
+| Демо (E5) | Next.js + FastAPI + воркер + Vercel + Render | Streamlit 1.66.1 (Apache-2.0) на Community Cloud | импорт +36 МБ; Gradio 6.30 — +159 МБ; HF Spaces для Gradio/Docker требуют PRO | **отклонено автором** (ADR-015): остаётся Next.js + FastAPI |
+| Чекпоинты локально | Supabase CLI в Docker | langgraph-checkpoint-sqlite 3.1.2 (MIT) | импорт +36 МБ | не нужно: остаётся Supabase CLI локально, MemorySaver в тестах |
 | Раскладка BPMN (T-103) | свой layout.py | bpmn-auto-layout 1.3.0 (npm) — **не подходит**: только Node и браузер, раскладывает только первого участника коллаборации | README пакета | свой layout на `networkx.topological_generations` |
 | MCP для разработки | — | Context7 (документация библиотек), Supabase MCP | хосты `mcp.context7.com`, `mcp.supabase.com` закрыты прокси облачной VM | подключать на ноутбуке по желанию; в репозиторий `.mcp.json` не кладём |
 

@@ -62,3 +62,26 @@
 - `docs/tech-design.pdf` не пересобран и отстаёт от Markdown.
 
 **Итог этапа 0:** [docs/preflight-report.md](preflight-report.md). Задачи в GitHub: 41 issue, 8 вех, 23 метки. Дальше — T-001 (монорепо на uv) по команде автора.
+
+## 2026-10-21 · Откат ADR-015: веб-стек возвращён
+
+**Решение автора:** вернуть веб-часть как было до этапа 0 — Next.js на Vercel, FastAPI и воркер на Render Free, Supabase (Postgres, Auth, Storage, Realtime). ADR-015 (одно приложение на Streamlit) помечен «отклонено»; ADR-001, 007, 008, 009 снова «принято» без уточнений.
+
+**Что вернулось:**
+- T-004 — миграции Supabase в S0;
+- E5 из 7 задач (T-501…T-507) в исходной редакции;
+- `07_deploy`, схема Supabase в `04_data`, стек и дерево `apps/api` + `apps/web` в `02_arch`;
+- `.env.example` с переменными Supabase и `NEXT_PUBLIC_API_URL`;
+- команды pnpm, supabase и docker compose в CLAUDE.md;
+- npm в Dependabot, ESLint и Prettier в VS Code;
+- в `doctor.py` снова проверяются Node, pnpm, Docker и Supabase CLI;
+- в чек-листе Windows снова Node, Docker Desktop и Supabase CLI;
+- оценка трудоёмкости ~185–255 ч.
+
+**Что осталось из этапа 0:**
+- pydantic-ai (ADR-013), pm4py с переводчиком (ADR-014), pandoc (ADR-016);
+- pydantic-evals, scipy и statsmodels;
+- новые модели и лимиты, исключение Cerebras;
+- методические правки (матрица, каппа Флейса, ACT, C4-EXT-01).
+
+**Риск, который снова актуален:** Render Free 512 МБ против 132–250 МБ импортов. Меры: ленивые импорты (pm4py — только в SND-002), замер в T-506, запасной вариант — Railway или Fly (~$5).

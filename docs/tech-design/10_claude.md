@@ -74,15 +74,15 @@
 
 ## Источники
 
-- [Supabase: IPv4 и IPv6, session pooler](https://supabase.com/docs/guides/troubleshooting/supabase--your-network-ipv4-and-ipv6-compatibility-cHe3BP)
+- [Supabase: IPv4 и IPv6, pooler для Render / Vercel](https://supabase.com/docs/guides/troubleshooting/supabase--your-network-ipv4-and-ipv6-compatibility-cHe3BP)
 
 - [Supabase: тарифы и лимиты](https://supabase.com/pricing)
 
-- [Streamlit Community Cloud: ресурсы и сон приложений](https://docs.streamlit.io/deploy/streamlit-community-cloud/manage-your-app)
-
 - [pydantic-ai: модели, FallbackModel, structured output](https://ai.pydantic.dev/)
 
-- [Render: бесплатные инстансы](https://render.com/docs/free) (запасной вариант)
+- [Render: бесплатные инстансы](https://render.com/docs/free)
+
+- [Vercel: тариф Hobby](https://vercel.com/docs/plans/hobby)
 
 - [OpenRouter: сравнение бесплатных LLM API (2026)](https://openrouter.ai/blog/tutorials/free-llm-apis-compared/)
 

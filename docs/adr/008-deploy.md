@@ -1,6 +1,6 @@
 # ADR-008: Деплой: Vercel для web, Render для api и worker, docker compose локально
 
-- Статус: заменено [ADR-015](015-demo-streamlit.md)
+- Статус: принято
 - Дата: 2026-10-20
 - Источник: docs/tech-design/README.md, таблица «Ключевые решения»
 
