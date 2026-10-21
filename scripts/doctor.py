@@ -3,7 +3,7 @@
 Prints a table OK / FAIL / SKIP with a hint for every failed item. Uses only the standard
 library, so it runs before `uv sync`:
 
-    uv run python scripts/doctor.py           # tools, Docker, Ollama, Kroki, model providers
+    uv run python scripts/doctor.py           # tools, Ollama, Kroki, model providers
     uv run python scripts/doctor.py --chat    # plus one tiny free completion per provider
 
 API keys are read from the environment or from .env in the repository root. When a key is
@@ -86,10 +86,6 @@ PROVIDERS = [
 TOOLS: list[tuple[str, int, bool, str]] = [
     ("git", 0, True, "Windows: winget install --id Git.Git -e"),
     ("uv", 0, True, "Windows: winget install --id astral-sh.uv -e"),
-    ("node", 22, True, "Windows: winget install --id OpenJS.NodeJS.LTS -e"),
-    ("pnpm", 0, True, "corepack enable && corepack prepare pnpm@latest --activate"),
-    ("docker", 0, False, "Windows: winget install --id Docker.DockerDesktop -e (WSL2)"),
-    ("supabase", 0, False, "нужен с T-004: pnpm dlx supabase --version или scoop install supabase"),
     ("gh", 0, False, "Windows: winget install --id GitHub.cli -e"),
     ("ollama", 0, False, "Windows: winget install --id Ollama.Ollama -e (офлайн-профиль)"),
 ]
@@ -174,15 +170,6 @@ def check_tools() -> list[Row]:
     return rows
 
 
-def check_docker() -> Row:
-    if shutil.which("docker") is None:
-        return Row("services", "docker daemon", "SKIP", "docker не установлен", "нужен для T-004 и офлайн-стенда")
-    code, out = run(["docker", "info", "--format", "{{.ServerVersion}}"])
-    if code == 0:
-        return Row("services", "docker daemon", "OK", f"server {out}")
-    return Row("services", "docker daemon", "FAIL", out[:60], "запустите Docker Desktop (Linux: sudo dockerd &)")
-
-
 def check_ollama() -> Row:
     base = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1").rstrip("/").removesuffix("/v1")
     code, body = http("GET", f"{base}/api/version")
@@ -259,7 +246,7 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8")
 
     load_dotenv(ROOT / ".env")
-    rows = check_tools() + [check_docker(), check_ollama()]
+    rows = [*check_tools(), check_ollama()]
     if not args.offline:
         rows.append(check_kroki())
         for p in PROVIDERS:
