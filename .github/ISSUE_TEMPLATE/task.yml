@@ -1,0 +1,38 @@
+name: Задача (T-xxx)
+description: Задача из бэклога docs/backlog.md
+title: "T-xxx: "
+labels: ["type:feature"]
+body:
+  - type: input
+    id: task_id
+    attributes:
+      label: ID задачи
+      placeholder: T-105
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Описание
+      description: Что нужно сделать и зачем.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки
+      description: Проверяемые условия, по одному в строке.
+      placeholder: |
+        - [ ] ...
+    validations:
+      required: true
+  - type: input
+    id: depends
+    attributes:
+      label: Зависит от
+      placeholder: "#12, #13"
+  - type: textarea
+    id: docs
+    attributes:
+      label: Ссылки на docs
+      placeholder: docs/tech-design/05_ci.md, docs/adr/006-deterministic-checks.md

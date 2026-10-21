@@ -18,60 +18,60 @@
 
 ## Роли и кандидаты
 
-<p align="right"><sub>Таблица 6 - кандидаты на октябрь 2026; финальный выбор — по probe в S0 и S6</sub></p>
+<p align="right"><sub>Таблица 6 - кандидаты, проверенные вживую 21.10.2026 (docs/research/2026-10-models.md); финальный выбор — по probe в S0 и S6</sub></p>
 
-| Роль | Что важно | $0 | Дёшево (основной) | Качество (контроль) |
+| Роль | Что важно | $0 (разработка) | Дёшево (основной) | Качество (контроль) |
 |---|---|---|---|---|
-| `Interviewer` | диалог на RU, короткие ответы, 30-40 вызовов | gpt-oss-120b:free, Llama 3.3 70B (Groq) | DeepSeek V4 Flash, Qwen Flash | DeepSeek V4 Pro, Kimi K2.x |
-| `Analyst` | извлечение структуры, JSON по схеме, длинный контекст | Qwen3-Coder:free, Nemotron:free | DeepSeek V4 Flash | DeepSeek V4 Pro, GLM-5.x |
-| `Modeler` | логика процессов, валидный DSL | gpt-oss-120b:free | DeepSeek V4 Flash | DeepSeek V4 Pro, Kimi K2.7 |
-| `Standards` | связный деловой текст, стиль ГОСТ | Gemma 4 31B:free | Qwen Flash, GLM Flash | DeepSeek V4 Pro |
-| `Reviewer` | рассуждение по отчёту CI | gpt-oss-120b:free | DeepSeek V4 Flash (thinking) | DeepSeek V4 Pro |
-| `Stakeholder sim` | другая семья, живой стиль | Gemini Flash (AI Studio), Llama 3.3 70B (Cerebras) | Qwen Flash | — |
-| `Judge (ISO-002, recall)` | другая семья, стабильность | Gemini Flash (AI Studio) | GLM Flash | + ручная проверка 20% |
-| `Локально (CPU)` | офлайн-разработка, smoke | Ollama: qwen3 1.7B / 4B | — | — |
+| `Interviewer` | диалог на RU, короткие ответы, 30-40 вызовов | `groq/openai/gpt-oss-120b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Analyst` | извлечение структуры, JSON по схеме, длинный контекст | `openrouter/nvidia/nemotron-3-super-120b-a12b:free`, `openrouter/minimax/minimax-m3.1-flash:free` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Modeler` | логика процессов, валидный DSL | `openrouter/nvidia/nemotron-3-super-120b-a12b:free` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/moonshotai/kimi-k2.7-code` |
+| `Standards` | связный деловой текст, стиль ГОСТ | `openrouter/google/gemma-4-31b-it:free` | `openrouter/qwen/qwen3.8-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Reviewer` | рассуждение по отчёту CI | `groq/openai/gpt-oss-120b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Stakeholder sim` | другая семья, живой стиль | `gemini/gemini-3.5-flash-lite` | `openrouter/meta-llama/llama-3.3-70b-instruct` | — |
+| `Judge (ISO-002, recall)` | другая семья, стабильность | `gemini/gemini-3.5-flash-lite` | `openrouter/z-ai/glm-5.3-flash` | + ручная проверка 20% |
+| `Локально (CPU)` | офлайн-разработка, smoke | `ollama/qwen3:4b`, `ollama/qwen3:1.7b` | — | — |
+
+<sub>Groq даёт 8000 токенов в минуту на модель, поэтому Analyst и Modeler с длинным транскриптом на Groq не помещаются. Бесплатные модели OpenRouter меняются и бывают недоступны (404/429): лестница фолбэков обязательна.</sub>
 
 ## Цены дешёвых моделей
 
 | Модель | $ / 1M вход | $ / 1M выход | Контекст | Заметки |
 |---|---|---|---|---|
-| `DeepSeek V4 Flash` | 0.14-0.30 | 0.28-1.20 | 1M | дёшево для агентных циклов; ночная скидка у провайдера |
-| `DeepSeek V4 Pro` | 0.435 | 0.87 | — | MIT-веса, сильный в коде и рассуждении |
-| `Qwen 3.7 / 3.8 Flash` | 0.03-0.15 | 0.13-0.47 | 1M | самый дешёвый; проверить tool calling |
-| `GLM-5.3 Flash` | 0.15 | 0.50 | — | справляется с вызовами инструментов |
-| `MiniMax M3` | 0.30 | 1.20 | до 512K | документирован tool use |
-| `Kimi K2.7 Code` | 0.95 | 4.00 | — | силён в MCP-задачах; дороже |
+| `DeepSeek V4 Flash` | 0.091 | 0.182 | 1M | основной кандидат; tools и structured output |
+| `DeepSeek V4 Pro` | 0.419 | 0.838 | 1M | сильный в коде и рассуждении |
+| `Qwen 3.8 Flash` / `3.7 Flash` | 0.15 / 0.03 | 0.47 / 0.13 | 1M | у 3.7 нет structured output, только JSON mode |
+| `GLM-5.3 Flash` | 0.15 | 0.50 | 1M | tools и structured output |
+| `MiniMax M3` | 0.30 | 1.20 | 1M | tools и structured output |
+| `Kimi K2.7 Code` | 0.671 | 3.35 | 262K | силён в коде; дороже |
 | `Claude Opus 5 / GPT-5.6 Sol` | 5.00 | 25-30 | — | только как верхняя граница на 1-2 сценариях, если хватит бюджета |
 
-<sub>Источники цен — сравнения Codersera (август 2026) и BetterClaw (проверено в октябре 2026); у разных провайдеров одной модели цены отличаются, поэтому даны диапазоны.</sub>
+<sub>Источник цен — `GET openrouter.ai/api/v1/models`, 21.10.2026; у разных провайдеров одной модели цены отличаются, для экспериментов провайдер закрепляется (T-601).</sub>
 
 ## Сколько стоит эксперимент
 
-Оценка одного прогона с интервью: ~80-100 вызовов LLM, ~0.5 млн входных и ~0.07 млн выходных токенов (интервью 30-40 ходов, извлечение, моделирование, 2-3 итерации ремонта). Основная матрица: 15 сценариев x 3 персоны x 6 конфигураций = 270 прогонов.
+Оценка одного прогона с интервью: ~80-100 вызовов LLM, ~0.5 млн входных и ~0.07 млн выходных токенов (интервью 30-40 ходов, извлечение, моделирование, 2-3 итерации ремонта). Основная матрица: 12 test-сценариев x 3 персоны x 8 методов (B1, B2, B3, M1, M2, A1-A3) = 288 прогонов + повторы для оценки разброса (09_eval).
 
-| Профиль | $ за прогон | 270 прогонов |
+| Профиль | $ за прогон | ~300 прогонов |
 |---|---|---|
-| free-only (:free + Groq) | $0 (~10 прогонов в день по лимитам) | $0 |
-| Flash везде | $0.09–0.23 | ~$24 |
-| Flash + Pro (Modeler, Reviewer) | ~$0.15 | ~$40 |
-| Pro везде | ~$0.27 | ~$73 |
-| Frontier (Claude / GPT) | $2.5–4 | ~$675+ |
+| free-only (Groq + Gemini + :free) | $0, но 50 запросов/день у OpenRouter и 8000 токенов/мин у Groq — не больше нескольких прогонов в день | $0 |
+| DeepSeek V4 Flash везде | ~$0.06 | ~$18 |
+| Qwen 3.8 Flash везде | ~$0.11 | ~$33 |
+| DeepSeek V4 Pro везде | ~$0.27 | ~$81 |
 
 Бюджет — до $20 в месяц.
 
 *рис.8 - стоимость основной матрицы при разных профилях моделей; пунктир — месячный бюджет*
 
 > [!TIP]
-> Рабочий план: разработка — на :free и Groq; основная матрица — на «Flash везде» (~$20-25, разнести на январь и февраль); малый эксперимент чувствительности — 1 персона x 15 сценариев x 3 модели (~$5-10). Разовое пополнение OpenRouter на $10 поднимает лимит бесплатных моделей с 50 до 1000 запросов в день — это первая трата, которую стоит сделать.
+> Рабочий план (решение автора 21.10): разработка до января — только бесплатно (Groq, Gemini Flash-Lite, OpenRouter :free) и кассеты; основная матрица — на «DeepSeek V4 Flash везде» (~$18-25, январь–февраль); малый эксперимент чувствительности — 1 персона x 12 сценариев x 3 модели (~$5-10). Покупка кредитов OpenRouter поднимает дневной лимит :free (50 запросов без кредитов) — порог по документации OpenRouter.
 
 ## Бесплатные тарифы
 
 | Провайдер | Лимит | Условия | Роль в проекте |
 |---|---|---|---|
-| `OpenRouter :free` | 20 RPM, 50 RPD (1000 RPD после $10) | без карты; модели исчезают без предупреждения | разработка, бейзлайны |
-| `Groq` | 30 RPM, ~1000 RPD | без карты, данные не обучают | Interviewer / симулятор в dev |
-| `Cerebras` | 30 RPM, ~1M токенов в день | без карты | симулятор, пакетные прогоны |
-| `Google AI Studio` | 5-15 RPM, 20-1500 RPD | вне ЕС промпты могут идти в обучение | судья, симулятор (не для личных данных) |
+| `OpenRouter :free` | 50 RPD без кредитов (проверено `GET /api/v1/key`, 21.10.2026); RPM и порог повышения — в документации | без карты; модели исчезают без предупреждения | запасной в разработке, smoke |
+| `Groq` | 1000 RPD, 8000 TPM на модель (заголовки ответа, 21.10.2026) | без карты | Interviewer, Reviewer в разработке |
+| `Google AI Studio` | смотреть в AI Studio → Rate limits; `gemini-3.5-flash-lite` работает | вне ЕС промпты могут идти в обучение | симулятор и судья (не для личных данных); эмбеддинги для recall |
 | `GitHub Models` | 15 RPM, 150-1000 RPD | аккаунт GitHub | запасной |
 | `Mistral Experiment` | ~1 млрд токенов в месяц | согласие на обучение на данных | запасной |
 | `Ollama локально` | без лимита | CPU: только 1-4B, медленно | офлайн и smoke-тесты |
@@ -81,29 +81,37 @@
 **`packages/core/src/reqgraph/llm/roles.yaml`**
 
 ```yaml
+# Читает llm/router.py и собирает pydantic-ai FallbackModel для роли (ADR-013).
 providers:
   openrouter: {base_url: "https://openrouter.ai/api/v1", key_env: OPENROUTER_API_KEY}
-  groq:       {base_url: "https://api.groq.com/openai/v1", key_env: GROQ_API_KEY}
-  ollama:     {base_url: "http://localhost:11434/v1", key_env: null}
+  groq:       {base_url: "https://api.groq.com/openai/v1", key_env: GROQ_API_KEY, free: true}
+  gemini:     {base_url: "https://generativelanguage.googleapis.com/v1beta/openai/", key_env: GEMINI_API_KEY, free: true}
+  ollama:     {base_url: "http://localhost:11434/v1", key_env: null, free: true}
 profiles:
-  cheap:                                   # профиль по умолчанию
-    analyst:  [openrouter/deepseek/deepseek-v4-flash, openrouter/qwen/qwen3.8-flash,
-               openrouter/openai/gpt-oss-120b:free]
-    modeler:  [openrouter/deepseek/deepseek-v4-flash, openrouter/z-ai/glm-5.3-flash]
-    stakeholder: [groq/llama-3.3-70b-versatile]   # другая семья
-  free:  {"*": [openrouter/openai/gpt-oss-120b:free, groq/llama-3.3-70b-versatile]}
+  free:                                    # разработка до января (решение автора)
+    interviewer: [groq/openai/gpt-oss-120b, gemini/gemini-3.5-flash-lite]
+    analyst:     [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
+    modeler:     [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
+    standards:   [openrouter/google/gemma-4-31b-it:free, groq/openai/gpt-oss-120b]
+    reviewer:    [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b]
+    stakeholder: [gemini/gemini-3.5-flash-lite]          # другая семья
+    judge:       [gemini/gemini-3.5-flash-lite]
+  cheap:                                   # эксперименты (январь–февраль)
+    "*":         [openrouter/deepseek/deepseek-v4-flash, openrouter/qwen/qwen3.8-flash]
+    stakeholder: [openrouter/meta-llama/llama-3.3-70b-instruct]
+    judge:       [openrouter/z-ai/glm-5.3-flash]
   local: {"*": [ollama/qwen3:4b]}
-defaults: {temperature: 0.2, timeout_s: 60, max_retries: 2, seed: 42}
-budget:   {run_usd: 0.50, run_tokens: 800000}
+defaults: {temperature: 0.2, timeout_s: 60, retries: 2, seed: 42}
+budget:   {run_usd: 0.50, run_tokens: 800000}   # -> pydantic-ai UsageLimits
 ```
 
-<sub>Точные идентификаторы моделей у провайдеров меняются; файл обновляется после probe. Цены для учёта стоимости берутся из ответа провайдера (usage) или из таблицы prices.yaml.</sub>
+<sub>Модели `:free` у OpenRouter бесплатны по id; для провайдеров с `free: true` стоимость считается как 0, для остальных — `response.cost()` (genai-prices). Файл обновляется после probe.</sub>
 
 ```mermaid
 flowchart LR
-  P[primary<br/>deepseek-v4-flash<br/>OpenRouter, платно] --> F[fallback<br/>qwen3.8-flash] --> FR[free<br/>gpt-oss-120b:free] --> L[local<br/>ollama qwen3:4b, только dev]
+  P[primary<br/>deepseek-v4-flash] --> F[fallback<br/>qwen3.8-flash] --> L[local<br/>ollama qwen3:4b, только dev]
 ```
-Переход вправо: 429 / 5xx / таймаут 60 с / невалидный JSON после 2 ретраев / превышен бюджет прогона. Каждый вызов пишет в `run_events`: роль, модель, токены, стоимость, латентность, исход.
+Переход вправо делает `FallbackModel`: 429 / 5xx / таймаут; ошибка схемы сначала повторяется (`retries=2`) с текстом ошибки. `UsageLimits` останавливает прогон при превышении бюджета. Каждый вызов пишет в `run_events`: роль, модель, провайдер, токены, стоимость, латентность, исход.
 
 *рис.9 - лестница фолбэков для одной роли*
 
@@ -115,12 +123,12 @@ flowchart LR
 | Процесс в DSL по описанию | 5 | SCH-002, SND-001/002 с первой попытки и после 2 ремонтов |
 | Переписать требование по ISO 29148 | 5 | нарушения до/после, сохранение смысла (судья + выборочно вручную) |
 | Вопрос интервьюера по покрытию | 5 | попадание в нужную область, длина, отсутствие подсказок ответа |
-| Итог | 20 | качество, $ на задачу, p50/p95 латентность, доля невалидного JSON |
+| Итог | 20 | качество, $ на задачу, p50/p95 латентность, доля невалидного JSON; датасет и оценщики — pydantic-evals |
 
 `bash`
 
 ```console
-$ reqgraph probe --models deepseek-v4-flash,qwen3.8-flash,glm-5.3-flash,gpt-oss-120b:free --repeat 3
+$ reqgraph probe --models groq/openai/gpt-oss-120b,gemini/gemini-3.5-flash-lite,openrouter/minimax/minimax-m3.1-flash:free --repeat 3
   -> evals/reports/probe-2026-10-30.csv + выбор по ролям в roles.yaml
 ```
 

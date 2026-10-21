@@ -1,0 +1,35 @@
+name: Ошибка
+description: Что-то работает не так, как описано в docs
+title: "bug: "
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Что случилось
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как воспроизвести
+      description: Команды, проект, run_id. Не вставляйте ключи и токены.
+      render: console
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Что ожидалось
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Окружение
+      placeholder: "Windows 11 / облачная VM; reqgraph 0.1.0; профиль free"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи и отчёт CI
+      render: text

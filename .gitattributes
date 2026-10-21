@@ -1,0 +1,25 @@
+# Переводы строк: в репозитории всегда LF (Windows + Linux)
+* text=auto eol=lf
+
+# Скрипты Windows
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Бинарные файлы
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.zip  binary
+
+# Сгенерированные файлы: свёрнуты в diff на GitHub
+uv.lock         linguist-generated=true
+pnpm-lock.yaml  linguist-generated=true
+schemas/*.schema.json linguist-generated=true
+examples/*/trace/edges.yaml linguist-generated=true

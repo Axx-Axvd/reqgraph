@@ -1,6 +1,6 @@
 # ADR-003: Тонкий роутер моделей над openai SDK и instructor
 
-- Статус: принято
+- Статус: принято; реализация уточнена [ADR-013](013-llm-layer-pydantic-ai.md) — pydantic-ai вместо openai SDK + instructor
 - Дата: 2026-10-20
 - Источник: docs/tech-design/README.md, таблица «Ключевые решения»
 

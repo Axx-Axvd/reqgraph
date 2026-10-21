@@ -2,7 +2,7 @@
 
 # 04 Data
 
-*граф артефактов, форматы файлов, DSL процессов, схема Supabase*
+*граф артефактов, форматы файлов, DSL процессов, схема Postgres демо*
 
 ## Узлы графа
 
@@ -17,7 +17,7 @@
 | `PRC-01` | process | dsl (JSON), bpmn_path; задачи PRC-01.T03, шлюзы PRC-01.G01 | Modeler |
 | `ENT-01` | entity | attributes[], атрибут как ENT-01.status | Modeler |
 | `UC-01` | use case | actor, goal, puml | Modeler |
-| `C4-SYS / C4-CNT-01` | c4 element | kind, technology, dsl | Modeler |
+| `C4-SYS / C4-CNT-01 / C4-EXT-01` | c4 element | kind, technology, dsl | Modeler |
 | `TURN-0001` | interview turn | role, text, area_tags[] | система |
 | `SEC-SRS-3.2` | document section | template, text, refs[] | Standards |
 
@@ -66,6 +66,8 @@
             ["G01","T03","да"], ["G01","T02","нет"], ["T03","T05"], ["T05","E"]] }
 ```
 
+> Пример иллюстративный и упрощён. Источник правды — эталон [examples/garage61](../../examples/garage61/models/processes/).
+
 <sub>Типы узлов DSL v1: start, end, task, user_task, service_task, timer, message, xor, and, event_based. Компилятор строит BPMN 2.0 XML с дорожками и DI-раскладкой (слои по топологической сортировке, дорожки по lane), затем XSD и PM4Py-проверку soundness.</sub>
 
 ```mermaid
@@ -112,36 +114,20 @@ garage61/
 └── exports/                   # SRS_ISO29148.docx TZ_GOST34_602.docx req.reqif
 ```
 
-<sub>FileStore читает и пишет эту папку (CLI, тесты, git). SupabaseStore хранит тот же граф целиком в `graph_revisions.graph` (jsonb) — проект 100-300 требований занимает сотни килобайт, поэтому 500 МБ бесплатной базы хватает на тысячи ревизий; старые ревизии и чекпоинты чистит ежедневная задача.</sub>
+<sub>FileStore читает и пишет эту папку (CLI, тесты, git). PostgresStore (демо) хранит тот же граф целиком в `graph_revisions.graph` (jsonb) — проект 100-300 требований занимает сотни килобайт, поэтому 500 МБ бесплатной базы хватает на тысячи ревизий; старые ревизии и чекпоинты чистит ежедневная задача.</sub>
 
-## Схема Supabase
+## Схема Postgres (Supabase, только для демо)
+
+По ADR-015 Supabase используется только как Postgres: без Auth, Storage, Realtime и пользовательских таблиц. Локально и офлайн тот же контракт хранилища реализуют FileStore и SQLite (`langgraph-checkpoint-sqlite`).
 
 ```mermaid
 erDiagram
-  profiles ||--o{ projects : owns
-  profiles ||--o{ usage_daily : has
   projects ||--o{ graph_revisions : has
   projects ||--o{ runs : has
-  projects ||--o{ exports : has
   runs ||--o{ run_events : emits
-  runs ||--o{ interview_turns : has
-  profiles {
-    uuid id PK "= auth.uid"
-    text display_name
-    text role
-    timestamptz created_at
-  }
-  usage_daily {
-    uuid user_id PK,FK
-    date day PK
-    int runs
-    int tokens_in
-    int tokens_out
-    numeric cost_usd
-  }
   projects {
     uuid id PK
-    uuid owner_id FK
+    text session_id "сессия демо, без входа"
     text name
     text_arr standards
     text_arr langs
@@ -157,55 +143,40 @@ erDiagram
     text author "agent|user"
     timestamptz created_at
   }
-  exports {
-    uuid id PK
-    uuid project_id FK
-    int rev
-    text format
-    text storage_path
-  }
   runs {
     uuid id PK
     uuid project_id FK
-    text kind
+    text kind "interview|brief|check"
     text status
     int iteration
     text model_profile
     numeric cost_usd
+    int tokens_in
+    int tokens_out
     text error
+    timestamptz created_at
   }
   run_events {
     bigint id PK
     uuid run_id FK
     text type
-    jsonb payload
+    jsonb payload "роль, модель, провайдер, токены, $, латентность"
     timestamptz ts
   }
-  interview_turns {
-    bigint id PK
-    uuid run_id FK
-    text role "agent|client"
-    text content
-    jsonb coverage
-  }
 ```
-Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. RLS: всё через `projects.owner_id = auth.uid()`.
+Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes, checkpoint_migrations) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. Таблицы чекпоинтера создаются без схемы, поэтому пул соединений чекпоинтера выставляет `search_path to lg` (проверка в T-503). Ответы интервью хранятся в чекпоинте и в `run_events`, отдельная таблица `interview_turns` не нужна. Дневной лимит демо считается по `runs.created_at` и `runs.cost_usd`.
 
 *рис.7 - таблицы public и служебная схема lg для чекпоинтов LangGraph*
 
-**`supabase/migrations/0002_rls.sql (фрагмент)`**
+**`supabase/migrations/0001_init.sql (фрагмент)`**
 
 ```sql
-alter table projects enable row level security;
-create policy owner_all on projects for all to authenticated
-  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
-
-alter table runs enable row level security;
-create policy via_project on runs for select to authenticated
-  using (exists (select 1 from projects p
-                 where p.id = runs.project_id and p.owner_id = auth.uid()));
--- запись в runs, run_events, graph_revisions делает только backend (service_role)
-alter publication supabase_realtime add table run_events;
+alter table projects        enable row level security;
+alter table graph_revisions enable row level security;
+alter table runs            enable row level security;
+alter table run_events      enable row level security;
+-- политик для anon и authenticated нет: всё читает и пишет только сервер демо
+-- (роль postgres через session pooler :5432); anon-ключ не видит ни одной строки
 ```
 
-<sub>Правила версий: каждый применённый патч -> новая ревизия; ручная правка в UI -> ревизия author=user; diff ревизий показывается в UI; удаление проекта каскадно удаляет ревизии, прогоны и файлы в Storage.</sub>
+<sub>Правила версий: каждый применённый патч -> новая ревизия; ручная правка в демо -> ревизия author=user; diff ревизий показывается в демо; удаление проекта каскадно удаляет ревизии и прогоны. Ежедневная очистка: чекпоинты старше 14 дней, ревизии сверх 50 на проект.</sub>
