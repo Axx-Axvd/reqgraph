@@ -1,0 +1,28 @@
+project:
+  id: garage61
+  name: "Гараж 61: онлайн-запись в автосервис"
+  description: "Эталонный проект reqgraph. Компания и все цифры условные."
+  reference: true                 # эталон: агенты не запускаются, только проверки и экспорт
+  standards: [iso29148, gost34_602]
+  langs: [ru]
+  dsl_version: 1
+
+models:
+  profile: cheap                  # см. packages/core/src/reqgraph/llm/roles.yaml
+
+interview:
+  max_turns: 40
+  coverage_need:                  # пороги покрытия по областям (docs/tech-design/03_agents.md)
+    goals: 2
+    stakeholders: 2
+    scenarios: 4
+    exceptions: 3
+    data: 3
+    rules: 3
+    integrations: 1
+    nfr: 4
+    constraints: 2
+
+checks:
+  max_iterations: 5
+  disabled: []                    # например [ISO-005]

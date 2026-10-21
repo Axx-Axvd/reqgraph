@@ -1,0 +1,55 @@
+# Нефункциональные требования (NFR): характеристика ISO/IEC 25010 + метрика + единица + порог + метод проверки.
+- id: NFR-001
+  title: "Время показа свободных слотов"
+  statement: "Показ свободных слотов (FR-002) должен занимать не более 2 секунд для 95% запросов при 20 одновременных пользователях."
+  iso25010: performance_efficiency
+  metric: {name: "p95 времени ответа", unit: "с", threshold: "<= 2", method: "нагрузочный тест, 20 виртуальных пользователей, 10 минут"}
+  priority: must
+  status: reviewed
+  area: nfr
+  refines: [UR-001]
+  derived_from: [TURN-0024]
+
+- id: NFR-002
+  title: "Доставка SMS-напоминаний"
+  statement: "Доля доставленных SMS-напоминаний должна быть не ниже 98% за календарный месяц."
+  iso25010: reliability
+  metric: {name: "доля доставленных SMS", unit: "%", threshold: ">= 98", method: "отчёт о доставке SMS-шлюза за месяц"}
+  priority: must
+  status: reviewed
+  area: nfr
+  refines: [UR-002]
+  derived_from: [TURN-0026]
+
+- id: NFR-003
+  title: "Срок действия SMS-кода"
+  statement: "Одноразовый код подтверждения телефона должен действовать не более 5 минут."
+  iso25010: security
+  metric: {name: "срок действия кода", unit: "мин", threshold: "<= 5", method: "тест: ввод кода через 5 мин 1 с отклоняется"}
+  priority: must
+  status: reviewed
+  area: nfr
+  refines: [UR-001]
+  derived_from: [TURN-0030]
+
+- id: NFR-004
+  title: "Время онлайн-записи"
+  statement: "Новый клиент должен завершать онлайн-запись не более чем за 3 минуты в 90% попыток."
+  iso25010: interaction_capability
+  metric: {name: "время от открытия сайта до подтверждения записи, 90-й процентиль", unit: "мин", threshold: "<= 3", method: "юзабилити-тест, 10 участников без опыта работы с сайтом"}
+  priority: should
+  status: reviewed
+  area: nfr
+  refines: [UR-001]
+  derived_from: [TURN-0024]
+
+- id: NFR-005
+  title: "Доступность онлайн-записи"
+  statement: "Онлайн-запись должна быть доступна не менее 99,5% времени с 7:00 до 22:00 по местному времени за календарный месяц."
+  iso25010: reliability
+  metric: {name: "доступность в рабочие часы", unit: "%", threshold: ">= 99.5", method: "внешний мониторинг, проверка раз в минуту"}
+  priority: must
+  status: reviewed
+  area: nfr
+  refines: [UR-001]
+  derived_from: [TURN-0024]

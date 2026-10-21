@@ -1,0 +1,31 @@
+@startuml use_cases
+' Соглашение: псевдоним = id узла графа без дефиса (UC01 -> UC-01, ACT01 -> ACT-01).
+left to right direction
+skinparam shadowing false
+
+actor "Частный клиент" as ACT01
+actor "Корпоративный клиент" as ACT02
+actor "Администратор" as ACT03
+
+rectangle "Гараж 61: онлайн-запись" {
+  usecase "Записаться на обслуживание" as UC01
+  usecase "Отменить запись" as UC02
+  usecase "Записать автомобили автопарка" as UC03
+  usecase "Просмотреть расписание мастеров" as UC04
+  usecase "Отметить неявку" as UC05
+  usecase "Получить ежемесячный счёт" as UC06
+  usecase "Перенести записи мастера" as UC07
+  usecase "Выгрузить счета для бухгалтерии" as UC08
+}
+
+ACT01 --> UC01
+ACT01 --> UC02
+ACT02 --> UC03
+ACT02 --> UC06
+ACT03 --> UC04
+ACT03 --> UC05
+ACT03 --> UC07
+ACT03 --> UC08
+UC05 .> UC04 : <<extend>>
+UC07 .> UC04 : <<extend>>
+@enduml

@@ -1,0 +1,30 @@
+@startuml seq_booking
+' Иллюстрация к UC-01 / PRC-01. Диаграмма последовательности не участвует в трассировке.
+skinparam shadowing false
+actor "Клиент" as C
+participant "Веб-приложение" as W
+participant "API" as A
+database "База данных" as D
+participant "SMS-шлюз" as S
+
+C -> W : номер телефона
+W -> A : POST /auth/sms-code
+A -> S : отправить код
+S --> C : SMS с кодом
+C -> W : код
+W -> A : POST /auth/verify
+A --> W : токен клиента
+C -> W : выбрать услугу
+W -> A : GET /slots?service_id&days=14
+A -> D : смены мастеров и записи
+A --> W : свободные слоты
+C -> W : подтвердить слот
+W -> A : POST /bookings
+A -> D : insert booking (status = confirmed)
+alt слот уже занят
+  A --> W : 409 + три ближайших слота
+else слот свободен
+  A --> W : 201 запись создана
+  A -> S : SMS-подтверждение
+end
+@enduml

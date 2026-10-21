@@ -1,0 +1,27 @@
+# Бизнес-требования (BR): зачем заказчику система. Каждое — с измеримой целью.
+- id: BR-001
+  title: "Снизить долю неявок"
+  statement: "Доля неявок клиентов должна снизиться с 15% до 7% записей в течение 6 месяцев после запуска системы."
+  goal_metric: {name: "доля неявок от числа записей", unit: "%", baseline: 15, target: "<= 7", horizon: "6 месяцев после запуска"}
+  priority: must
+  status: reviewed
+  area: goals
+  derived_from: [TURN-0004]
+
+- id: BR-002
+  title: "Перевести запись в онлайн"
+  statement: "Доля записей через онлайн-канал должна вырасти с 0% до 60% в течение 6 месяцев после запуска системы."
+  goal_metric: {name: "доля онлайн-записей", unit: "%", baseline: 0, target: ">= 60", horizon: "6 месяцев после запуска"}
+  priority: must
+  status: reviewed
+  area: goals
+  derived_from: [TURN-0002]
+
+- id: BR-003
+  title: "Учёт корпоративных заказов без тетради"
+  statement: "Все заказы корпоративных клиентов по договорам должны учитываться в системе вместо бумажного журнала с первого месяца после запуска."
+  goal_metric: {name: "доля корпоративных заказов, учтённых в системе", unit: "%", baseline: 0, target: "100", horizon: "1 месяц после запуска"}
+  priority: should
+  status: reviewed
+  area: goals
+  derived_from: [TURN-0006]

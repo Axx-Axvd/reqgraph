@@ -1,0 +1,18 @@
+# Акторы (ACT): роли людей, которые работают с системой.
+- id: ACT-01
+  name: "Частный клиент"
+  description: "Владелец автомобиля, записывается на обслуживание сам."
+  area: stakeholders
+  derived_from: [TURN-0006]
+
+- id: ACT-02
+  name: "Корпоративный клиент"
+  description: "Менеджер автопарка компании, работает по договору с отсрочкой платежа."
+  area: stakeholders
+  derived_from: [TURN-0006, TURN-0020]
+
+- id: ACT-03
+  name: "Администратор"
+  description: "Сотрудник сервиса, управляет расписанием мастеров и записями."
+  area: stakeholders
+  derived_from: [TURN-0006]

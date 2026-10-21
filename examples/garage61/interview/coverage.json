@@ -1,0 +1,99 @@
+{
+  "computed_from": "requirements/*.yaml (area) + models/data/erd.dbml (ENT)",
+  "areas": {
+    "goals": {
+      "need": 2,
+      "got": 3,
+      "nodes": [
+        "BR-001",
+        "BR-002",
+        "BR-003"
+      ]
+    },
+    "stakeholders": {
+      "need": 2,
+      "got": 3,
+      "nodes": [
+        "ACT-01",
+        "ACT-02",
+        "ACT-03"
+      ]
+    },
+    "scenarios": {
+      "need": 4,
+      "got": 11,
+      "nodes": [
+        "UR-001",
+        "UR-002",
+        "UR-003",
+        "UR-004",
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007"
+      ]
+    },
+    "exceptions": {
+      "need": 3,
+      "got": 3,
+      "nodes": [
+        "FR-009",
+        "FR-013",
+        "FR-014"
+      ]
+    },
+    "data": {
+      "need": 3,
+      "got": 8,
+      "nodes": [
+        "ENT-01",
+        "ENT-02",
+        "ENT-03",
+        "ENT-04",
+        "ENT-05",
+        "ENT-06",
+        "ENT-07",
+        "ENT-08"
+      ]
+    },
+    "rules": {
+      "need": 3,
+      "got": 3,
+      "nodes": [
+        "FR-008",
+        "FR-010",
+        "FR-011"
+      ]
+    },
+    "integrations": {
+      "need": 1,
+      "got": 1,
+      "nodes": [
+        "FR-012"
+      ]
+    },
+    "nfr": {
+      "need": 4,
+      "got": 5,
+      "nodes": [
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005"
+      ]
+    },
+    "constraints": {
+      "need": 2,
+      "got": 3,
+      "nodes": [
+        "CON-001",
+        "CON-002",
+        "CON-003"
+      ]
+    }
+  }
+}

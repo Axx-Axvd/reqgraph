@@ -1,0 +1,24 @@
+# Ограничения (CON): законы, бюджет, сроки, технологии.
+- id: CON-001
+  type: legal
+  title: "Локализация персональных данных"
+  statement: "Персональные данные клиентов (ФИО, телефон, госномер автомобиля) должны храниться в базе данных на территории РФ (152-ФЗ, ст. 18, ч. 5)."
+  status: reviewed
+  area: constraints
+  derived_from: [TURN-0028]
+
+- id: CON-002
+  type: budget
+  title: "Бюджет первой версии"
+  statement: "Стоимость разработки первой версии не должна превышать 600 000 рублей."
+  status: reviewed
+  area: constraints
+  derived_from: [TURN-0028]
+
+- id: CON-003
+  type: time
+  title: "Срок запуска"
+  statement: "Онлайн-запись должна быть запущена для клиентов не позднее 1 марта 2027 года."
+  status: reviewed
+  area: constraints
+  derived_from: [TURN-0028]

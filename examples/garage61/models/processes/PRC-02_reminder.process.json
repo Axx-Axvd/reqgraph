@@ -1,0 +1,26 @@
+{
+  "dsl_version": 1,
+  "id": "PRC-02",
+  "name": "Напоминание и отмена записи",
+  "refines": ["UR-002"],
+  "lanes": ["Система", "Клиент"],
+  "nodes": [
+    {"id": "S",   "type": "start",        "name": "За 24 ч до визита", "event": "timer", "timer": "booking.starts_at - PT24H", "lane": "Система"},
+    {"id": "T01", "type": "service_task", "name": "Отправить SMS-напоминание",        "lane": "Система", "realizes": ["FR-007"]},
+    {"id": "G01", "type": "event_based",  "name": "Ответ клиента",                    "lane": "Система"},
+    {"id": "M01", "type": "message",      "name": "Клиент отменил запись",            "lane": "Клиент"},
+    {"id": "W01", "type": "timer",        "name": "За 2 ч до визита", "timer": "booking.starts_at - PT2H", "lane": "Система"},
+    {"id": "T02", "type": "service_task", "name": "Перевести запись в «отменена»",    "lane": "Система", "realizes": ["FR-008"]},
+    {"id": "E1",  "type": "end",          "name": "Запись отменена",                  "lane": "Система"},
+    {"id": "E2",  "type": "end",          "name": "Запись в силе",                    "lane": "Система"}
+  ],
+  "flows": [
+    ["S",   "T01"],
+    ["T01", "G01"],
+    ["G01", "M01"],
+    ["G01", "W01"],
+    ["M01", "T02"],
+    ["T02", "E1"],
+    ["W01", "E2"]
+  ]
+}

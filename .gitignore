@@ -1,0 +1,42 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# node
+node_modules/
+.next/
+out/
+.turbo/
+.vercel/
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+
+# generated
+examples/*/reports/*
+!examples/*/reports/.gitkeep
+examples/*/exports/*
+!examples/*/exports/.gitkeep
+evals/runs/
+
+# os / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
