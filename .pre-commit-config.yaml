@@ -1,0 +1,37 @@
+# pre-commit: uv run pre-commit install  (one time), then hooks run on every commit.
+# ruff and mypy run from the uv environment so versions match pyproject.toml and CI.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: ^examples/garage61/
+      - id: trailing-whitespace
+        exclude: ^(examples/garage61/|.*\.md$)
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        exclude: ^(apps/web/tsconfig\.json|\.vscode/.*\.json)$  # JSON with comments
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, pyi]
+      - id: mypy
+        name: mypy (packages/core)
+        entry: uv run mypy packages/core
+        language: system
+        pass_filenames: false
+        files: ^packages/core/
