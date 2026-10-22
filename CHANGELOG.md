@@ -8,6 +8,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Monorepo skeleton (T-001): uv workspace with `packages/core` (`reqgraph` package, layer packages,
+  `reqgraph --version` from package metadata) and `apps/api` (stub until T-501); pnpm workspace with
+  `apps/web` (Next.js 16.4.2, TypeScript strict, ESLint); ruff, mypy strict, pytest with
+  `--disable-socket`, pytest-cov (report only) and pre-commit.
 - Technical design, ADR 001–012, backlog and the garage61 reference project (draft).
 - Preflight (stage 0): session prompts in `docs/prompts/`, development journal, GitHub templates,
   Dependabot, `.gitattributes`, `.editorconfig`, `scripts/doctor.py`, `scripts/github_bootstrap.py`,
@@ -17,6 +21,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- `scripts/doctor.py` and `scripts/github_bootstrap.py` formatted with ruff (line length 100), no behaviour change.
 - Core and experiments moved to ready-made tools: T-005 (pydantic-ai), T-006/T-304/T-405 (pydantic-evals),
   T-106 (pm4py with a DSL adapter), T-401/T-402 (pandoc).
 - ADR-003 refined by ADR-013. ADR-015 (single Streamlit demo) was proposed and then rejected by the author:

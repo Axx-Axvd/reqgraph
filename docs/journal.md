@@ -9,7 +9,7 @@
 **Решения**
 
 - **Python 3.12.** `uv python install 3.12` в облачной VM скачал CPython 3.12.13 за 3 с. Фиксируем `.python-version = 3.12` и `requires-python = ">=3.12,<3.13"` в T-001. На ноутбуке автора тоже 3.12. Матрица 3.12 + 3.13 в CI не нужна. Системный Python в VM (3.13) не используем.
-- **Supabase CLI в VM.** `pnpm dlx supabase --version` → 2.121.0, бинарник скачивается. Сначала образы с `public.ecr.aws` и Docker Hub не качались (403 и 429), после того как автор открыл хосты — качаются. **Допущение:** миграции (теперь T-503, хранилище демо) применяет GitHub Actions (`supabase/setup-cli`, `supabase db push`); локальный стек Supabase не нужен (ADR-015).
+- **Supabase CLI в VM.** `pnpm dlx supabase --version` → 2.121.0, бинарник скачивается. Сначала образы с `public.ecr.aws` и Docker Hub не качались (403 и 429), после того как автор открыл хосты — качаются. Миграции — T-004: `supabase db reset` в GitHub Actions и на ноутбуке автора, `supabase db push` в staging и prod (migrate.yml, T-506). *(Исправлено 22.10: в первой редакции здесь было допущение из отменённого ADR-015.)*
 - **Docker в VM** не запускается сам: демон стартует вручную (`dockerd &`). `hello-world` работает через `mirror.gcr.io/library/hello-world`.
 - **Защита ветки main** откладывается до T-003: нужен хотя бы один зелёный прогон `ci.yml`. **Задача на потом:** в T-003 включить правило для main — PR обязателен, статус-чек `ci` обязателен, запрет force-push.
 - **DoD** отмечается только в `docs/backlog.md`. В `08_plan.md` и `10_claude.md` теперь стоит ссылка туда.
@@ -87,3 +87,23 @@
 **Риск, который снова актуален:** Render Free 512 МБ против 132–250 МБ импортов. Меры: ленивые импорты (pm4py — только в SND-002), замер в T-506, запасной вариант — Railway или Fly (~$5).
 
 **GitHub после отката:** созданы `area:api`, `area:web` и задачи T-004 (#43), T-506 (#44), T-507 (#45); обновлены T-001, T-003, T-501…T-505, T-605, T-701 и описания вех M0, M5; метка `area:demo` удалена. Итого 44 задачи, 8 вех, 24 метки; сверка backlog ↔ GitHub ↔ 08_plan — без расхождений.
+
+## 2026-10-22 · T-001: каркас монорепо
+
+**Решения**
+
+- **uv workspace:** корень — виртуальный (`package = false`), участники `packages/core` (пакет `reqgraph`) и `apps/api` (заглушка `reqgraph-api` без зависимостей до T-501). Сборка — `uv_build`. Единственная runtime-зависимость ядра — typer 0.27.3 (CLI). `reqgraph --version` читает версию через `importlib.metadata`.
+- **Проверки:** ruff (line-length 100, как в `.editorconfig`), mypy strict, pytest с `--strict-markers --disable-socket`, pytest-cov только отчётом. Правила RUF001–RUF003 выключены: сообщения проверок и промпты по соглашению на русском, кириллица — не «двусмысленные символы».
+- **ruff 0.17 форматирует Python-блоки внутри Markdown.** Первый `ruff format .` переписал примеры кода в `docs/tech-design/03_agents.md` и `05_ci.md`. Откатил, `docs/**` исключён из форматирования: примеры — часть проекта, а не код.
+- **Существующие скрипты** (`doctor.py`, `github_bootstrap.py`) отформатированы ruff, поведение не менялось.
+- **Next.js 16.4.2** через `create-next-app` (App Router, `src/`, TypeScript strict, ESLint flat config, без Tailwind и UI-библиотек). Шаблонная страница заменена заглушкой.
+- **TypeScript 7.0.2 и ESLint 10 не подошли:** typescript-eslint 8.72 требует TypeScript < 6.1, плагины eslint-config-next 16.4.2 (react, jsx-a11y, import) — ESLint ≤ 9. Закреплены TypeScript 6.0.3 и ESLint 9.39.5; пересмотреть, когда плагины обновятся (Dependabot).
+- **`next/font/google` убран:** он скачивает шрифты при сборке, а офлайн-стенд должен собираться без сети. Системные шрифты.
+- **pre-commit:** базовые хуки pre-commit-hooks v6.0.0; ruff и mypy — локальные хуки через `uv run`, чтобы версии совпадали с `uv.lock` и CI.
+- **Решение по пункту 16 отчёта preflight (принято автором 21.10):** связь «требование → элемент модели» хранит `realized_by` в требованиях; `realizes` в DSL — зеркало; расхождение — error TRC-004. Реализация — T-101 (граф и патчи) и T-107 (проверки трассировки).
+
+**Проблемы**
+
+- В VM демон Docker не запущен, поэтому `doctor.py --offline` показывает FAIL для docker daemon; к T-001 не относится (нужен с T-004).
+
+**Что дальше:** T-003 — ci.yml (ubuntu + windows) и защита main.

@@ -24,6 +24,7 @@
 
 - **Критерий приёмки:** uv run pytest и pnpm -C apps/web build проходят на чистой машине (Windows и Linux); reqgraph --version печатает версию из метаданных пакета
 - **Зависит от:** —
+- **Статус:** сделано 22.10 (ветка feat/T-001): Linux проверен; Windows — проверка автора
 
 ### T-002 — CLAUDE.md, README, LICENSE (MIT), docs/adr/001-016
 
