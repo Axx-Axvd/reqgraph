@@ -35,6 +35,7 @@ def test_layer_packages_import(layer: str) -> None:
     assert module.__doc__
 
 
+@pytest.mark.filterwarnings("ignore:A test tried to use socket.socket")
 def test_network_is_disabled_in_unit_tests() -> None:
     with pytest.raises(Exception, match="socket"):
         socket.socket(socket.AF_INET, socket.SOCK_STREAM)
