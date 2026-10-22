@@ -1,0 +1,15 @@
+[project]
+name = "reqgraph"
+version = "0.1.0"
+description = "Requirements as a checked graph: interview -> requirements -> models as code -> CI -> SRS and GOST 34 TZ"
+license = "MIT"
+authors = [{ name = "Rybalkin A.A." }]
+requires-python = ">=3.12,<3.13"
+dependencies = ["typer==0.27.3"]
+
+[project.scripts]
+reqgraph = "reqgraph.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14"]
+build-backend = "uv_build"
