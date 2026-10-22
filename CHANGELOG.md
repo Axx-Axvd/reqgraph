@@ -8,6 +8,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- GitHub Actions `ci.yml` (T-003): ruff, mypy, pytest with coverage report, pre-commit, web lint and build on ubuntu and windows;
+  aggregate check `ci` for branch protection.
 - Monorepo skeleton (T-001): uv workspace with `packages/core` (`reqgraph` package, layer packages,
   `reqgraph --version` from package metadata) and `apps/api` (stub until T-501); pnpm workspace with
   `apps/web` (Next.js 16.4.2, TypeScript strict, ESLint); ruff, mypy strict, pytest with
