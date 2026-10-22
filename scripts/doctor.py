@@ -130,7 +130,9 @@ def run(cmd: list[str], timeout: int = TIMEOUT_S) -> tuple[int, str]:
     return proc.returncode, out[0] if out else ""
 
 
-def http(method: str, url: str, key: str | None = None, body: dict[str, object] | None = None) -> tuple[int, str]:
+def http(
+    method: str, url: str, key: str | None = None, body: dict[str, object] | None = None
+) -> tuple[int, str]:
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
     req.add_header("User-Agent", "reqgraph-doctor")
@@ -176,24 +178,48 @@ def check_tools() -> list[Row]:
 
 def check_docker() -> Row:
     if shutil.which("docker") is None:
-        return Row("services", "docker daemon", "SKIP", "docker не установлен", "нужен для T-004 и офлайн-стенда")
+        return Row(
+            "services",
+            "docker daemon",
+            "SKIP",
+            "docker не установлен",
+            "нужен для T-004 и офлайн-стенда",
+        )
     code, out = run(["docker", "info", "--format", "{{.ServerVersion}}"])
     if code == 0:
         return Row("services", "docker daemon", "OK", f"server {out}")
-    return Row("services", "docker daemon", "FAIL", out[:60], "запустите Docker Desktop (Linux: sudo dockerd &)")
+    return Row(
+        "services",
+        "docker daemon",
+        "FAIL",
+        out[:60],
+        "запустите Docker Desktop (Linux: sudo dockerd &)",
+    )
 
 
 def check_ollama() -> Row:
-    base = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1").rstrip("/").removesuffix("/v1")
+    base = (
+        os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+        .rstrip("/")
+        .removesuffix("/v1")
+    )
     code, body = http("GET", f"{base}/api/version")
     if code == 200:
         return Row("services", "ollama", "OK", body.strip()[:60])
-    return Row("services", "ollama", "SKIP", f"{base} недоступен", "нужен только для профиля local: ollama serve")
+    return Row(
+        "services",
+        "ollama",
+        "SKIP",
+        f"{base} недоступен",
+        "нужен только для профиля local: ollama serve",
+    )
 
 
 def check_kroki() -> Row:
     url = os.environ.get("KROKI_URL", "https://kroki.io").rstrip("/")
-    req = urllib.request.Request(f"{url}/plantuml/svg", data=b"@startuml\nA -> B\n@enduml", method="POST")
+    req = urllib.request.Request(
+        f"{url}/plantuml/svg", data=b"@startuml\nA -> B\n@enduml", method="POST"
+    )
     req.add_header("Content-Type", "text/plain")
     req.add_header("User-Agent", "reqgraph-doctor")
     try:
@@ -201,9 +227,21 @@ def check_kroki() -> Row:
             ok = resp.status == 200 and b"<svg" in resp.read(2048)
             return Row("services", "kroki", "OK" if ok else "FAIL", f"{url} -> {resp.status}")
     except urllib.error.HTTPError as e:
-        return Row("services", "kroki", "FAIL", f"{url} -> {e.code}", "офлайн SCH-004/005 пропускаются с info")
+        return Row(
+            "services",
+            "kroki",
+            "FAIL",
+            f"{url} -> {e.code}",
+            "офлайн SCH-004/005 пропускаются с info",
+        )
     except (urllib.error.URLError, TimeoutError, OSError) as e:
-        return Row("services", "kroki", "FAIL", str(getattr(e, "reason", e))[:60], "проверьте сеть или KROKI_URL")
+        return Row(
+            "services",
+            "kroki",
+            "FAIL",
+            str(getattr(e, "reason", e))[:60],
+            "проверьте сеть или KROKI_URL",
+        )
 
 
 def check_provider(p: Provider, chat: bool) -> list[Row]:
@@ -229,14 +267,24 @@ def check_provider(p: Provider, chat: bool) -> list[Row]:
         return [Row("providers", p.name, status, f"HTTP {code}, {source}", hint)]
 
     if chat:
-        payload = {"model": p.chat_model, "messages": [{"role": "user", "content": "Reply: ok"}], "max_tokens": 5}
+        payload = {
+            "model": p.chat_model,
+            "messages": [{"role": "user", "content": "Reply: ok"}],
+            "max_tokens": 5,
+        }
         ccode, cbody = http("POST", p.chat_url, key or PLACEHOLDER, payload)
         if ccode == 200:
             rows.append(Row("providers", f"{p.name} chat", "OK", f"{p.chat_model}, HTTP 200"))
         else:
             msg = cbody.replace("\n", " ")[:50]
             rows.append(
-                Row("providers", f"{p.name} chat", "FAIL", f"{p.chat_model}, HTTP {ccode}", f"модель или лимит: {msg}")
+                Row(
+                    "providers",
+                    f"{p.name} chat",
+                    "FAIL",
+                    f"{p.chat_model}, HTTP {ccode}",
+                    f"модель или лимит: {msg}",
+                )
             )
     return rows
 
@@ -251,15 +299,19 @@ def print_table(rows: list[Row]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--chat", action="store_true", help="also send one tiny completion per provider")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--chat", action="store_true", help="also send one tiny completion per provider"
+    )
     ap.add_argument("--offline", action="store_true", help="skip network checks")
     args = ap.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
     load_dotenv(ROOT / ".env")
-    rows = check_tools() + [check_docker(), check_ollama()]
+    rows = [*check_tools(), check_docker(), check_ollama()]
     if not args.offline:
         rows.append(check_kroki())
         for p in PROVIDERS:
