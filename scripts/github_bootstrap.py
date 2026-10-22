@@ -126,13 +126,21 @@ EPIC_DOCS: dict[str, list[str]] = {
 TASK_DOCS: dict[str, list[str]] = {
     "T-002": ["docs/adr/README.md"],
     "T-003": ["docs/tech-design/07_deploy.md"],
-    "T-004": ["docs/tech-design/04_data.md", "docs/tech-design/07_deploy.md", "docs/adr/007-supabase.md"],
+    "T-004": [
+        "docs/tech-design/04_data.md",
+        "docs/tech-design/07_deploy.md",
+        "docs/adr/007-supabase.md",
+    ],
     "T-005": [
         "docs/tech-design/06_models.md",
         "docs/adr/013-llm-layer-pydantic-ai.md",
         "docs/research/2026-10-models.md",
     ],
-    "T-006": ["docs/tech-design/06_models.md", "docs/adr/011-models.md", "docs/research/2026-10-models.md"],
+    "T-006": [
+        "docs/tech-design/06_models.md",
+        "docs/adr/011-models.md",
+        "docs/research/2026-10-models.md",
+    ],
     "T-101": ["docs/adr/004-artifact-graph.md"],
     "T-102": ["examples/garage61/REVIEW.md"],
     "T-103": ["docs/adr/005-process-dsl.md"],
@@ -224,7 +232,9 @@ def parse_backlog(text: str) -> tuple[list[Task], dict[str, str]]:
             flush()
             current = None
         elif current is not None and (m := re.match(r"- \*\*(.+?):\*\*\s*(.*)", line)):
-            key = {"Критерий приёмки": "acc", "Зависит от": "dep", "Статус": "status"}.get(m.group(1))
+            key = {"Критерий приёмки": "acc", "Зависит от": "dep", "Статус": "status"}.get(
+                m.group(1)
+            )
             if key:
                 current[key] = m.group(2).strip()
     flush()
@@ -241,7 +251,11 @@ def parse_backlog(text: str) -> tuple[list[Task], dict[str, str]]:
 
 def render_body(t: Task, repo: str, numbers: dict[str, int]) -> str:
     blob = BLOB.format(repo=repo)
-    deps = ", ".join(f"#{numbers[d]} ({d})" if d in numbers else d for d in t.depends) if t.depends else "—"
+    deps = (
+        ", ".join(f"#{numbers[d]} ({d})" if d in numbers else d for d in t.depends)
+        if t.depends
+        else "—"
+    )
     docs = ["docs/backlog.md", *EPIC_DOCS[t.epic], *TASK_DOCS.get(t.tid, [])]
     lines = [
         MARKER.format(tid=t.tid),
@@ -288,7 +302,9 @@ class GitHub:
             check=False,
         )
         if proc.returncode != 0:
-            raise RuntimeError(f"gh api {method} {path} failed: {proc.stderr.strip() or proc.stdout}")
+            raise RuntimeError(
+                f"gh api {method} {path} failed: {proc.stderr.strip() or proc.stdout}"
+            )
         return json.loads(proc.stdout) if proc.stdout.strip() else None
 
     def list_all(self, path: str) -> list[dict[str, Any]]:
@@ -320,7 +336,9 @@ def sync_labels(gh: GitHub, update: bool) -> None:
             gh.write("POST", "labels", {"name": name, "color": color, "description": desc})
         elif update and (cur["color"] != color or strip_footer(cur.get("description")) != desc):
             print(f"  ~ label   {name:<16} -> #{color}  {desc}")
-            gh.write("PATCH", f"labels/{name.replace(':', '%3A')}", {"color": color, "description": desc})
+            gh.write(
+                "PATCH", f"labels/{name.replace(':', '%3A')}", {"color": color, "description": desc}
+            )
         else:
             print(f"  = label   {name}")
 
@@ -338,9 +356,9 @@ def sync_milestones(gh: GitHub, goals: dict[str, str], update: bool) -> dict[str
             numbers[title] = res["number"] if res else -1
         else:
             numbers[title] = cur["number"]
-            changed = (cur.get("due_on") or "")[:10] != day or strip_footer(cur.get("description")) != payload[
-                "description"
-            ]
+            changed = (cur.get("due_on") or "")[:10] != day or strip_footer(
+                cur.get("description")
+            ) != payload["description"]
             if update and changed:
                 print(f"  ~ milestone {title}  due {day}")
                 gh.write("PATCH", f"milestones/{cur['number']}", payload)
@@ -351,7 +369,12 @@ def sync_milestones(gh: GitHub, goals: dict[str, str], update: bool) -> dict[str
 
 def issue_state(it: dict[str, Any]) -> tuple[str, str, list[str], int | None]:
     labels = sorted(lb["name"] for lb in it.get("labels", []))
-    return it["title"], strip_footer(it.get("body")).strip(), labels, (it.get("milestone") or {}).get("number")
+    return (
+        it["title"],
+        strip_footer(it.get("body")).strip(),
+        labels,
+        (it.get("milestone") or {}).get("number"),
+    )
 
 
 def sync_issues(gh: GitHub, tasks: list[Task], ms: dict[str, int], update: bool) -> None:
@@ -371,7 +394,10 @@ def sync_issues(gh: GitHub, tasks: list[Task], ms: dict[str, int], update: bool)
         title = f"{t.tid}: {t.title}"
         deps = ",".join(t.depends) or "—"
         print(f"  + issue {title}")
-        print(f"        {t.sprint} | {', '.join(t.labels)} | deps: {deps}" + (" | частично" if t.status else ""))
+        print(
+            f"        {t.sprint} | {', '.join(t.labels)} | deps: {deps}"
+            + (" | частично" if t.status else "")
+        )
         payload = {
             "title": title,
             "body": render_body(t, gh.repo, numbers),
@@ -413,14 +439,19 @@ def sync_issues(gh: GitHub, tasks: list[Task], ms: dict[str, int], update: bool)
             print(f"  ~ issue #{cur['number']} {t.tid}: {', '.join(fields)}")
             gh.write("PATCH", f"issues/{cur['number']}", want)
         else:
-            print(f"  ! issue #{cur['number']} {t.tid} differs ({', '.join(fields)}); run with --update")
+            diff = ", ".join(fields)
+            print(f"  ! issue #{cur['number']} {t.tid} differs ({diff}); run with --update")
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--repo", default=DEFAULT_REPO)
     ap.add_argument("--dry-run", action="store_true", help="show what would change, write nothing")
-    ap.add_argument("--update", action="store_true", help="overwrite existing labels, milestones, issues")
+    ap.add_argument(
+        "--update", action="store_true", help="overwrite existing labels, milestones, issues"
+    )
     ap.add_argument("--show-body", metavar="T-xxx", help="print the rendered issue body and exit")
     args = ap.parse_args()
 
@@ -437,7 +468,8 @@ def main() -> int:
 
     gh = GitHub(args.repo, args.dry_run)
     mode = "DRY RUN — nothing is written" if args.dry_run else "APPLY"
-    print(f"{mode}: {args.repo}, {len(LABELS)} labels, {len(MILESTONES)} milestones, {len(tasks)} issues")
+    counts = f"{len(LABELS)} labels, {len(MILESTONES)} milestones, {len(tasks)} issues"
+    print(f"{mode}: {args.repo}, {counts}")
     print("labels:")
     sync_labels(gh, args.update)
     print("milestones:")

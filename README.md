@@ -2,7 +2,7 @@
 
 **Verifiable primary documentation for software projects.** A multi-agent system that interviews a stakeholder, writes business, user, functional and non-functional requirements, builds process, data and architecture models as code, runs them through deterministic checks (CI for requirements) and exports an ISO/IEC/IEEE 29148 SRS and a GOST 34.602-2020 specification from one artifact graph.
 
-> Status: **design phase** (October 2026). The technical design, roadmap and a reference project are in place; code starts with task T-001. Target release v1.0: 21 February 2027.
+> Status: **sprint S0** (October 2026). The technical design, roadmap and a reference project are in place; the monorepo skeleton is ready (T-001). Target release v1.0: 21 February 2027.
 
 ---
 
@@ -17,6 +17,25 @@ flowchart LR
   E -->|ошибки| F[Reviewer -> владельцу] -.-> C
   E -->|зелёный| G[SRS · ТЗ · ReqIF]
 ```
+
+## Быстрый старт
+
+Нужны [uv](https://docs.astral.sh/uv/), Node.js ≥ 22 и pnpm 10 (подробно для Windows — [docs/setup/windows.md](docs/setup/windows.md)).
+
+```bash
+uv sync                          # Python 3.12 и зависимости (uv.lock)
+uv run pytest -q                 # тесты без сети
+uv run ruff check . && uv run ruff format --check .
+uv run mypy packages/core
+uv run reqgraph --version
+pnpm install                     # apps/web
+pnpm -C apps/web lint
+pnpm -C apps/web build
+uv run pre-commit install        # хуки перед коммитом (один раз)
+uv run python scripts/doctor.py  # готовность окружения
+```
+
+Структура: `packages/core` — библиотека и CLI `reqgraph`, `apps/api` — FastAPI и воркер (с T-501), `apps/web` — Next.js (с S5).
 
 ## Документация
 

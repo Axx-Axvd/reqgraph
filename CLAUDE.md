@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-016; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug); дневник — docs/journal.md.
-- Состояние: кода ещё нет, начинать с T-001.
+- Состояние: каркас монорепо готов (T-001); дальше по S0: T-003 -> T-002 -> T-004 -> T-005 -> T-006.
 
 ## Команды
 - uv run python scripts/doctor.py   # готовность окружения: OK / FAIL / SKIP (--chat, --offline)

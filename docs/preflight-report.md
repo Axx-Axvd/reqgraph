@@ -231,6 +231,6 @@ S0 не блокирует ничего. Перед S1 нужен один от�
 - [x] метки, вехи и 44 задачи в GitHub; доска Projects — вручную по инструкции
 - [x] `.gitattributes` (LF), `.editorconfig`, шаблоны PR и issue, Dependabot
 - [x] `examples/garage61` не тронут; секретов в диффе нет
-- [ ] мерж PR `chore/preflight` → `main` (автор)
+- [x] мерж PR `chore/preflight` → `main` (автор; PR #42, 21.10)
 - [ ] доска «reqgraph roadmap» в Projects (автор, по желанию)
-- [ ] ответ на вопрос #16 — нужен до S1, не до T-001
+- [x] ответ на вопрос #16 (21.10): главный источник — `realized_by`, `realizes` — зеркало, расхождение — error TRC-004
