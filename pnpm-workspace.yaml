@@ -1,0 +1,7 @@
+packages:
+  - apps/web
+
+# Native postinstall scripts are not needed for build or lint (sharp is optional for next/image).
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
