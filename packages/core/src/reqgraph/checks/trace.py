@@ -190,8 +190,9 @@ class EntitiesInErd(BaseCheck):
     owner = "modeler"
 
     def run(self, graph: ArtifactGraph, ctx: CheckContext) -> list[Finding]:
-        """An FR realized by an entity should speak about it: the entity name (in Russian) is
-        found among the words of the FR (lemmas, rapidfuzz ≥ 85)."""
+        """An FR realized by an entity should speak about it: every word of the entity name (in
+        Russian, `Note: 'ENT-05 · Запись'` in DBML) is found among the words of the FR (lemmas,
+        rapidfuzz ≥ 85): «Смена мастера» matches «с учётом смен мастеров»."""
         entities = {n.id: n for n in graph.nodes_of("ENT") if isinstance(n, EntityNode)}
         russian = {
             i: n for i, n in entities.items() if any("а" <= c <= "я" for c in n.name.lower())
@@ -210,8 +211,10 @@ class EntitiesInErd(BaseCheck):
             ]
             lemmas = [w.lemma for w in words(fr.statement)]
             for entity_id in mine:
-                name = " ".join(w.lemma for w in words(russian[entity_id].name))
-                if not any(fuzz.ratio(name, lemma) >= _FUZZY_MIN for lemma in lemmas):
+                name = [w.lemma for w in words(russian[entity_id].name)]
+                if not all(
+                    any(fuzz.ratio(part, lemma) >= _FUZZY_MIN for lemma in lemmas) for part in name
+                ):
                     found.append(
                         self.finding(
                             "warning",

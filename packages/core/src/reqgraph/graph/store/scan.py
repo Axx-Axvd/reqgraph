@@ -14,7 +14,7 @@ from reqgraph.graph.nodes import C4Node, EntityNode, UseCaseNode, node_from_dict
 from reqgraph.graph.store.errors import StoreError
 
 _TABLE = re.compile(r"^Table\s+\"?([\w.]+)\"?[^{\n]*\{(.*?)^\}", re.M | re.S)
-_ENT_NOTE = re.compile(r"^\s*Note:\s*['\"](ENT-\d+)['\"]", re.M)
+_ENT_NOTE = re.compile(r"^\s*Note:\s*['\"](ENT-\d+)(?:\s*·\s*([^'\"]+?))?\s*['\"]", re.M)
 _COLUMN = re.compile(r"^\"?(\w+)\"?\s+(\w+(?:\([^)]*\))?)")
 _USECASE = re.compile(r"^\s*usecase\s+\"([^\"]+)\"\s+as\s+UC(\d+)", re.M)
 _ACTOR_LINK = re.compile(r"^\s*ACT(\d+)\s+-+>\s*UC(\d+)", re.M)
@@ -55,7 +55,8 @@ def scan_dbml(text: str, path: str) -> list[EntityNode]:
             column = _COLUMN.match(line)
             if column:
                 attributes.append({"name": column.group(1), "type": column.group(2)})
-        data = {"kind": "ENT", "id": node_id, "name": table.group(1), "attributes": attributes}
+        name = note.group(2) or table.group(1)  # `Note: 'ENT-01 · Клиент'`: the Russian name
+        data = {"kind": "ENT", "id": node_id, "name": name, "attributes": attributes}
         found[node_id] = _node(data, f"{path}: {node_id}")
     return list(found.values())
 

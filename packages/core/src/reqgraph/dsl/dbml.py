@@ -1,4 +1,5 @@
-"""ERD as DBML, read with pydbml (base of SCH-003). Tables with `Note: 'ENT-xx'` are entities."""
+"""ERD as DBML, read with pydbml (base of SCH-003). Tables with `Note: 'ENT-xx'` are entities;
+`Note: 'ENT-xx · Название'` also gives the entity its Russian name (TRC-005)."""
 
 import re
 from dataclasses import dataclass
@@ -10,7 +11,7 @@ from reqgraph.dsl.process import DslError
 from reqgraph.graph.errors import GraphError
 from reqgraph.graph.nodes import EntityNode, node_from_dict
 
-_ENTITY_ID = re.compile(r"ENT-\d{2,}")
+_ENTITY_NOTE = re.compile(r"(ENT-\d{2,})(?:\s*·\s*(\S.*))?")
 
 
 @dataclass(frozen=True)
@@ -31,9 +32,15 @@ class Table:
 
     @property
     def entity_id(self) -> str | None:
-        """ENT-xx when the table note is exactly an entity id (REVIEW.md of garage61, No. 3)."""
-        text = (self.note or "").strip()
-        return text if _ENTITY_ID.fullmatch(text) else None
+        """ENT-xx when the table note is an entity id (REVIEW.md of garage61, No. 3)."""
+        match = _ENTITY_NOTE.fullmatch((self.note or "").strip())
+        return match.group(1) if match else None
+
+    @property
+    def entity_name(self) -> str:
+        """The Russian name after «·» in the note, else the table name."""
+        match = _ENTITY_NOTE.fullmatch((self.note or "").strip())
+        return match.group(2).strip() if match and match.group(2) else self.name
 
 
 @dataclass(frozen=True)
@@ -108,7 +115,7 @@ def entities(model: DataModel, path: str) -> list[EntityNode]:
         if entity_id in found:
             raise DslError(f"{path}: {entity_id} встречается в двух таблицах")
         attributes = [{"name": c.name, "type": c.type, "note": c.note} for c in table.columns]
-        data = {"kind": "ENT", "id": entity_id, "name": table.name, "attributes": attributes}
+        data = {"kind": "ENT", "id": entity_id, "name": table.entity_name, "attributes": attributes}
         try:
             node = node_from_dict(data, f"{path}: {entity_id}")
         except GraphError as exc:
