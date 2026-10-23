@@ -73,5 +73,34 @@ def bpmn(
         typer.echo(f"записано: {out}")
 
 
+@app.command("render")
+def render(
+    path: Annotated[Path, typer.Argument(help="Model file: .dbml, .puml, .dsl or .bpmn.")],
+    out: Annotated[Path | None, typer.Option("--out", "-o", help="SVG file to write.")] = None,
+) -> None:
+    """Draw a model as SVG through Kroki (KROKI_URL, default kroki.io); results are cached."""
+    import asyncio
+
+    from reqgraph.dsl.kroki import KIND_BY_SUFFIX, render_svg
+
+    kind = KIND_BY_SUFFIX.get(path.suffix)
+    if kind is None:
+        known = ", ".join(KIND_BY_SUFFIX)
+        typer.echo(f"{path}: расширение {path.suffix} не поддерживается, есть {known}", err=True)
+        raise typer.Exit(1)
+    result = asyncio.run(render_svg(kind, path.read_text(encoding="utf-8")))
+    if result.offline:
+        typer.echo(f"{path}: {result.error}", err=True)
+        raise typer.Exit(2)
+    if result.svg is None:
+        typer.echo(f"{path}: диаграмма не компилируется: {result.error}", err=True)
+        raise typer.Exit(1)
+    if out is None:
+        typer.echo(result.svg, nl=False)
+    else:
+        out.write_bytes(result.svg.encode("utf-8"))
+        typer.echo(f"записано: {out}")
+
+
 if __name__ == "__main__":
     app()
