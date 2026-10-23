@@ -119,3 +119,18 @@
 - `pre-commit` — только на ubuntu (хуки не зависят от ОС). `supabase db reset` добавляется в T-004.
 - Действия: checkout v7, setup-uv v7, pnpm/action-setup v6 (версия pnpm — из `packageManager`), setup-node v7; Dependabot обновляет их (github-actions в `.github/dependabot.yml`).
 - Правило для main (PR и проверка `ci` обязательны, запрет force-push) меняет настройки GitHub вне репозитория: по правилам этапа 0 сначала показываю, что именно включаю, и жду «ок».
+
+## 2026-10-23 · T-002: документы проекта; защита main
+
+**Защита main (хвост T-003).** Автор дал «ок». Правило `protect-main` (ruleset: только PR, обязательная проверка `ci` с актуальной веткой, запрет force-push и удаления) через API включить не удалось: прокси облачной сессии отвечает 403 «Write access to this GitHub API path is not permitted through this proxy». Обходить не стал — автор включает правило в Settings → Rules → Rulesets.
+
+**Сверка T-002**
+
+- LICENSE (MIT, 2026), README с разделом «Лицензии зависимостей», ADR 001–016 — на месте; относительные ссылки во всех Markdown целы, все T-xxx есть в бэклоге.
+- ADR 001–012 и 013–016 разложены по разделам по-разному; обе раскладки — облегчённый MADR. Тексты принятых ADR не переписывал (так требует README ADR), добавил `docs/adr/template.md` для новых решений.
+- В CLAUDE.md часть команд ещё не существует (`reqgraph check`, `reqgraph schemas`, `supabase`, `docker compose`). Разделил список на «работают сейчас» и «появятся с задачами», чтобы сессии не запускали несуществующее.
+- README: бейдж CI; текущие лицензии (typer, Next.js, React — MIT).
+
+**Решение автора:** DoD S6 «расход ≤ $25» оставлен.
+
+**Что дальше:** T-004 — миграции Supabase (схема 04_data, RLS, seed) и `supabase db reset` в CI.

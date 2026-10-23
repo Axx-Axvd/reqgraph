@@ -8,19 +8,25 @@
 - Решения: docs/adr/ (001-016; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug); дневник — docs/journal.md.
-- Состояние: каркас монорепо готов (T-001); дальше по S0: T-003 -> T-002 -> T-004 -> T-005 -> T-006.
+- Состояние: каркас монорепо (T-001) и CI (T-003) готовы; дальше по S0: T-004 -> T-005 -> T-006.
 
 ## Команды
+Работают сейчас:
 - uv run python scripts/doctor.py   # готовность окружения: OK / FAIL / SKIP (--chat, --offline)
 - uv sync                           # зависимости Python
 - uv run pytest -q                  # тесты без сети (кассеты в packages/core/tests/cassettes)
 - uv run ruff check . && uv run ruff format --check .
 - uv run mypy packages/core
-- uv run reqgraph check examples/garage61
-- supabase start && supabase db reset   # локальная база и миграции
-- pnpm -C apps/web dev | lint | build
-- docker compose up                 # офлайн-стенд: web + api + supabase + ollama
+- uv run pre-commit install         # один раз: хуки ruff, mypy и базовые проверки перед коммитом
+- uv run reqgraph --version
+- pnpm install && pnpm -C apps/web dev | lint | build
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
+
+Появятся с задачами (до этого не запускать):
+- supabase start && supabase db reset   # локальная база и миграции (T-004)
+- uv run reqgraph schemas           # JSON Schema из Pydantic (T-101)
+- uv run reqgraph check examples/garage61   # отчёт CI по проекту (T-105)
+- docker compose up                 # офлайн-стенд: web + api + supabase + ollama (T-507)
 
 ## Инварианты (не нарушать)
 - packages/core/src/reqgraph: graph/ dsl/ checks/ agents/ llm/ exporters/ sim/ cli.py
