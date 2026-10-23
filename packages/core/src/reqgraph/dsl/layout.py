@@ -17,7 +17,7 @@ SIZE = {"event": (36, 36), "gateway": (50, 50)}
 # (3 lines with the taller box); the text then stays below the icon in the top left corner.
 TASK_WIDTHS = (120, 150, 180, 210, 240)
 TASK_HEIGHT = {2: 100, 3: 120}
-GAP_X = 30  # between tasks of neighbouring columns
+GAP_X = 40  # between tasks of neighbouring columns (author: 50 too loose, 30 too tight)
 GAP_Y = 40  # between rows of a lane
 TEXT_PADDING = 7  # bpmn-js keeps 5 px on each side; 2 px of reserve for font differences
 LABEL_BAND = 30  # left band of a pool / lane with its name

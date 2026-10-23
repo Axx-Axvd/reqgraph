@@ -66,71 +66,71 @@
   <bpmndi:BPMNDiagram id="PRC-02.diagram">
     <bpmndi:BPMNPlane id="PRC-02.plane" bpmnElement="PRC-02.collaboration">
       <bpmndi:BPMNShape id="PRC-02.pool.di" bpmnElement="PRC-02.pool" isHorizontal="true">
-        <dc:Bounds x="40" y="40" width="1150" height="420"/>
+        <dc:Bounds x="40" y="40" width="1210" height="420"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.L1.di" bpmnElement="PRC-02.L1" isHorizontal="true">
-        <dc:Bounds x="70" y="40" width="1120" height="280"/>
+        <dc:Bounds x="70" y="40" width="1180" height="280"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.L2.di" bpmnElement="PRC-02.L2" isHorizontal="true">
-        <dc:Bounds x="70" y="320" width="1120" height="140"/>
+        <dc:Bounds x="70" y="320" width="1180" height="140"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.S.di" bpmnElement="PRC-02.S">
-        <dc:Bounds x="182" y="92" width="36" height="36"/>
+        <dc:Bounds x="187" y="92" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.T01.di" bpmnElement="PRC-02.T01">
-        <dc:Bounds x="305" y="60" width="150" height="100"/>
+        <dc:Bounds x="320" y="60" width="150" height="100"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.G01.di" bpmnElement="PRC-02.G01">
-        <dc:Bounds x="535" y="85" width="50" height="50"/>
+        <dc:Bounds x="560" y="85" width="50" height="50"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.M01.di" bpmnElement="PRC-02.M01">
-        <dc:Bounds x="722" y="372" width="36" height="36"/>
+        <dc:Bounds x="757" y="372" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.W01.di" bpmnElement="PRC-02.W01">
-        <dc:Bounds x="722" y="92" width="36" height="36"/>
+        <dc:Bounds x="757" y="92" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.T02.di" bpmnElement="PRC-02.T02">
-        <dc:Bounds x="845" y="200" width="150" height="100"/>
+        <dc:Bounds x="890" y="200" width="150" height="100"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.E1.di" bpmnElement="PRC-02.E1">
-        <dc:Bounds x="1082" y="92" width="36" height="36"/>
+        <dc:Bounds x="1137" y="92" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-02.E2.di" bpmnElement="PRC-02.E2">
-        <dc:Bounds x="902" y="92" width="36" height="36"/>
+        <dc:Bounds x="947" y="92" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="PRC-02.F01.di" bpmnElement="PRC-02.F01">
-        <di:waypoint x="218" y="110"/>
-        <di:waypoint x="305" y="110"/>
+        <di:waypoint x="223" y="110"/>
+        <di:waypoint x="320" y="110"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="PRC-02.F02.di" bpmnElement="PRC-02.F02">
-        <di:waypoint x="455" y="110"/>
-        <di:waypoint x="535" y="110"/>
+        <di:waypoint x="470" y="110"/>
+        <di:waypoint x="560" y="110"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="PRC-02.F03.di" bpmnElement="PRC-02.F03">
-        <di:waypoint x="585" y="110"/>
-        <di:waypoint x="653" y="110"/>
-        <di:waypoint x="653" y="390"/>
-        <di:waypoint x="722" y="390"/>
+        <di:waypoint x="610" y="110"/>
+        <di:waypoint x="683" y="110"/>
+        <di:waypoint x="683" y="390"/>
+        <di:waypoint x="757" y="390"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="PRC-02.F04.di" bpmnElement="PRC-02.F04">
-        <di:waypoint x="585" y="110"/>
-        <di:waypoint x="722" y="110"/>
+        <di:waypoint x="610" y="110"/>
+        <di:waypoint x="757" y="110"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="PRC-02.F05.di" bpmnElement="PRC-02.F05">
-        <di:waypoint x="758" y="390"/>
-        <di:waypoint x="801" y="390"/>
-        <di:waypoint x="801" y="250"/>
-        <di:waypoint x="845" y="250"/>
+        <di:waypoint x="793" y="390"/>
+        <di:waypoint x="841" y="390"/>
+        <di:waypoint x="841" y="250"/>
+        <di:waypoint x="890" y="250"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="PRC-02.F06.di" bpmnElement="PRC-02.F06">
-        <di:waypoint x="995" y="250"/>
-        <di:waypoint x="1038" y="250"/>
-        <di:waypoint x="1038" y="110"/>
-        <di:waypoint x="1082" y="110"/>
+        <di:waypoint x="1040" y="250"/>
+        <di:waypoint x="1088" y="250"/>
+        <di:waypoint x="1088" y="110"/>
+        <di:waypoint x="1137" y="110"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="PRC-02.F07.di" bpmnElement="PRC-02.F07">
-        <di:waypoint x="758" y="110"/>
-        <di:waypoint x="902" y="110"/>
+        <di:waypoint x="793" y="110"/>
+        <di:waypoint x="947" y="110"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
