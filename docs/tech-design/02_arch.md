@@ -97,7 +97,7 @@ reqgraph/
 │   ├── graph/                 # models.py nodes.py edges.py patch.py ids.py
 │   │   └── store/             # base.py file_store.py formats.py scan.py config.py (supabase_store.py — S5)
 │   ├── dsl/                   # process.py bpmn_compile.py layout.py bpmn_xsd.py xsd/ soundness.py
-│   │                          # dbml.py plantuml.py c4.py kroki.py idef0.py
+│   │                          # dbml.py plantuml.py c4.py kroki.py readers.py idef0.py
 │   ├── checks/                # base.py registry.py schema.py sound.py
 │   │                          # iso29148.py trace.py template.py report.py
 │   ├── agents/                # state.py graph.py runtime.py

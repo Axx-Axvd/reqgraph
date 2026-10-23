@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1: T-101 (граф и патчи), T-102 (FileStore), T-103 (DSL процессов → BPMN) сделаны, дальше T-104 (DBML, PlantUML, Structurizr, Kroki).
+- Состояние: S0 закрыт (T-001…T-006); S1: T-101…T-104 сделаны (граф, FileStore, DSL → BPMN, DBML/PlantUML/C4 и SVG через Kroki), дальше T-105 (каркас проверок и `reqgraph check`).
 
 ## Команды
 Работают сейчас:
@@ -23,6 +23,8 @@
 - uv run reqgraph schemas           # JSON Schema из Pydantic в schemas/ (GraphPatch, ArtifactGraph, ProjectConfig, ProcessDSL)
 - uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>   # DSL процесса -> BPMN 2.0 (Camunda Modeler, bpmn-js)
 - REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl   # пересоздать golden BPMN после намеренной правки компилятора
+- uv run reqgraph render <файл.dbml|.puml|.dsl|.bpmn> -o <схема.svg>   # SVG через Kroki (KROKI_URL), с кэшем
+- uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
@@ -79,6 +81,7 @@
 - Supabase из облака — только Supavisor session pooler :5432; psycopg: autocommit=True,
   prepare_threshold=None.
 - Офлайн-стенд для защиты (docker compose, профиль local, replay) должен работать без сети.
+- Одна BPMN-схема — одна страница А4 альбомная, текст не мельче 6 pt (решение автора; SND-004, экспорт).
 - Каждый прогон ограничен бюджетом (REQGRAPH_RUN_BUDGET_USD); платные модели — только
   в экспериментах, общий потолок $20 в месяц. В разработке — профиль free или local.
 

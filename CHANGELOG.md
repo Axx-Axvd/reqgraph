@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Models as code (T-104): `reqgraph.dsl.dbml` (pydbml: tables, columns, relations, enums; entities `ENT-xx`),
+  `dsl.plantuml` / `dsl.c4` readers, `dsl.readers.model_readers()` for `FileStore(root, readers=...)`;
+  `dsl.kroki.render_svg()` — SVG of DBML, PlantUML, Structurizr and BPMN through Kroki (`KROKI_URL`), compile
+  errors with the line, `offline` without network, disk cache (`REQGRAPH_CACHE_DIR`); CLI `reqgraph render`.
+  New dependency of `packages/core`: `pydbml==1.2.1` (MIT).
+- One process = one page (author's rule): narrow columns for events and gateways, `dsl.layout.page_font_pt()`
+  (A4 landscape, minimum 6 pt); new planned check SND-004 (warning) — 22 checks.
 - Process DSL and BPMN compiler (T-103): `reqgraph.dsl.process.ProcessDSL` (**public schema, version 1:**
   `schemas/process-dsl.schema.json`), `compile_bpmn()` to BPMN 2.0 XML with lanes and diagram layout
   (`dsl/layout.py`, networkx), element ids equal graph references (`PRC-01.T05`), `validate_bpmn()` against the
