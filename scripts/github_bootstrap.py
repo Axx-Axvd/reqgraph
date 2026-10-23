@@ -108,6 +108,7 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-603": ("research", "evals"),
     "T-604": ("research", "evals"),
     "T-605": ("research", "evals"),
+    "T-606": ("research", "evals"),
     "T-701": ("feature", "web"),
     "T-702": ("docs", None),
     "T-703": ("docs", None),
