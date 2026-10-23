@@ -11,6 +11,7 @@ providers:
     key_env: GROQ_API_KEY
     free: true
     max_input_tokens: 6000           # 8000 tokens per minute per model: long prompts go to the next step
+    output_mode: native              # Groq validates tool calls server-side (400, no retry); JSON schema works
   gemini:
     base_url: https://generativelanguage.googleapis.com/v1beta/openai/
     key_env: GEMINI_API_KEY

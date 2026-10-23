@@ -176,3 +176,11 @@ async def test_model_id_pins_one_model(fake_models: dict[str, Model]) -> None:
 async def test_model_id_with_unknown_provider_is_rejected(fake_models: dict[str, Model]) -> None:
     with pytest.raises(ValueError, match="провайдер"):
         await structured("analyst", "x", Requirement, model_id="nosuch/model")
+
+
+def test_output_mode_from_provider() -> None:
+    cfg = load_roles()
+    groq = router._build_model(cfg.ladder("reviewer", "free")[0])
+    gemini = router._build_model(cfg.ladder("stakeholder", "free")[0])
+    assert groq.profile.get("default_structured_output_mode") == "native"
+    assert gemini.profile.get("default_structured_output_mode") == "tool"

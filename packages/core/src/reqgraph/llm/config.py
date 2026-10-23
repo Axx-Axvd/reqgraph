@@ -3,6 +3,7 @@
 import os
 from functools import cached_property
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -24,6 +25,9 @@ class Provider(BaseModel):
     free: bool = False
     max_input_tokens: int | None = None
     supports_seed: bool = True
+    # How structured output is requested: tool call (pydantic-ai default), native JSON schema
+    # (response_format) or JSON in the text. None keeps the pydantic-ai default.
+    output_mode: Literal["tool", "native", "prompted"] | None = None
 
 
 class Step(BaseModel):
