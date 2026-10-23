@@ -166,3 +166,13 @@ def test_seed_only_for_providers_that_accept_it() -> None:
     gemini = router._build_model(cfg.ladder("stakeholder", "free")[0])
     assert (groq.settings or {}).get("seed") == cfg.defaults.seed
     assert "seed" not in (gemini.settings or {})
+
+
+async def test_model_id_pins_one_model(fake_models: dict[str, Model]) -> None:
+    _, stats = await structured("analyst", "x", Requirement, model_id="groq/openai/gpt-oss-20b")
+    assert (stats.provider, stats.model) == ("groq", "openai/gpt-oss-20b")
+
+
+async def test_model_id_with_unknown_provider_is_rejected(fake_models: dict[str, Model]) -> None:
+    with pytest.raises(ValueError, match="провайдер"):
+        await structured("analyst", "x", Requirement, model_id="nosuch/model")
