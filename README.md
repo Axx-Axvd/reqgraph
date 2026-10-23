@@ -34,6 +34,8 @@ pnpm install                     # apps/web
 pnpm -C apps/web lint
 pnpm -C apps/web build
 uv run pre-commit install        # хуки перед коммитом (один раз)
+pnpm db:start && pnpm db:reset   # локальная база Supabase: только Postgres (нужен Docker)
+pnpm db:test                     # тесты RLS; весь стек со Studio — pnpm supabase start
 uv run python scripts/doctor.py  # готовность окружения
 ```
 

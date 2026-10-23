@@ -8,6 +8,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Supabase schema (T-004): migrations `init` (profiles with auth trigger, projects, graph_revisions, runs, run_events,
+  interview_turns, exports, usage_daily) and `rls` (RLS on all public tables, Realtime for run_events and
+  interview_turns), local seed, pgTAP RLS tests, CI job `db`; Supabase CLI 2.121.0 as a root devDependency.
 - ADR template (`docs/adr/template.md`) and CI badge in README (T-002).
 - GitHub Actions `ci.yml` (T-003): ruff, mypy, pytest with coverage report, pre-commit, web lint and build on ubuntu and windows;
   aggregate check `ci` for branch protection.
@@ -24,6 +27,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- `runs` gets reproducibility fields (config jsonb, seed, package_version, tokens, timestamps); ER diagram in 04_data updated.
 - CLAUDE.md: commands split into working now and arriving with tasks T-004, T-101, T-105, T-507 (T-002).
 - `scripts/doctor.py` and `scripts/github_bootstrap.py` formatted with ruff (line length 100), no behaviour change.
 - Core and experiments moved to ready-made tools: T-005 (pydantic-ai), T-006/T-304/T-405 (pydantic-evals),

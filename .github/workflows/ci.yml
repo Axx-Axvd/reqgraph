@@ -1,6 +1,5 @@
-# CI: ruff, mypy, pytest (no network), web lint and build. Runs on every push and pull request.
+# CI: ruff, mypy, pytest (no network), web lint and build, migrations + RLS tests. Runs on every push and PR.
 # Branch protection for main requires the single aggregate check "ci" (see the last job).
-# Migrations check (supabase db reset) is added in T-004.
 name: ci
 
 on:
@@ -57,13 +56,33 @@ jobs:
       - run: pnpm -C apps/web lint
       - run: pnpm -C apps/web build
 
+  db:
+    name: db (supabase)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: start Postgres only (not the whole Supabase stack)
+        run: pnpm db:start
+      - name: apply migrations and seed
+        run: pnpm db:reset
+      - name: RLS tests (pgTAP)
+        run: pnpm db:test
+
   # One stable check name for branch protection, whatever the matrix looks like.
   ci:
     if: always()
-    needs: [python, web]
+    needs: [python, web, db]
     runs-on: ubuntu-latest
     steps:
       - name: all jobs must succeed
         run: |
-          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}"
-          test "${{ needs.python.result }}" = "success" && test "${{ needs.web.result }}" = "success"
+          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}, db: ${{ needs.db.result }}"
+          test "${{ needs.python.result }}" = "success"
+          test "${{ needs.web.result }}" = "success"
+          test "${{ needs.db.result }}" = "success"

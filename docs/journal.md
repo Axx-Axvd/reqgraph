@@ -134,3 +134,23 @@
 **Решение автора:** DoD S6 «расход ≤ $25» оставлен.
 
 **Что дальше:** T-004 — миграции Supabase (схема 04_data, RLS, seed) и `supabase db reset` в CI.
+
+## 2026-10-23 · T-004: схема Supabase, RLS, seed
+
+**Решение автора:** у `runs` — колонки для того, что считаем и фильтруем (seed, package_version, tokens_in/out, cost_usd, created/started/finished_at), остальные параметры воспроизводимости (модели по ролям, провайдер, температура, хэши промптов) — в `config jsonb`. ER-схема 04_data была уже, чем требования 02_arch и CLAUDE.md; обновлена.
+
+**Решения**
+
+- Supabase CLI 2.121.0 — devDependency в корне; скрипты `db:start` (только Postgres), `db:reset`, `db:test`. Миграции названы по правилу CLI (таймстемп): `20261023000001_init.sql`, `20261023000002_rls.sql`.
+- Профиль создаётся триггером на `auth.users` (функция `security definer`, `search_path = ''`).
+- RLS на всех таблицах public; доступ только через `projects.owner_id = auth.uid()`. Пользователь может читать и менять только свои проекты; ревизии, прогоны, события, реплики интервью, выгрузки — только чтение, запись делает backend (service_role). В политиках `(select auth.uid())` — рекомендация Supabase: функция вычисляется один раз на запрос.
+- Realtime: `run_events` и `interview_turns` в публикации `supabase_realtime`.
+- Тест RLS — pgTAP через встроенный `supabase test db` (готовое средство вместо своего харнесса): 17 проверок, включая «на всех таблицах public включён RLS» — страховка от новой таблицы без политик. Проверено обратное: если выключить RLS на `runs`, падают 4 проверки.
+- Бакет Storage `exports` перенесён в T-501 (там появляется `/exports`).
+
+**Проблемы**
+
+- `supabase db start` в облачной VM не дошёл до конца: кроме Postgres CLI тянет образы gotrue, realtime, storage, а реестры отвечают 429 (Docker Hub) и «Data limit exceeded» (public.ecr.aws). Postgres поднялся; миграции, seed и тест прогнаны в нём напрямую через psql. Полный путь `db start → db reset → test db` проверяет задача `db` в GitHub Actions.
+- Без сервиса auth в Postgres остаётся старая `auth.uid()`, которая читает `request.jwt.claim.sub`, а не `request.jwt.claims`. Тест выставляет обе настройки. Seed пишет только колонки базовой таблицы `auth.users` (без `email_confirmed_at`), чтобы работать и без auth.
+
+**Что дальше:** T-005 — LLM-слой на pydantic-ai.
