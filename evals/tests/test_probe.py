@@ -4,6 +4,7 @@ import csv
 from pathlib import Path
 
 import pytest
+from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart
 from pydantic_ai.models import Model
 from pydantic_ai.models.function import AgentInfo, FunctionModel
@@ -115,3 +116,19 @@ def test_judge_only_on_rewrite_cases(fake_models: None) -> None:
 async def test_answers_are_stored_for_manual_review(fake_models: None) -> None:
     rows = await probe.run_model("groq/fake-model", 1, probe.build_dataset())
     assert all(r.answer.startswith("{") for r in rows)
+
+
+async def test_rate_limit_is_waited_out(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"n": 0}
+
+    def limited(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ModelHTTPError(429, "groq-limited", retry_after=0.01)
+        return fake(messages, info)
+
+    monkeypatch.setattr(
+        router, "_build_model", lambda step: FunctionModel(limited, model_name=step.model)
+    )
+    rows = await probe.run_model("groq/limited", 1, probe.build_dataset())
+    assert all(r.valid for r in rows)

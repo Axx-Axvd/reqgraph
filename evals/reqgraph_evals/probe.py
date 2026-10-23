@@ -1,5 +1,6 @@
 """Probe (T-006): the same 20 tasks for several models, deterministic scores, CSV and Markdown."""
 
+import asyncio
 import csv
 import hashlib
 import json
@@ -14,6 +15,7 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from pydantic import BaseModel
+from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_evals import Case, Dataset
 from pydantic_evals.evaluators import Evaluator, EvaluatorContext, LLMJudge
 from reqgraph.llm import CallStats, load_roles, model_for, structured
@@ -23,6 +25,8 @@ from reqgraph_evals import scoring
 from reqgraph_evals.schemas import OUTPUT_TYPES, ROLES, Extraction, ProcessSketch, Question, Rewrite
 
 PROBE_DIR = Path(__file__).resolve().parent.parent / "probe"
+RATE_LIMIT_RETRIES = 4  # free tiers: Groq allows 8000 tokens per minute per model
+RATE_LIMIT_WAIT_S = 20.0
 BLOCKS = ("extract", "process", "rewrite", "question")
 CSV_FIELDS = [
     "date",
@@ -163,10 +167,17 @@ async def run_model(
     today = date.today().isoformat()
 
     async def task(inp: ProbeInput) -> ProbeOutput:
-        answer, stats = await structured(
-            ROLES[inp.block], inp.prompt, OUTPUT_TYPES[inp.block], model_id=model_id
-        )
-        return ProbeOutput(answer=answer, stats=stats)
+        for attempt in range(RATE_LIMIT_RETRIES + 1):
+            try:
+                answer, stats = await structured(
+                    ROLES[inp.block], inp.prompt, OUTPUT_TYPES[inp.block], model_id=model_id
+                )
+                return ProbeOutput(answer=answer, stats=stats)
+            except ModelHTTPError as exc:  # wait out free-tier rate limits, fail on anything else
+                if exc.status_code != 429 or attempt == RATE_LIMIT_RETRIES:
+                    raise
+                await asyncio.sleep(exc.retry_after or RATE_LIMIT_WAIT_S)
+        raise AssertionError("unreachable")
 
     by_name = {c.name: c.inputs for c in dataset.cases}
     rows: list[Row] = []

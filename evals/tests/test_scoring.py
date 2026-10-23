@@ -141,3 +141,15 @@ def test_question_rules() -> None:
     assert s["no_hint"] == 0.0 and s["single"] == 0.0
     off = Question(question="Как клиенты будут покупать билеты?", area="билеты")
     assert score_question(off, case)["on_topic"] == 0.0
+
+
+def test_extract_matches_across_inflections() -> None:
+    expected = [{"kind": "FR", "text": "резидент бронирует переговорную комнату на время"}]
+    out = Extraction(
+        requirements=[
+            ExtractedRequirement(kind="FR", text="Бронировать переговорки на час или два")
+        ]
+    )
+    assert score_extract(out, expected)["recall"] == 1.0
+    other = Extraction(requirements=[ExtractedRequirement(kind="FR", text="Платить картой онлайн")])
+    assert score_extract(other, expected)["recall"] == 0.0

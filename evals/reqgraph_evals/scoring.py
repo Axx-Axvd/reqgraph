@@ -7,12 +7,13 @@ SCH/SND (T-106). The probe is re-run with real checks in T-601.
 import re
 from collections import deque
 from collections.abc import Mapping, Sequence
-from difflib import SequenceMatcher
 from typing import Any
 
 from reqgraph_evals.schemas import Extraction, ProcessSketch, Question, Rewrite
 
-MATCH_THRESHOLD = 0.55
+MATCH_THRESHOLD = 0.5
+STEM = 5  # crude Russian stemming: first letters of a word survive most inflections
+STOPWORDS = {"систем", "котор", "чтобы", "можно", "должн", "когда", "через", "после", "также"}
 VAGUE_TERMS = [
     "быстро",
     "быстрый",
@@ -40,12 +41,15 @@ SHALL = re.compile(r"\bдолж(ен|на|но|ны)\b", re.IGNORECASE)
 Scores = dict[str, float]
 
 
-def _norm(text: str) -> str:
-    return " ".join(re.sub(r"[^\w\s]", " ", text.lower().replace("ё", "е")).split())
+def _stems(text: str) -> set[str]:
+    words = re.findall(r"\w+", text.lower().replace("ё", "е"))
+    return {w[:STEM] for w in words if len(w) > 3 or w.isdigit()} - STOPWORDS
 
 
 def _similar(a: str, b: str) -> float:
-    return SequenceMatcher(None, _norm(a), _norm(b)).ratio()
+    """Share of the shorter text's word stems found in the other text."""
+    sa, sb = _stems(a), _stems(b)
+    return len(sa & sb) / min(len(sa), len(sb)) if sa and sb else 0.0
 
 
 def _with_score(parts: Scores) -> Scores:
