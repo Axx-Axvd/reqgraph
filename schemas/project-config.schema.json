@@ -1,0 +1,175 @@
+{
+  "$defs": {
+    "ChecksConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "disabled": {
+          "default": [],
+          "items": {
+            "pattern": "^[A-Z]{3}-\\d{3}$",
+            "type": "string"
+          },
+          "title": "Disabled",
+          "type": "array"
+        },
+        "max_iterations": {
+          "default": 5,
+          "minimum": 1,
+          "title": "Max Iterations",
+          "type": "integer"
+        }
+      },
+      "title": "ChecksConfig",
+      "type": "object"
+    },
+    "InterviewConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage_need": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "default": {},
+          "propertyNames": {
+            "enum": [
+              "goals",
+              "stakeholders",
+              "scenarios",
+              "exceptions",
+              "data",
+              "rules",
+              "integrations",
+              "nfr",
+              "constraints"
+            ]
+          },
+          "title": "Coverage Need",
+          "type": "object"
+        },
+        "max_turns": {
+          "default": 40,
+          "minimum": 1,
+          "title": "Max Turns",
+          "type": "integer"
+        }
+      },
+      "title": "InterviewConfig",
+      "type": "object"
+    },
+    "ModelsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "default": "free",
+          "enum": [
+            "free",
+            "cheap",
+            "local"
+          ],
+          "title": "Profile",
+          "type": "string"
+        }
+      },
+      "title": "ModelsConfig",
+      "type": "object"
+    },
+    "ProjectInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "dsl_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Dsl Version",
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "langs": {
+          "default": [
+            "ru"
+          ],
+          "items": {
+            "enum": [
+              "ru",
+              "en"
+            ],
+            "type": "string"
+          },
+          "title": "Langs",
+          "type": "array"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reference": {
+          "default": false,
+          "title": "Reference",
+          "type": "boolean"
+        },
+        "standards": {
+          "default": [],
+          "items": {
+            "enum": [
+              "iso29148",
+              "gost34_602"
+            ],
+            "type": "string"
+          },
+          "title": "Standards",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "ProjectInfo",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Settings of one project folder: standards, languages, model profile, coverage thresholds.",
+  "properties": {
+    "checks": {
+      "$ref": "#/$defs/ChecksConfig"
+    },
+    "interview": {
+      "$ref": "#/$defs/InterviewConfig"
+    },
+    "models": {
+      "$ref": "#/$defs/ModelsConfig"
+    },
+    "project": {
+      "$ref": "#/$defs/ProjectInfo"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "project"
+  ],
+  "title": "ProjectConfig",
+  "type": "object"
+}
