@@ -304,7 +304,7 @@ def rescore(rows: Sequence[Row]) -> list[Row]:
 def write_csv(rows: Sequence[Row], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=CSV_FIELDS)
+        writer = csv.DictWriter(fh, fieldnames=CSV_FIELDS, lineterminator="\n")
         writer.writeheader()
         for r in rows:
             d = asdict(r)
