@@ -1,9 +1,13 @@
 interactions:
 - request:
     body: "// \u041C\u043E\u0434\u0435\u043B\u044C \u0434\u0430\u043D\u043D\u044B\u0445
-      \xAB\u0413\u0430\u0440\u0430\u0436 61\xBB. Id \u0441\u0443\u0449\u043D\u043E\u0441\u0442\u0438
-      \u0433\u0440\u0430\u0444\u0430 \u2014 \u0432 Note \u0442\u0430\u0431\u043B\u0438\u0446\u044B
-      (ENT-xx).\n// \u0410\u0442\u0440\u0438\u0431\u0443\u0442 \u0441\u0443\u0449\u043D\u043E\u0441\u0442\u0438
+      \xAB\u0413\u0430\u0440\u0430\u0436 61\xBB. Id \u0438 \u0440\u0443\u0441\u0441\u043A\u043E\u0435
+      \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0441\u0443\u0449\u043D\u043E\u0441\u0442\u0438
+      \u0433\u0440\u0430\u0444\u0430 \u2014 \u0432 Note \u0442\u0430\u0431\u043B\u0438\u0446\u044B\n//
+      (ENT-xx \xB7 \u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0435): \u043F\u043E
+      \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u044E TRC-005 \u0438\u0449\u0435\u0442
+      \u0441\u0443\u0449\u043D\u043E\u0441\u0442\u044C \u0432 \u0444\u043E\u0440\u043C\u0443\u043B\u0438\u0440\u043E\u0432\u043A\u0430\u0445
+      \u0424\u0422.\n// \u0410\u0442\u0440\u0438\u0431\u0443\u0442 \u0441\u0443\u0449\u043D\u043E\u0441\u0442\u0438
       \u0430\u0434\u0440\u0435\u0441\u0443\u0435\u0442\u0441\u044F \u043A\u0430\u043A
       ENT-xx.<column>, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 ENT-05.status.\n\nProject
       garage61 {\n  database_type: 'PostgreSQL'\n  Note: '\u042D\u0442\u0430\u043B\u043E\u043D\u043D\u044B\u0439
@@ -15,39 +19,42 @@ interactions:
       client {\n  id int [pk, increment]\n  full_name varchar\n  phone varchar [unique,
       not null, note: '\u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043D
       SMS-\u043A\u043E\u0434\u043E\u043C (FR-004)']\n  created_at timestamp [not null]\n
-      \ Note: 'ENT-01'\n}\n\nTable service {\n  id int [pk, increment]\n  title varchar
-      [not null]\n  specialization varchar [not null, note: '\u043A\u0430\u043A\u0430\u044F
-      \u0441\u043F\u0435\u0446\u0438\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F
+      \ Note: 'ENT-01 \xB7 \u041A\u043B\u0438\u0435\u043D\u0442'\n}\n\nTable service
+      {\n  id int [pk, increment]\n  title varchar [not null]\n  specialization varchar
+      [not null, note: '\u043A\u0430\u043A\u0430\u044F \u0441\u043F\u0435\u0446\u0438\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F
       \u043C\u0430\u0441\u0442\u0435\u0440\u0430 \u043D\u0443\u0436\u043D\u0430']\n
-      \ duration_min int [not null]\n  base_price numeric [not null]\n  Note: 'ENT-02'\n}\n\nTable
-      car {\n  id int [pk, increment]\n  plate_number varchar [unique, not null]\n
-      \ model varchar\n  client_id int [ref: > client.id]\n  contract_id int [ref:
-      > contract.id, note: '\u0437\u0430\u043F\u043E\u043B\u043D\u0435\u043D \u0434\u043B\u044F
-      \u043C\u0430\u0448\u0438\u043D \u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E
-      \u0430\u0432\u0442\u043E\u043F\u0430\u0440\u043A\u0430']\n  Note: 'ENT-03'\n}\n\nTable
-      master {\n  id int [pk, increment]\n  full_name varchar [not null]\n  specialization
-      varchar [not null]\n  Note: 'ENT-04'\n}\n\nTable master_shift {\n  id int [pk,
-      increment]\n  master_id int [ref: > master.id, not null]\n  shift_date date
-      [not null]\n  starts_at time [not null]\n  ends_at time [not null]\n  Note:
-      'ENT-08'\n}\n\nTable booking {\n  id int [pk, increment]\n  client_id int [ref:
-      > client.id, not null]\n  car_id int [ref: > car.id]\n  service_id int [ref:
-      > service.id, not null]\n  master_id int [ref: > master.id, not null]\n  starts_at
-      timestamp [not null]\n  status booking_status [not null, default: 'confirmed']\n
-      \ created_at timestamp [not null]\n  Note: 'ENT-05'\n}\n\nTable contract {\n
-      \ id int [pk, increment]\n  company_name varchar [not null]\n  inn varchar [not
-      null]\n  payment_delay_days int [not null, default: 30]\n  valid_until date
-      [not null]\n  Note: 'ENT-06'\n}\n\nTable invoice {\n  id int [pk, increment]\n
-      \ contract_id int [ref: > contract.id, not null]\n  period_month date [not null,
-      note: '\u043F\u0435\u0440\u0432\u044B\u0439 \u0434\u0435\u043D\u044C \u043C\u0435\u0441\u044F\u0446\u0430,
-      \u0437\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0432\u044B\u0441\u0442\u0430\u0432\u043B\u0435\u043D
+      \ duration_min int [not null]\n  base_price numeric [not null]\n  Note: 'ENT-02
+      \xB7 \u0423\u0441\u043B\u0443\u0433\u0430'\n}\n\nTable car {\n  id int [pk,
+      increment]\n  plate_number varchar [unique, not null]\n  model varchar\n  client_id
+      int [ref: > client.id]\n  contract_id int [ref: > contract.id, note: '\u0437\u0430\u043F\u043E\u043B\u043D\u0435\u043D
+      \u0434\u043B\u044F \u043C\u0430\u0448\u0438\u043D \u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u043E\u0433\u043E
+      \u0430\u0432\u0442\u043E\u043F\u0430\u0440\u043A\u0430']\n  Note: 'ENT-03 \xB7
+      \u0410\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u044C'\n}\n\nTable master
+      {\n  id int [pk, increment]\n  full_name varchar [not null]\n  specialization
+      varchar [not null]\n  Note: 'ENT-04 \xB7 \u041C\u0430\u0441\u0442\u0435\u0440'\n}\n\nTable
+      master_shift {\n  id int [pk, increment]\n  master_id int [ref: > master.id,
+      not null]\n  shift_date date [not null]\n  starts_at time [not null]\n  ends_at
+      time [not null]\n  Note: 'ENT-08 \xB7 \u0421\u043C\u0435\u043D\u0430 \u043C\u0430\u0441\u0442\u0435\u0440\u0430'\n}\n\nTable
+      booking {\n  id int [pk, increment]\n  client_id int [ref: > client.id, not
+      null]\n  car_id int [ref: > car.id]\n  service_id int [ref: > service.id, not
+      null]\n  master_id int [ref: > master.id, not null]\n  starts_at timestamp [not
+      null]\n  status booking_status [not null, default: 'confirmed']\n  created_at
+      timestamp [not null]\n  Note: 'ENT-05 \xB7 \u0417\u0430\u043F\u0438\u0441\u044C'\n}\n\nTable
+      contract {\n  id int [pk, increment]\n  company_name varchar [not null]\n  inn
+      varchar [not null]\n  payment_delay_days int [not null, default: 30]\n  valid_until
+      date [not null]\n  Note: 'ENT-06 \xB7 \u0414\u043E\u0433\u043E\u0432\u043E\u0440'\n}\n\nTable
+      invoice {\n  id int [pk, increment]\n  contract_id int [ref: > contract.id,
+      not null]\n  period_month date [not null, note: '\u043F\u0435\u0440\u0432\u044B\u0439
+      \u0434\u0435\u043D\u044C \u043C\u0435\u0441\u044F\u0446\u0430, \u0437\u0430
+      \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0432\u044B\u0441\u0442\u0430\u0432\u043B\u0435\u043D
       \u0441\u0447\u0451\u0442']\n  amount numeric [not null]\n  issued_at date [not
       null]\n  due_date date [not null, note: 'issued_at + contract.payment_delay_days']\n
-      \ Note: 'ENT-07'\n}\n"
+      \ Note: 'ENT-07 \xB7 \u0421\u0447\u0451\u0442'\n}\n"
     headers:
       Connection:
       - close
       Content-Length:
-      - '2533'
+      - '2830'
       Content-Type:
       - text/plain; charset=utf-8
       Host:
@@ -100,47 +107,48 @@ interactions:
         fill=\"none\" stroke=\"#29235c\" stroke-width=\"2\" points=\"704.44,-571.39
         704.44,-873.39 1067.44,-873.39 1067.44,-571.39 704.44,-571.39\"/>\n</g>\n<!--
         client -->\n<g id=\"client\" class=\"node\">\n<title>client</title>\n<g id=\"a_client\"><a
-        xlink:title=\"client&#10;ENT&#45;01\">\n<ellipse fill=\"none\" stroke=\"black\"
-        stroke-width=\"0\" cx=\"1513.79\" cy=\"-2479.39\" rx=\"281.36\" ry=\"214.92\"/>\n<polygon
-        fill=\"#1d71b8\" stroke=\"transparent\" points=\"1316.79,-2569.39 1316.79,-2629.39
-        1710.79,-2629.39 1710.79,-2569.39 1316.79,-2569.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"1316.79,-2569.39 1316.79,-2629.39 1710.79,-2629.39
-        1710.79,-2569.39 1316.79,-2569.39\"/>\n<text text-anchor=\"start\" x=\"1414.21\"
-        y=\"-2590.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
-        fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;client &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon
-        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"1316.79,-2509.39 1316.79,-2569.39
-        1710.79,-2569.39 1710.79,-2509.39 1316.79,-2509.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"1316.79,-2509.39 1316.79,-2569.39 1710.79,-2569.39
-        1710.79,-2509.39 1316.79,-2509.39\"/>\n<text text-anchor=\"start\" x=\"1327.79\"
-        y=\"-2530.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
-        fill=\"#29235c\">id</text>\n<text text-anchor=\"start\" x=\"1352.68\" y=\"-2530.59\"
-        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
-        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1666.01\" y=\"-2530.59\"
-        font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
-        fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        xlink:title=\"client&#10;ENT&#45;01 \xB7 \u041A\u043B\u0438\u0435\u043D\u0442\">\n<ellipse
+        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"1513.79\" cy=\"-2479.39\"
+        rx=\"281.36\" ry=\"214.92\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
+        points=\"1316.79,-2569.39 1316.79,-2629.39 1710.79,-2629.39 1710.79,-2569.39
+        1316.79,-2569.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"1316.79,-2569.39
+        1316.79,-2629.39 1710.79,-2629.39 1710.79,-2569.39 1316.79,-2569.39\"/>\n<text
+        text-anchor=\"start\" x=\"1414.21\" y=\"-2590.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;client
+        &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        points=\"1316.79,-2509.39 1316.79,-2569.39 1710.79,-2569.39 1710.79,-2509.39
+        1316.79,-2509.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"1316.79,-2509.39
+        1316.79,-2569.39 1710.79,-2569.39 1710.79,-2509.39 1316.79,-2509.39\"/>\n<text
+        text-anchor=\"start\" x=\"1327.79\" y=\"-2530.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">id</text>\n<text
+        text-anchor=\"start\" x=\"1352.68\" y=\"-2530.59\" font-family=\"Helvetica,sans-Serif\"
+        font-size=\"32.00\" fill=\"#29235c\"> &#160;&#160;&#160;</text>\n<text text-anchor=\"start\"
+        x=\"1666.01\" y=\"-2530.59\" font-family=\"Helvetica,sans-Serif\" font-style=\"italic\"
+        font-size=\"32.00\" fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\"
+        stroke=\"transparent\" points=\"1316.79,-2449.39 1316.79,-2509.39 1710.79,-2509.39
+        1710.79,-2449.39 1316.79,-2449.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
         points=\"1316.79,-2449.39 1316.79,-2509.39 1710.79,-2509.39 1710.79,-2449.39
-        1316.79,-2449.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"1316.79,-2449.39
-        1316.79,-2509.39 1710.79,-2509.39 1710.79,-2449.39 1316.79,-2449.39\"/>\n<text
-        text-anchor=\"start\" x=\"1327.79\" y=\"-2469.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\">full_name &#160;&#160;&#160;</text>\n<text
-        text-anchor=\"start\" x=\"1593.12\" y=\"-2470.59\" font-family=\"Helvetica,sans-Serif\"
-        font-style=\"italic\" font-size=\"32.00\" fill=\"#29235c\">varchar</text>\n<polygon
-        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"1316.79,-2389.39 1316.79,-2449.39
-        1710.79,-2449.39 1710.79,-2389.39 1316.79,-2389.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"1316.79,-2389.39 1316.79,-2449.39 1710.79,-2449.39
-        1710.79,-2389.39 1316.79,-2389.39\"/>\n<text text-anchor=\"start\" x=\"1327.79\"
-        y=\"-2409.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">phone
-        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1554.03\" y=\"-2410.59\"
+        1316.79,-2449.39\"/>\n<text text-anchor=\"start\" x=\"1327.79\" y=\"-2469.59\"
+        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">full_name
+        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1593.12\" y=\"-2470.59\"
         font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
-        fill=\"#29235c\">varchar</text>\n<text text-anchor=\"start\" x=\"1660.7\"
-        y=\"-2410.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
-        </text>\n<text text-anchor=\"start\" x=\"1669.59\" y=\"-2410.59\" font-family=\"Helvetica,sans-Serif\"
-        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon
-        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"1316.79,-2329.39 1316.79,-2389.39
-        1710.79,-2389.39 1710.79,-2329.39 1316.79,-2329.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"1316.79,-2329.39 1316.79,-2389.39 1710.79,-2389.39
-        1710.79,-2329.39 1316.79,-2329.39\"/>\n<text text-anchor=\"start\" x=\"1327.42\"
-        y=\"-2349.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">created_at
+        fill=\"#29235c\">varchar</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        points=\"1316.79,-2389.39 1316.79,-2449.39 1710.79,-2449.39 1710.79,-2389.39
+        1316.79,-2389.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"1316.79,-2389.39
+        1316.79,-2449.39 1710.79,-2449.39 1710.79,-2389.39 1316.79,-2389.39\"/>\n<text
+        text-anchor=\"start\" x=\"1327.79\" y=\"-2409.59\" font-family=\"Helvetica,sans-Serif\"
+        font-size=\"32.00\" fill=\"#29235c\">phone &#160;&#160;&#160;</text>\n<text
+        text-anchor=\"start\" x=\"1554.03\" y=\"-2410.59\" font-family=\"Helvetica,sans-Serif\"
+        font-style=\"italic\" font-size=\"32.00\" fill=\"#29235c\">varchar</text>\n<text
+        text-anchor=\"start\" x=\"1660.7\" y=\"-2410.59\" font-family=\"Helvetica,sans-Serif\"
+        font-size=\"32.00\" fill=\"#29235c\"> </text>\n<text text-anchor=\"start\"
+        x=\"1669.59\" y=\"-2410.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\"
+        font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon fill=\"#e7e2dd\"
+        stroke=\"transparent\" points=\"1316.79,-2329.39 1316.79,-2389.39 1710.79,-2389.39
+        1710.79,-2329.39 1316.79,-2329.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
+        points=\"1316.79,-2329.39 1316.79,-2389.39 1710.79,-2389.39 1710.79,-2329.39
+        1316.79,-2329.39\"/>\n<text text-anchor=\"start\" x=\"1327.42\" y=\"-2349.59\"
+        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">created_at
         &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1513.47\" y=\"-2350.59\"
         font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
         fill=\"#29235c\">timestamp</text>\n<text text-anchor=\"start\" x=\"1661.02\"
@@ -150,14 +158,14 @@ interactions:
         fill=\"none\" stroke=\"#29235c\" stroke-width=\"2\" points=\"1315.79,-2328.39
         1315.79,-2630.39 1711.79,-2630.39 1711.79,-2328.39 1315.79,-2328.39\"/>\n</a>\n</g>\n</g>\n<!--
         service -->\n<g id=\"service\" class=\"node\">\n<title>service</title>\n<g
-        id=\"a_service\"><a xlink:title=\"service&#10;ENT&#45;02\">\n<ellipse fill=\"none\"
-        stroke=\"black\" stroke-width=\"0\" cx=\"885.94\" cy=\"-1830.39\" rx=\"281.36\"
-        ry=\"257.27\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\" points=\"688.94,-1950.39
-        688.94,-2010.39 1082.94,-2010.39 1082.94,-1950.39 688.94,-1950.39\"/>\n<polygon
-        fill=\"none\" stroke=\"#29235c\" points=\"688.94,-1950.39 688.94,-2010.39
-        1082.94,-2010.39 1082.94,-1950.39 688.94,-1950.39\"/>\n<text text-anchor=\"start\"
-        x=\"773.03\" y=\"-1971.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\"
-        font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;service
+        id=\"a_service\"><a xlink:title=\"service&#10;ENT&#45;02 \xB7 \u0423\u0441\u043B\u0443\u0433\u0430\">\n<ellipse
+        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"885.94\" cy=\"-1830.39\"
+        rx=\"281.36\" ry=\"257.27\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
+        points=\"688.94,-1950.39 688.94,-2010.39 1082.94,-2010.39 1082.94,-1950.39
+        688.94,-1950.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"688.94,-1950.39
+        688.94,-2010.39 1082.94,-2010.39 1082.94,-1950.39 688.94,-1950.39\"/>\n<text
+        text-anchor=\"start\" x=\"773.03\" y=\"-1971.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;service
         &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
         points=\"688.94,-1890.39 688.94,-1950.39 1082.94,-1950.39 1082.94,-1890.39
         688.94,-1890.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"688.94,-1890.39
@@ -215,40 +223,40 @@ interactions:
         fill=\"none\" stroke=\"#29235c\" stroke-width=\"2\" points=\"687.94,-1649.39
         687.94,-2011.39 1083.94,-2011.39 1083.94,-1649.39 687.94,-1649.39\"/>\n</a>\n</g>\n</g>\n<!--
         car -->\n<g id=\"car\" class=\"node\">\n<title>car</title>\n<g id=\"a_car\"><a
-        xlink:title=\"car&#10;ENT&#45;03\">\n<ellipse fill=\"none\" stroke=\"black\"
-        stroke-width=\"0\" cx=\"885.94\" cy=\"-2363.39\" rx=\"284.01\" ry=\"257.27\"/>\n<polygon
-        fill=\"#1d71b8\" stroke=\"transparent\" points=\"686.94,-2483.39 686.94,-2543.39
-        1084.94,-2543.39 1084.94,-2483.39 686.94,-2483.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"686.94,-2483.39 686.94,-2543.39 1084.94,-2543.39
-        1084.94,-2483.39 686.94,-2483.39\"/>\n<text text-anchor=\"start\" x=\"801.47\"
-        y=\"-2504.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
-        fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;car &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon
-        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"686.94,-2423.39 686.94,-2483.39
-        1084.94,-2483.39 1084.94,-2423.39 686.94,-2423.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"686.94,-2423.39 686.94,-2483.39 1084.94,-2483.39
-        1084.94,-2423.39 686.94,-2423.39\"/>\n<text text-anchor=\"start\" x=\"697.94\"
-        y=\"-2444.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
-        fill=\"#29235c\">id</text>\n<text text-anchor=\"start\" x=\"722.83\" y=\"-2444.59\"
-        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
-        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1040.16\" y=\"-2444.59\"
-        font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
-        fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        xlink:title=\"car&#10;ENT&#45;03 \xB7 \u0410\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u044C\">\n<ellipse
+        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"885.94\" cy=\"-2363.39\"
+        rx=\"284.01\" ry=\"257.27\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
+        points=\"686.94,-2483.39 686.94,-2543.39 1084.94,-2543.39 1084.94,-2483.39
+        686.94,-2483.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"686.94,-2483.39
+        686.94,-2543.39 1084.94,-2543.39 1084.94,-2483.39 686.94,-2483.39\"/>\n<text
+        text-anchor=\"start\" x=\"801.47\" y=\"-2504.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;car
+        &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        points=\"686.94,-2423.39 686.94,-2483.39 1084.94,-2483.39 1084.94,-2423.39
+        686.94,-2423.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"686.94,-2423.39
+        686.94,-2483.39 1084.94,-2483.39 1084.94,-2423.39 686.94,-2423.39\"/>\n<text
+        text-anchor=\"start\" x=\"697.94\" y=\"-2444.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">id</text>\n<text
+        text-anchor=\"start\" x=\"722.83\" y=\"-2444.59\" font-family=\"Helvetica,sans-Serif\"
+        font-size=\"32.00\" fill=\"#29235c\"> &#160;&#160;&#160;</text>\n<text text-anchor=\"start\"
+        x=\"1040.16\" y=\"-2444.59\" font-family=\"Helvetica,sans-Serif\" font-style=\"italic\"
+        font-size=\"32.00\" fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\"
+        stroke=\"transparent\" points=\"686.94,-2363.39 686.94,-2423.39 1084.94,-2423.39
+        1084.94,-2363.39 686.94,-2363.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
         points=\"686.94,-2363.39 686.94,-2423.39 1084.94,-2423.39 1084.94,-2363.39
-        686.94,-2363.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"686.94,-2363.39
-        686.94,-2423.39 1084.94,-2423.39 1084.94,-2363.39 686.94,-2363.39\"/>\n<text
-        text-anchor=\"start\" x=\"697.85\" y=\"-2383.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\">plate_number &#160;&#160;&#160;</text>\n<text
-        text-anchor=\"start\" x=\"928.56\" y=\"-2384.59\" font-family=\"Helvetica,sans-Serif\"
-        font-style=\"italic\" font-size=\"32.00\" fill=\"#29235c\">varchar</text>\n<text
-        text-anchor=\"start\" x=\"1035.23\" y=\"-2384.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\"> </text>\n<text text-anchor=\"start\"
-        x=\"1044.13\" y=\"-2384.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\"
-        font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon fill=\"#e7e2dd\"
-        stroke=\"transparent\" points=\"686.94,-2303.39 686.94,-2363.39 1084.94,-2363.39
-        1084.94,-2303.39 686.94,-2303.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
-        points=\"686.94,-2303.39 686.94,-2363.39 1084.94,-2363.39 1084.94,-2303.39
-        686.94,-2303.39\"/>\n<text text-anchor=\"start\" x=\"697.94\" y=\"-2323.59\"
-        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">model
+        686.94,-2363.39\"/>\n<text text-anchor=\"start\" x=\"697.85\" y=\"-2383.59\"
+        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">plate_number
+        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"928.56\" y=\"-2384.59\"
+        font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
+        fill=\"#29235c\">varchar</text>\n<text text-anchor=\"start\" x=\"1035.23\"
+        y=\"-2384.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
+        </text>\n<text text-anchor=\"start\" x=\"1044.13\" y=\"-2384.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon
+        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"686.94,-2303.39 686.94,-2363.39
+        1084.94,-2363.39 1084.94,-2303.39 686.94,-2303.39\"/>\n<polygon fill=\"none\"
+        stroke=\"#29235c\" points=\"686.94,-2303.39 686.94,-2363.39 1084.94,-2363.39
+        1084.94,-2303.39 686.94,-2303.39\"/>\n<text text-anchor=\"start\" x=\"697.94\"
+        y=\"-2323.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">model
         &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"967.27\" y=\"-2324.59\"
         font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
         fill=\"#29235c\">varchar</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
@@ -278,40 +286,40 @@ interactions:
         text-anchor=\"middle\" x=\"1079.72\" y=\"-2282.99\" font-family=\"Helvetica,sans-Serif\"
         font-size=\"32.00\" fill=\"#29235c\">*</text>\n</g>\n<!-- contract -->\n<g
         id=\"contract\" class=\"node\">\n<title>contract</title>\n<g id=\"a_contract\"><a
-        xlink:title=\"contract&#10;ENT&#45;06\">\n<ellipse fill=\"none\" stroke=\"black\"
-        stroke-width=\"0\" cx=\"1513.79\" cy=\"-1680.39\" rx=\"307.68\" ry=\"257.27\"/>\n<polygon
-        fill=\"#1d71b8\" stroke=\"transparent\" points=\"1298.79,-1800.39 1298.79,-1860.39
-        1729.79,-1860.39 1729.79,-1800.39 1298.79,-1800.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"1298.79,-1800.39 1298.79,-1860.39 1729.79,-1860.39
-        1729.79,-1800.39 1298.79,-1800.39\"/>\n<text text-anchor=\"start\" x=\"1395.14\"
-        y=\"-1821.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
-        fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;contract &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon
-        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"1298.79,-1740.39 1298.79,-1800.39
-        1729.79,-1800.39 1729.79,-1740.39 1298.79,-1740.39\"/>\n<polygon fill=\"none\"
-        stroke=\"#29235c\" points=\"1298.79,-1740.39 1298.79,-1800.39 1729.79,-1800.39
-        1729.79,-1740.39 1298.79,-1740.39\"/>\n<text text-anchor=\"start\" x=\"1309.79\"
-        y=\"-1761.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
-        fill=\"#29235c\">id</text>\n<text text-anchor=\"start\" x=\"1334.68\" y=\"-1761.59\"
-        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
-        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1685.01\" y=\"-1761.59\"
-        font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
-        fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        xlink:title=\"contract&#10;ENT&#45;06 \xB7 \u0414\u043E\u0433\u043E\u0432\u043E\u0440\">\n<ellipse
+        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"1513.79\" cy=\"-1680.39\"
+        rx=\"307.68\" ry=\"257.27\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
+        points=\"1298.79,-1800.39 1298.79,-1860.39 1729.79,-1860.39 1729.79,-1800.39
+        1298.79,-1800.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"1298.79,-1800.39
+        1298.79,-1860.39 1729.79,-1860.39 1729.79,-1800.39 1298.79,-1800.39\"/>\n<text
+        text-anchor=\"start\" x=\"1395.14\" y=\"-1821.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;contract
+        &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        points=\"1298.79,-1740.39 1298.79,-1800.39 1729.79,-1800.39 1729.79,-1740.39
+        1298.79,-1740.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"1298.79,-1740.39
+        1298.79,-1800.39 1729.79,-1800.39 1729.79,-1740.39 1298.79,-1740.39\"/>\n<text
+        text-anchor=\"start\" x=\"1309.79\" y=\"-1761.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">id</text>\n<text
+        text-anchor=\"start\" x=\"1334.68\" y=\"-1761.59\" font-family=\"Helvetica,sans-Serif\"
+        font-size=\"32.00\" fill=\"#29235c\"> &#160;&#160;&#160;</text>\n<text text-anchor=\"start\"
+        x=\"1685.01\" y=\"-1761.59\" font-family=\"Helvetica,sans-Serif\" font-style=\"italic\"
+        font-size=\"32.00\" fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\"
+        stroke=\"transparent\" points=\"1298.79,-1680.39 1298.79,-1740.39 1729.79,-1740.39
+        1729.79,-1680.39 1298.79,-1680.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
         points=\"1298.79,-1680.39 1298.79,-1740.39 1729.79,-1740.39 1729.79,-1680.39
-        1298.79,-1680.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"1298.79,-1680.39
-        1298.79,-1740.39 1729.79,-1740.39 1729.79,-1680.39 1298.79,-1680.39\"/>\n<text
-        text-anchor=\"start\" x=\"1309.79\" y=\"-1700.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\">company_name &#160;&#160;&#160;</text>\n<text
-        text-anchor=\"start\" x=\"1573.41\" y=\"-1701.59\" font-family=\"Helvetica,sans-Serif\"
-        font-style=\"italic\" font-size=\"32.00\" fill=\"#29235c\">varchar</text>\n<text
-        text-anchor=\"start\" x=\"1680.08\" y=\"-1701.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\"> </text>\n<text text-anchor=\"start\"
-        x=\"1688.97\" y=\"-1701.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\"
-        font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon fill=\"#e7e2dd\"
-        stroke=\"transparent\" points=\"1298.79,-1620.39 1298.79,-1680.39 1729.79,-1680.39
-        1729.79,-1620.39 1298.79,-1620.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
-        points=\"1298.79,-1620.39 1298.79,-1680.39 1729.79,-1680.39 1729.79,-1620.39
-        1298.79,-1620.39\"/>\n<text text-anchor=\"start\" x=\"1309.79\" y=\"-1640.59\"
-        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">inn
+        1298.79,-1680.39\"/>\n<text text-anchor=\"start\" x=\"1309.79\" y=\"-1700.59\"
+        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">company_name
+        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1573.41\" y=\"-1701.59\"
+        font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
+        fill=\"#29235c\">varchar</text>\n<text text-anchor=\"start\" x=\"1680.08\"
+        y=\"-1701.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
+        </text>\n<text text-anchor=\"start\" x=\"1688.97\" y=\"-1701.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon
+        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"1298.79,-1620.39 1298.79,-1680.39
+        1729.79,-1680.39 1729.79,-1620.39 1298.79,-1620.39\"/>\n<polygon fill=\"none\"
+        stroke=\"#29235c\" points=\"1298.79,-1620.39 1298.79,-1680.39 1729.79,-1680.39
+        1729.79,-1620.39 1298.79,-1620.39\"/>\n<text text-anchor=\"start\" x=\"1309.79\"
+        y=\"-1640.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">inn
         &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"1573.03\" y=\"-1641.59\"
         font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
         fill=\"#29235c\">varchar</text>\n<text text-anchor=\"start\" x=\"1679.7\"
@@ -350,11 +358,12 @@ interactions:
         font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">1</text>\n<text
         text-anchor=\"middle\" x=\"1079.72\" y=\"-2222.99\" font-family=\"Helvetica,sans-Serif\"
         font-size=\"32.00\" fill=\"#29235c\">*</text>\n</g>\n<!-- master -->\n<g id=\"master\"
-        class=\"node\">\n<title>master</title>\n<g id=\"a_master\"><a xlink:title=\"master&#10;ENT&#45;04\">\n<ellipse
-        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"885.94\" cy=\"-317.39\"
-        rx=\"281.36\" ry=\"172.57\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
-        points=\"688.94,-377.39 688.94,-437.39 1082.94,-437.39 1082.94,-377.39 688.94,-377.39\"/>\n<polygon
-        fill=\"none\" stroke=\"#29235c\" points=\"688.94,-377.39 688.94,-437.39 1082.94,-437.39
+        class=\"node\">\n<title>master</title>\n<g id=\"a_master\"><a xlink:title=\"master&#10;ENT&#45;04
+        \xB7 \u041C\u0430\u0441\u0442\u0435\u0440\">\n<ellipse fill=\"none\" stroke=\"black\"
+        stroke-width=\"0\" cx=\"885.94\" cy=\"-317.39\" rx=\"281.36\" ry=\"172.57\"/>\n<polygon
+        fill=\"#1d71b8\" stroke=\"transparent\" points=\"688.94,-377.39 688.94,-437.39
+        1082.94,-437.39 1082.94,-377.39 688.94,-377.39\"/>\n<polygon fill=\"none\"
+        stroke=\"#29235c\" points=\"688.94,-377.39 688.94,-437.39 1082.94,-437.39
         1082.94,-377.39 688.94,-377.39\"/>\n<text text-anchor=\"start\" x=\"774.8\"
         y=\"-398.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
         fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;master &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon
@@ -392,36 +401,36 @@ interactions:
         fill=\"none\" stroke=\"#29235c\" stroke-width=\"2\" points=\"687.94,-196.39
         687.94,-438.39 1083.94,-438.39 1083.94,-196.39 687.94,-196.39\"/>\n</a>\n</g>\n</g>\n<!--
         master_shift -->\n<g id=\"master_shift\" class=\"node\">\n<title>master_shift</title>\n<g
-        id=\"a_master_shift\"><a xlink:title=\"master_shift&#10;ENT&#45;08\">\n<ellipse
-        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"282.84\" cy=\"-257.39\"
-        rx=\"229.21\" ry=\"257.27\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
-        points=\"122.84,-377.39 122.84,-437.39 442.84,-437.39 442.84,-377.39 122.84,-377.39\"/>\n<polygon
-        fill=\"none\" stroke=\"#29235c\" points=\"122.84,-377.39 122.84,-437.39 442.84,-437.39
-        442.84,-377.39 122.84,-377.39\"/>\n<text text-anchor=\"start\" x=\"133.47\"
-        y=\"-398.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
-        fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;master_shift &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon
-        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"122.84,-317.39 122.84,-377.39
-        442.84,-377.39 442.84,-317.39 122.84,-317.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
-        points=\"122.84,-317.39 122.84,-377.39 442.84,-377.39 442.84,-317.39 122.84,-317.39\"/>\n<text
-        text-anchor=\"start\" x=\"133.84\" y=\"-338.59\" font-family=\"Helvetica,sans-Serif\"
-        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">id</text>\n<text
-        text-anchor=\"start\" x=\"158.73\" y=\"-338.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\"> &#160;&#160;&#160;</text>\n<text text-anchor=\"start\"
-        x=\"398.06\" y=\"-338.59\" font-family=\"Helvetica,sans-Serif\" font-style=\"italic\"
-        font-size=\"32.00\" fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\"
-        stroke=\"transparent\" points=\"122.84,-257.39 122.84,-317.39 442.84,-317.39
-        442.84,-257.39 122.84,-257.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
-        points=\"122.84,-257.39 122.84,-317.39 442.84,-317.39 442.84,-257.39 122.84,-257.39\"/>\n<text
-        text-anchor=\"start\" x=\"133.84\" y=\"-277.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\">master_id &#160;&#160;&#160;</text>\n<text
-        text-anchor=\"start\" x=\"358.97\" y=\"-278.59\" font-family=\"Helvetica,sans-Serif\"
-        font-style=\"italic\" font-size=\"32.00\" fill=\"#29235c\">int</text>\n<text
-        text-anchor=\"start\" x=\"392.75\" y=\"-278.59\" font-family=\"Helvetica,sans-Serif\"
-        font-size=\"32.00\" fill=\"#29235c\"> </text>\n<text text-anchor=\"start\"
-        x=\"401.64\" y=\"-278.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\"
-        font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon fill=\"#e7e2dd\"
-        stroke=\"transparent\" points=\"122.84,-197.39 122.84,-257.39 442.84,-257.39
-        442.84,-197.39 122.84,-197.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
+        id=\"a_master_shift\"><a xlink:title=\"master_shift&#10;ENT&#45;08 \xB7 \u0421\u043C\u0435\u043D\u0430
+        \u043C\u0430\u0441\u0442\u0435\u0440\u0430\">\n<ellipse fill=\"none\" stroke=\"black\"
+        stroke-width=\"0\" cx=\"282.84\" cy=\"-257.39\" rx=\"229.21\" ry=\"257.27\"/>\n<polygon
+        fill=\"#1d71b8\" stroke=\"transparent\" points=\"122.84,-377.39 122.84,-437.39
+        442.84,-437.39 442.84,-377.39 122.84,-377.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
+        points=\"122.84,-377.39 122.84,-437.39 442.84,-437.39 442.84,-377.39 122.84,-377.39\"/>\n<text
+        text-anchor=\"start\" x=\"133.47\" y=\"-398.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;master_shift
+        &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        points=\"122.84,-317.39 122.84,-377.39 442.84,-377.39 442.84,-317.39 122.84,-317.39\"/>\n<polygon
+        fill=\"none\" stroke=\"#29235c\" points=\"122.84,-317.39 122.84,-377.39 442.84,-377.39
+        442.84,-317.39 122.84,-317.39\"/>\n<text text-anchor=\"start\" x=\"133.84\"
+        y=\"-338.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
+        fill=\"#29235c\">id</text>\n<text text-anchor=\"start\" x=\"158.73\" y=\"-338.59\"
+        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
+        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"398.06\" y=\"-338.59\"
+        font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
+        fill=\"#29235c\">int</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
+        points=\"122.84,-257.39 122.84,-317.39 442.84,-317.39 442.84,-257.39 122.84,-257.39\"/>\n<polygon
+        fill=\"none\" stroke=\"#29235c\" points=\"122.84,-257.39 122.84,-317.39 442.84,-317.39
+        442.84,-257.39 122.84,-257.39\"/>\n<text text-anchor=\"start\" x=\"133.84\"
+        y=\"-277.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">master_id
+        &#160;&#160;&#160;</text>\n<text text-anchor=\"start\" x=\"358.97\" y=\"-278.59\"
+        font-family=\"Helvetica,sans-Serif\" font-style=\"italic\" font-size=\"32.00\"
+        fill=\"#29235c\">int</text>\n<text text-anchor=\"start\" x=\"392.75\" y=\"-278.59\"
+        font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">
+        </text>\n<text text-anchor=\"start\" x=\"401.64\" y=\"-278.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#29235c\">(!)</text>\n<polygon
+        fill=\"#e7e2dd\" stroke=\"transparent\" points=\"122.84,-197.39 122.84,-257.39
+        442.84,-257.39 442.84,-197.39 122.84,-197.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\"
         points=\"122.84,-197.39 122.84,-257.39 442.84,-257.39 442.84,-197.39 122.84,-197.39\"/>\n<text
         text-anchor=\"start\" x=\"133.84\" y=\"-217.59\" font-family=\"Helvetica,sans-Serif\"
         font-size=\"32.00\" fill=\"#29235c\">shift_date &#160;&#160;&#160;</text>\n<text
@@ -463,10 +472,10 @@ interactions:
         font-size=\"32.00\" fill=\"#29235c\">1</text>\n<text text-anchor=\"middle\"
         x=\"437.62\" y=\"-258.59\" font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\"
         fill=\"#29235c\">*</text>\n</g>\n<!-- booking -->\n<g id=\"booking\" class=\"node\">\n<title>booking</title>\n<g
-        id=\"a_booking\"><a xlink:title=\"booking&#10;ENT&#45;05\">\n<ellipse fill=\"none\"
-        stroke=\"black\" stroke-width=\"0\" cx=\"282.84\" cy=\"-1920.39\" rx=\"282.69\"
-        ry=\"384.83\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\" points=\"84.84,-2130.39
-        84.84,-2190.39 480.84,-2190.39 480.84,-2130.39 84.84,-2130.39\"/>\n<polygon
+        id=\"a_booking\"><a xlink:title=\"booking&#10;ENT&#45;05 \xB7 \u0417\u0430\u043F\u0438\u0441\u044C\">\n<ellipse
+        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"282.84\" cy=\"-1920.39\"
+        rx=\"282.69\" ry=\"384.83\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
+        points=\"84.84,-2130.39 84.84,-2190.39 480.84,-2190.39 480.84,-2130.39 84.84,-2130.39\"/>\n<polygon
         fill=\"none\" stroke=\"#29235c\" points=\"84.84,-2130.39 84.84,-2190.39 480.84,-2190.39
         480.84,-2130.39 84.84,-2130.39\"/>\n<text text-anchor=\"start\" x=\"164.57\"
         y=\"-2151.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\" font-size=\"32.00\"
@@ -593,14 +602,14 @@ interactions:
         fill=\"#29235c\">1</text>\n<text text-anchor=\"middle\" x=\"475.62\" y=\"-1869.99\"
         font-family=\"Helvetica,sans-Serif\" font-size=\"32.00\" fill=\"#29235c\">*</text>\n</g>\n<!--
         invoice -->\n<g id=\"invoice\" class=\"node\">\n<title>invoice</title>\n<g
-        id=\"a_invoice\"><a xlink:title=\"invoice&#10;ENT&#45;07\">\n<ellipse fill=\"none\"
-        stroke=\"black\" stroke-width=\"0\" cx=\"885.94\" cy=\"-1255.39\" rx=\"253.29\"
-        ry=\"299.63\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\" points=\"708.94,-1405.39
-        708.94,-1465.39 1062.94,-1465.39 1062.94,-1405.39 708.94,-1405.39\"/>\n<polygon
-        fill=\"none\" stroke=\"#29235c\" points=\"708.94,-1405.39 708.94,-1465.39
-        1062.94,-1465.39 1062.94,-1405.39 708.94,-1405.39\"/>\n<text text-anchor=\"start\"
-        x=\"773.91\" y=\"-1426.59\" font-family=\"Helvetica,sans-Serif\" font-weight=\"bold\"
-        font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;invoice
+        id=\"a_invoice\"><a xlink:title=\"invoice&#10;ENT&#45;07 \xB7 \u0421\u0447\u0451\u0442\">\n<ellipse
+        fill=\"none\" stroke=\"black\" stroke-width=\"0\" cx=\"885.94\" cy=\"-1255.39\"
+        rx=\"253.29\" ry=\"299.63\"/>\n<polygon fill=\"#1d71b8\" stroke=\"transparent\"
+        points=\"708.94,-1405.39 708.94,-1465.39 1062.94,-1465.39 1062.94,-1405.39
+        708.94,-1405.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"708.94,-1405.39
+        708.94,-1465.39 1062.94,-1465.39 1062.94,-1405.39 708.94,-1405.39\"/>\n<text
+        text-anchor=\"start\" x=\"773.91\" y=\"-1426.59\" font-family=\"Helvetica,sans-Serif\"
+        font-weight=\"bold\" font-size=\"32.00\" fill=\"#ffffff\"> &#160;&#160;&#160;&#160;&#160;&#160;invoice
         &#160;&#160;&#160;&#160;&#160;&#160;</text>\n<polygon fill=\"#e7e2dd\" stroke=\"transparent\"
         points=\"708.94,-1345.39 708.94,-1405.39 1062.94,-1405.39 1062.94,-1345.39
         708.94,-1345.39\"/>\n<polygon fill=\"none\" stroke=\"#29235c\" points=\"708.94,-1345.39
@@ -679,24 +688,24 @@ interactions:
         font-size=\"32.00\" fill=\"#29235c\">*</text>\n</g>\n</g>\n</svg>\n\n"
     headers:
       CF-RAY:
-      - a4f3c236384fad11-IAD
+      - a4f4100dabbcf4b5-IAD
       Connection:
       - close
       Content-Length:
-      - '48131'
+      - '48278'
       Content-Type:
       - image/svg+xml
       Date:
-      - Fri, 23 Oct 2026 21:15:43 GMT
+      - Fri, 23 Oct 2026 22:08:51 GMT
       Nel:
       - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
       Report-To:
-      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=57qFiMOIdNx%2Fo3ndOewWD6ul8CW1Vg1RuRWIaZ6iL8sT0O%2F%2F%2BqroNH9pR7Tq9V7tn72bIEFvNswWMHVuB5tqCPMoUYN3OcDnBSbr%2FXJto4IsUP0VBFl1ROlasA%3D%3D"}]}'
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=DN3HA0xG042rNOEA86NMSO49sFxa76F7oQi2pL00oEKwvonXk9v5QKUJODtD1iJpAi1NcH64Z539zkWnXr2xA98yl7n0USz%2FWJWljhvxpFycUfsYjUNkTkob7Q%3D%3D"}]}'
       Server:
       - cloudflare
       Server-Timing:
       - cfCacheStatus;desc="DYNAMIC"
-      - cfEdge;dur=28,cfOrigin;dur=591
+      - cfEdge;dur=43,cfOrigin;dur=908
       alt-svc:
       - h3=":443"; ma=86400
       cache-control:
@@ -704,9 +713,9 @@ interactions:
       cf-cache-status:
       - DYNAMIC
       etag:
-      - '"1.0.3167ALXf4PIYKNtQQVoteNj000"'
+      - '"1.0.31RVStaLdwkprMwzbSz9PMu000"'
       expires:
-      - Wed, 28 Oct 2026 21:15:42 GMT
+      - Wed, 28 Oct 2026 22:08:51 GMT
       last-modified:
       - Mon, 05 Oct 2026 18:06:07 GMT
     status:

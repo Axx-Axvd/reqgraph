@@ -50,8 +50,8 @@ mypy_path = ["packages/core/src", "apps/api/src", "evals"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-# lxml, networkx, pydbml and pm4py ship no type hints; stub packages lag behind or do not exist
-module = ["lxml", "lxml.*", "networkx", "networkx.*", "pydbml", "pydbml.*", "pm4py", "pm4py.*"]
+# lxml, networkx, pydbml, pm4py and pymorphy3 ship no type hints; stub packages lag behind or do not exist
+module = ["lxml", "lxml.*", "networkx", "networkx.*", "pydbml", "pydbml.*", "pm4py", "pm4py.*", "pymorphy3", "pymorphy3.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

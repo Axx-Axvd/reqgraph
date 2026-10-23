@@ -31,3 +31,69 @@
 - name: process_too_wide_for_a_page
   add: [models/processes/PRC-92.process.json, processes/too_wide.process.json]
   expect: {SND-004: [PRC-92]}
+
+# --- ISO: качество требований ------------------------------------------------------------------
+# edit: [[файл, id узла, поле, значение], …] — значение null удаляет поле; delete_node: [файл, id].
+- name: vague_word_in_fr001
+  review: true
+  edit: [[requirements/functional.yaml, FR-001, statement, "Система должна быстро показывать клиенту список услуг с длительностью и базовой ценой каждой услуги."]]
+  expect: {ISO-001: [FR-001]}
+- name: vague_phrase_in_acceptance
+  edit: [[requirements/functional.yaml, FR-002, acceptance, ["показываются удобные слоты и т. д."]]]
+  expect: {ISO-001: [FR-002]}
+- name: two_actions_in_one_fr
+  edit: [[requirements/functional.yaml, FR-003, statement, "Система должна создать запись и отправить клиенту SMS с подтверждением."]]
+  expect: {ISO-002: [FR-003]}
+- name: nfr_metric_removed
+  review: true
+  edit: [[requirements/nonfunctional.yaml, NFR-002, metric, null]]
+  load_error: metric   # у НФТ метрика обязательна по формату узла (T-101): проект не читается
+- name: nfr_threshold_without_number
+  edit: [[requirements/nonfunctional.yaml, NFR-002, metric, {name: "доля доставленных SMS", unit: "%", threshold: "высокая", method: "отчёт SMS-шлюза"}]]
+  expect: {ISO-003: [NFR-002]}
+- name: fr_without_acceptance
+  edit: [[requirements/functional.yaml, FR-006, acceptance, null]]
+  expect: {ISO-003: [FR-006]}
+- name: tbd_in_acceptance_of_fr005
+  review: true
+  replace: [requirements/functional.yaml, '"SMS отправляется не позднее чем через 1 минуту после создания записи"', '"SMS отправляется не позднее TBD"']
+  expect: {ISO-004: [FR-005]}
+
+# --- TRC: трассировка --------------------------------------------------------------------------
+- name: br003_not_refined
+  review: true
+  edit: [[requirements/user.yaml, UR-003, refines, null]]
+  expect: {TRC-001: [BR-003]}
+- name: fr007_not_realized
+  review: true
+  edit: [[requirements/functional.yaml, FR-007, realized_by, null]]
+  expect: {TRC-002: [FR-007], TRC-003: [PRC-02.T01], TRC-004: [FR-007, PRC-02.T01]}
+- name: fr010_removed
+  review: true
+  delete_node: [requirements/functional.yaml, FR-010]
+  expect: {TRC-003: [UC-03, ENT-06, ENT-03]}
+- name: fr011_refines_missing_ur
+  review: true
+  edit: [[requirements/functional.yaml, FR-011, refines, [UR-099]]]
+  load_error: UR-099   # ссылки на узлы проверяются при сборке графа (T-101): проект не читается
+- name: realized_by_missing_process_step
+  edit: [[requirements/functional.yaml, FR-001, realized_by, [PRC-01.T99, ENT-02, C4-CNT-01]]]
+  expect: {TRC-004: [FR-001, PRC-01.T99, PRC-01.T02], TRC-003: [PRC-01.T02]}
+- name: realized_by_missing_attribute
+  edit: [[requirements/functional.yaml, FR-003, realized_by, [PRC-01.T04, ENT-05.colour, UC-01, C4-CNT-02, C4-CNT-03]]]
+  expect: {TRC-004: [FR-003, ENT-05.colour]}
+- name: depends_on_cycle
+  edit:
+    - [requirements/functional.yaml, FR-001, depends_on, [FR-002]]
+    - [requirements/functional.yaml, FR-002, depends_on, [FR-001]]
+  expect: {TRC-004: [FR-001, FR-002]}
+- name: fr011_does_not_name_the_invoice
+  replace: [requirements/functional.yaml, "счёт за работы", "документ за работы"]
+  expect: {TRC-005: [FR-011, ENT-07]}
+- name: con002_without_source
+  review: true
+  edit: [[requirements/constraints.yaml, CON-002, derived_from, null]]
+  expect: {TRC-006: [CON-002]}
+- name: br001_source_is_a_question
+  edit: [[requirements/business.yaml, BR-001, derived_from, [TURN-0003]]]
+  expect: {TRC-006: [BR-001, TURN-0003]}
