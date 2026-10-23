@@ -231,7 +231,8 @@ def validation_text(exc: ValidationError, kind: str) -> str:
     parts = []
     for err in exc.errors():
         loc = [str(x) for x in err["loc"] if x != kind]
-        parts.append(f"{'.'.join(loc) or 'узел'}: {err['msg']}")
+        message = err["msg"].removeprefix("Value error, ")  # our own validators speak Russian
+        parts.append(f"{'.'.join(loc) or 'узел'}: {message}")
     return "; ".join(parts)
 
 
