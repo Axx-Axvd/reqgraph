@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1: T-101…T-105 сделаны (граф, FileStore, DSL → BPMN, модели и Kroki, каркас проверок и `reqgraph check`), дальше T-106 (SCH, SND).
+- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`), дальше S2: T-201 (агенты).
 
 ## Команды
 Работают сейчас:
@@ -24,7 +24,7 @@
 - uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>   # DSL процесса -> BPMN 2.0 (Camunda Modeler, bpmn-js)
 - REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl   # пересоздать golden BPMN после намеренной правки компилятора
 - uv run reqgraph render <файл.dbml|.puml|.dsl|.bpmn> -o <схема.svg>   # SVG через Kroki (KROKI_URL), с кэшем
-- uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # отчёт проверок в reports/; код 1 при ошибках (проверки — с T-106)
+- uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # 20 проверок, отчёт в reports/; код 1 при ошибках
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
