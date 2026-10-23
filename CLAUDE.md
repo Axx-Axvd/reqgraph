@@ -8,13 +8,14 @@
 - Решения: docs/adr/ (001-016; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: каркас монорепо (T-001), CI (T-003) и схема Supabase с RLS (T-004) готовы; дальше по S0: T-005 -> T-006.
+- Состояние: каркас (T-001), CI (T-003), схема Supabase (T-004) и LLM-слой (T-005) готовы; дальше по S0: T-006.
 
 ## Команды
 Работают сейчас:
 - uv run python scripts/doctor.py   # готовность окружения: OK / FAIL / SKIP (--chat, --offline)
 - uv sync                           # зависимости Python
 - uv run pytest -q                  # тесты без сети (кассеты в packages/core/tests/cassettes)
+- uv run pytest packages/core/tests/llm/test_live_cassettes.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты LLM (нужна сеть)
 - uv run ruff check . && uv run ruff format --check .
 - uv run mypy packages/core
 - uv run pre-commit install         # один раз: хуки ruff, mypy и базовые проверки перед коммитом

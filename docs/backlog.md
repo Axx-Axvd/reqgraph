@@ -48,6 +48,7 @@
 
 - **Критерий приёмки:** одна функция structured() вызывает OpenRouter, Groq и Gemini (Ollama — на ноутбуке); фолбэк по 429; учёт $ (0 для бесплатных) и токенов; тесты на кассетах
 - **Зависит от:** T-001
+- **Статус:** сделано в feat/T-005: три провайдера на кассетах, фолбэк, бюджет прогона, стоимость; Ollama — проверка автора на ноутбуке
 
 ### T-006 — evals/probe на pydantic-evals: 20 задач, CLI reqgraph probe, отчёт CSV
 
@@ -265,7 +266,7 @@
 
 - [x] uv run pytest и pnpm build зелёные в GitHub Actions — ci.yml на каждый push (PR #48, ubuntu и windows, 22.10)
 - [x] supabase db reset поднимает все таблицы и RLS — миграции 0001-0002 (T-004: init и rls, тест pgTAP в CI)
-- [ ] LLM-слой вызывает OpenRouter, Groq и Gemini одной функцией — usage и $ пишутся в лог
+- [x] LLM-слой вызывает OpenRouter, Groq и Gemini одной функцией — usage и $ пишутся в лог (T-005, кассеты 23.10)
 - [ ] probe-отчёт по 3-4 моделям сохранён — выбран стартовый профиль free
 
 ### S1 · Граф, DSL, проверки (02.11 - 15.11, M1)
