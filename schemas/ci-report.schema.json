@@ -1,0 +1,205 @@
+{
+  "$defs": {
+    "CheckResult": {
+      "additionalProperties": false,
+      "properties": {
+        "errors": {
+          "default": 0,
+          "title": "Errors",
+          "type": "integer"
+        },
+        "group": {
+          "enum": [
+            "sch",
+            "snd",
+            "iso",
+            "trc",
+            "tpl"
+          ],
+          "title": "Group",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "infos": {
+          "default": 0,
+          "title": "Infos",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "warning",
+            "failed",
+            "skipped"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "warnings": {
+          "default": 0,
+          "title": "Warnings",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "group",
+        "status"
+      ],
+      "title": "CheckResult",
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "description": "One problem: which check, how serious, which nodes, what to do and who fixes it.",
+      "properties": {
+        "check_id": {
+          "pattern": "^(SCH|SND|ISO|TRC|TPL)-\\d{3}$",
+          "title": "Check Id",
+          "type": "string"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hint"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "node_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Node Ids",
+          "type": "array"
+        },
+        "owner": {
+          "enum": [
+            "analyst",
+            "modeler",
+            "standards"
+          ],
+          "title": "Owner",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "severity",
+        "message",
+        "owner"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "Summary": {
+      "additionalProperties": false,
+      "properties": {
+        "errors": {
+          "title": "Errors",
+          "type": "integer"
+        },
+        "failed": {
+          "title": "Failed",
+          "type": "integer"
+        },
+        "infos": {
+          "title": "Infos",
+          "type": "integer"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "integer"
+        },
+        "skipped": {
+          "title": "Skipped",
+          "type": "integer"
+        },
+        "warned": {
+          "title": "Warned",
+          "type": "integer"
+        },
+        "warnings": {
+          "title": "Warnings",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "errors",
+        "warnings",
+        "infos",
+        "passed",
+        "warned",
+        "failed",
+        "skipped"
+      ],
+      "title": "Summary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/CheckResult"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "project": {
+      "title": "Project",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "summary": {
+      "$ref": "#/$defs/Summary"
+    }
+  },
+  "required": [
+    "project",
+    "checks",
+    "findings",
+    "summary"
+  ],
+  "title": "CIReport",
+  "type": "object"
+}

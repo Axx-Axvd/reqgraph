@@ -102,5 +102,40 @@ def render(
         typer.echo(f"записано: {out}")
 
 
+@app.command("check")
+def check(
+    path: Annotated[Path, typer.Argument(help="Project folder (with reqgraph.yaml).")],
+    no_write: Annotated[
+        bool, typer.Option("--no-write", help="Do not write reports/ci-report.*")
+    ] = False,
+    offline: Annotated[
+        bool, typer.Option("--offline", help="Skip the checks that need Kroki.")
+    ] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="Print the report as JSON.")] = False,
+) -> None:
+    """Run the checks; exit code 1 when there are errors, 2 when the project cannot be read."""
+    import asyncio
+
+    from reqgraph.checks.runner import run_checks
+    from reqgraph.dsl.readers import model_readers
+    from reqgraph.graph.store import FileStore, StoreError
+
+    try:
+        project = FileStore(path, readers=model_readers()).load()
+    except StoreError as exc:
+        typer.echo(f"проект не прочитан: {exc}", err=True)
+        raise typer.Exit(2) from None
+    for warning in project.warnings:
+        typer.echo(f"предупреждение: {warning}", err=True)
+    report = asyncio.run(run_checks(project, offline=offline))
+    if not no_write:
+        reports = path / "reports"
+        reports.mkdir(parents=True, exist_ok=True)
+        (reports / "ci-report.json").write_bytes(report.to_json().encode("utf-8"))
+        (reports / "ci-report.md").write_bytes(report.to_markdown().encode("utf-8"))
+    typer.echo(report.to_json() if as_json else report.to_markdown(), nl=False)
+    raise typer.Exit(0 if report.ok else 1)
+
+
 if __name__ == "__main__":
     app()
