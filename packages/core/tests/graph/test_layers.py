@@ -1,4 +1,4 @@
-"""Architecture (CLAUDE.md): the domain layer does not import agents or llm (T-101)."""
+"""Architecture (CLAUDE.md): the domain layer does not import agents or llm (T-101, T-102)."""
 
 import ast
 from pathlib import Path
@@ -29,8 +29,20 @@ def test_graph_package_imports_nothing_from_upper_layers() -> None:
     root = Path(reqgraph.graph.__file__).parent
     offenders = {
         f"{path.name}: {name}"
-        for path in root.glob("*.py")
+        for path in root.rglob("*.py")
         for name in imports_of(path)
         if name.startswith(FORBIDDEN)
+    }
+    assert not offenders
+
+
+def test_graph_core_does_not_depend_on_its_store() -> None:
+    """graph/store reads and writes files using the graph; the graph itself knows no files."""
+    root = Path(reqgraph.graph.__file__).parent
+    offenders = {
+        f"{path.name}: {name}"
+        for path in root.glob("*.py")
+        for name in imports_of(path)
+        if name.startswith("reqgraph.graph.store")
     }
     assert not offenders
