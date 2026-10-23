@@ -1,4 +1,6 @@
-"""Imports every module with checks so that their @register runs (T-106, T-107, T-404 add theirs).
+"""Imports every module with checks so that their @register runs.
 
 Catalog of checks v1: docs/tech-design/05_ci.md (22 checks).
 """
+
+from reqgraph.checks import schema, sound  # noqa: F401 - registration on import

@@ -27,3 +27,13 @@ def test_checks_import_nothing_from_upper_layers() -> None:
         if name.startswith(FORBIDDEN)
     }
     assert not offenders
+
+
+def test_pm4py_is_imported_only_by_the_soundness_check() -> None:
+    """pm4py costs +160 MB and seconds (ADR-014): importing the checks must not load it."""
+    import subprocess
+    import sys
+
+    code = "import sys, reqgraph.checks, reqgraph.cli; print('pm4py' in sys.modules)"
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+    assert out.stdout.strip() == "False"

@@ -1,0 +1,33 @@
+# Мутации эталона garage61: что портим и какие проверки обязаны сработать (на каких узлах).
+# replace: [файл, было, стало] — замена первого вхождения; add: [файл в копии, файл из fixtures/bad].
+# expect: {проверка: [узлы]} — узлы находки (пустой список — находка без узлов).
+
+# --- SCH: схемы моделей ------------------------------------------------------------------------
+- name: process_realizes_missing_fr
+  replace: [models/processes/PRC-01_booking.process.json, '"realizes": ["FR-002"]', '"realizes": ["FR-099"]']
+  expect: {SCH-002: [PRC-01.T03]}
+- name: process_unknown_step_type
+  replace: [models/processes/PRC-02_reminder.process.json, '"type": "service_task",', '"type": "robot_task",']
+  expect: {SCH-002: [PRC-02]}
+- name: dbml_syntax_error
+  replace: [models/data/erd.dbml, "plate_number varchar [unique, not null]", "plate_number varchar [unique, not null"]
+  load_error: erd.dbml   # ERD нужен графу (ENT-xx): проект не читается, `reqgraph check` — код 2
+
+# --- SND: корректность процессов ---------------------------------------------------------------
+- name: drop_no_branch_of_g01
+  review: true
+  replace: [models/processes/PRC-01_booking.process.json, '["G01", "T06", "нет"],', '']
+  expect: {SND-001: [PRC-01.T06], SND-003: [PRC-01.G01]}
+- name: drop_yes_label
+  review: true
+  replace: [models/processes/PRC-01_booking.process.json, '["G01", "T04", "да"]', '["G01", "T04"]']
+  expect: {SND-003: [PRC-01.G01]}
+- name: deadlock_and_closed_by_xor
+  add: [models/processes/PRC-90.process.json, processes/deadlock.process.json]
+  expect: {SND-002: [PRC-90], SND-003: [PRC-90.G01]}
+- name: dead_end_and_lost_step
+  add: [models/processes/PRC-91.process.json, processes/dead_end.process.json]
+  expect: {SND-001: [PRC-91.T02, PRC-91.T03], SND-003: [PRC-91.G01]}
+- name: process_too_wide_for_a_page
+  add: [models/processes/PRC-92.process.json, processes/too_wide.process.json]
+  expect: {SND-004: [PRC-92]}

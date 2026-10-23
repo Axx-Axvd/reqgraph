@@ -72,7 +72,7 @@ flowchart TB
 | `Домен` | Pydantic v2, networkx | модели графа, алгоритмы на графах (достижимость, сироты) |
 | `Агенты` | langgraph, langgraph-checkpoint-postgres, psycopg 3 | граф состояний, interrupt, чекпоинты |
 | `LLM` | pydantic-ai-slim[openai], genai-prices | структурный вывод в Pydantic, ретраи, FallbackModel, лимиты, цена вызова (ADR-013) |
-| `Модели как код` | lxml (BPMN XSD), pm4py (soundness, ленивый импорт, ADR-014), pydbml, httpx -> Kroki | компиляция, валидация, soundness, SVG (BPMN — bpmn-js, остальное — Kroki) |
+| `Модели как код` | lxml (BPMN XSD), pm4py (soundness, ленивый импорт, ADR-014), pydbml, urllib -> Kroki | компиляция, валидация, soundness, SVG (BPMN — bpmn-js, остальное — Kroki) |
 | `Текст и правила` | pymorphy3, rapidfuzz, PyYAML | лемматизация для ISO-правил, нечёткое сопоставление сущностей |
 | `Экспорт` | Jinja2, pypandoc-binary (pandoc), reqif | Markdown → DOCX по reference.docx (ADR-016), ReqIF 1.2 |
 | `API` | FastAPI, uvicorn, pydantic-settings, PyJWT | REST, проверка JWT Supabase |

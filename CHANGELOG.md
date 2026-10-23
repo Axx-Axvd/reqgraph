@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Checks SCH-001…005 and SND-001…004 (T-106): BPMN against the XSD, process DSL and its references, DBML, PlantUML
+  and Structurizr through Kroki (skipped offline), reachability (networkx), soundness through pm4py with the DSL
+  adapter `dsl/soundness.py` (ADR-014, lazy import), gateways, one process per page. Fixtures: garage61 is clean,
+  bad cases are mutations of it (`tests/checks/fixtures/bad/mutations.yaml`). New dependency of `packages/core`:
+  `pm4py==2.7.23.11` (AGPL-3.0-or-later, accepted in ADR-014; imported only by SND-002).
 - Checks framework (T-105): `reqgraph.checks` — `Finding` (with a fingerprint for the repeat detector), `BaseCheck`,
   `CheckContext` (parsed processes and ERD, SVG through Kroki), `@register`, `run_checks()` (async; disabled and
   skipped checks, a crashing check becomes an error finding); **public schema, version 1:**
