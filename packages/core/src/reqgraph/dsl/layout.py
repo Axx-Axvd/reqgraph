@@ -5,15 +5,21 @@ code on top of networkx: back flows (loops) are found by DFS, the rest is layere
 `topological_generations`; elements of one column and lane are stacked.
 """
 
+import re
 from dataclasses import dataclass, field
 
 import networkx as nx
 
-from reqgraph.dsl.process import EVENTS, GATEWAYS, ProcessDSL
+from reqgraph.dsl.process import EVENTS, GATEWAYS, TASKS, ProcessDSL
 
-SIZE = {"task": (100, 80), "event": (36, 36), "gateway": (50, 50)}
-COLUMN = 150  # distance between column centres
-ROW = 120  # height of one slot in a lane
+SIZE = {"event": (36, 36), "gateway": (50, 50)}
+# Tasks: one size per process, the smallest width at which every name wraps into 2 lines
+# (3 lines with the taller box); the text then stays below the icon in the top left corner.
+TASK_WIDTHS = (120, 150, 180, 210, 240)
+TASK_HEIGHT = {2: 100, 3: 120}
+GAP_X = 50  # between tasks of neighbouring columns
+GAP_Y = 40  # between rows of a lane
+TEXT_PADDING = 7  # bpmn-js keeps 5 px on each side; 2 px of reserve for font differences
 LABEL_BAND = 30  # left band of a pool / lane with its name
 MARGIN = 40
 
@@ -50,12 +56,49 @@ class Layout:
     back_flows: set[str] = field(default_factory=set)
 
 
-def _size(element_type: str) -> tuple[int, int]:
+def text_width(text: str) -> float:
+    """Width of a label in bpmn-js (Arial / Liberation Sans 12px), measured in Chromium."""
+    return sum(3.4 if c == " " else 9.0 if c.isupper() or c.isdigit() else 7.2 for c in text)
+
+
+def wrap(text: str, width: int) -> list[str] | None:
+    """Lines of a label in a box `width` wide, like bpmn-js: by spaces, a long word after `-`.
+
+    None when a piece of a word does not fit into a line: bpmn-js would break the word itself.
+    """
+    room = width - 2 * TEXT_PADDING
+    pieces: list[str] = []
+    for word in text.split():
+        pieces += [word] if text_width(word) <= room else re.split(r"(?<=-)", word)
+    lines: list[str] = []
+    for piece in pieces:
+        if text_width(piece) > room:
+            return None
+        if lines and text_width(f"{lines[-1]} {piece}".replace("- ", "-")) <= room:
+            joiner = "" if lines[-1].endswith("-") else " "
+            lines[-1] = f"{lines[-1]}{joiner}{piece}"
+        else:
+            lines.append(piece)
+    return lines
+
+
+def task_size(dsl: ProcessDSL) -> tuple[int, int]:
+    """(width, height) of every task of the process: names fit without touching the icon."""
+    names = [e.name for e in dsl.nodes if e.type in TASKS]
+    for max_lines, height in sorted(TASK_HEIGHT.items()):
+        for width in TASK_WIDTHS:
+            wrapped = [wrap(name, width) for name in names]
+            if all(lines is not None and len(lines) <= max_lines for lines in wrapped):
+                return width, height
+    return TASK_WIDTHS[-1], TASK_HEIGHT[3]  # very long names: the widest box; keep names short
+
+
+def _size(element_type: str, task: tuple[int, int]) -> tuple[int, int]:
     if element_type in EVENTS:
         return SIZE["event"]
     if element_type in GATEWAYS:
         return SIZE["gateway"]
-    return SIZE["task"]
+    return task
 
 
 def _back_flows(dsl: ProcessDSL) -> set[str]:
@@ -123,14 +166,16 @@ def layout(dsl: ProcessDSL) -> Layout:
     for (lane, _), members in cells.items():
         rows[lane] = max(rows.get(lane, 1), len(members))
 
+    task = task_size(dsl)
+    column_width, row_height = task[0] + GAP_X, task[1] + GAP_Y
     columns = max(column.values()) + 1
     left = MARGIN + (LABEL_BAND if dsl.lanes else 0)
-    width = columns * COLUMN + MARGIN
+    width = columns * column_width + MARGIN
     lane_y: dict[str | None, int] = {}
     y = MARGIN
     lane_order: list[str | None] = list(dsl.lanes) if dsl.lanes else [None]
     for lane in lane_order:
-        height = rows.get(lane, 1) * ROW
+        height = rows.get(lane, 1) * row_height
         lane_y[lane] = y
         if lane is not None:
             result.lanes[lane] = Bounds(left, y, width, height)
@@ -140,7 +185,7 @@ def layout(dsl: ProcessDSL) -> Layout:
 
     # column by column, a cell is ordered by the height of the predecessors (fewer crossings);
     # elements without placed predecessors keep the DSL order
-    size = {e.id: _size(e.type) for e in dsl.nodes}
+    size = {e.id: _size(e.type, task) for e in dsl.nodes}
     centre: dict[str, int] = {}
     forward = [f for f in flows if f.id not in result.back_flows]
     for (lane, col), members in sorted(cells.items(), key=lambda item: item[0][1]):
@@ -152,8 +197,8 @@ def layout(dsl: ProcessDSL) -> Layout:
         ordered = sorted(members, key=lambda m: (level(m), members.index(m)))
         for index, element_id in enumerate(ordered):
             w, h = size[element_id]
-            cx = left + MARGIN + col * COLUMN + COLUMN // 2
-            cy = lane_y[lane] + index * ROW + ROW // 2
+            cx = left + MARGIN + col * column_width + column_width // 2
+            cy = lane_y[lane] + index * row_height + row_height // 2
             centre[element_id] = cy
             result.shapes[element_id] = Bounds(cx - w // 2, cy - h // 2, w, h)
     result.shapes = {e.id: result.shapes[e.id] for e in dsl.nodes}
@@ -161,7 +206,7 @@ def layout(dsl: ProcessDSL) -> Layout:
     for f in flows:
         s, d = result.shapes[f.src], result.shapes[f.dst]
         if f.id in result.back_flows:  # loop back: along the gap between rows of the lanes
-            below = max(s.cy, d.cy) + ROW // 2 - 6
+            below = max(s.cy, d.cy) + row_height // 2 - 6
             points = [
                 Point(s.cx, s.y + s.h),
                 Point(s.cx, below),
