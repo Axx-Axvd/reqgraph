@@ -1,0 +1,48 @@
+interactions:
+- request:
+    body: "workspace {\n model {\n a = person \"A\"\n a -> b \"x\"\n }\n}\n"
+    headers:
+      Connection:
+      - close
+      Content-Length:
+      - '54'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Host:
+      - kroki.io
+      User-Agent:
+      - reqgraph/0.1.0
+    method: POST
+    uri: https://kroki.io/structurizr/svg
+  response:
+    body:
+      string: 'Error 400: Unable to parse the Structurizr DSL. The destination element
+        "b" does not exist at line 4: a -> b "x".'
+    headers:
+      CF-RAY:
+      - a4f3c248dca06c71-IAD
+      Connection:
+      - close
+      Content-Length:
+      - '113'
+      Content-Type:
+      - text/plain
+      Date:
+      - Fri, 23 Oct 2026 21:15:45 GMT
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=Wrm%2FM0K8k7HxEvMzKqEmWxJVEVURBe9cih1aaIZSZyALIxchcvY5Uo8w%2BVPwm1bqPW3STEKq5u3mQAK5uNMaovXoaZq3NyrTsJ%2BqO%2FSKDhiWojRKyhVM9UHz9A%3D%3D"}]}'
+      Server:
+      - cloudflare
+      Server-Timing:
+      - cfCacheStatus;desc="DYNAMIC"
+      - cfEdge;dur=35,cfOrigin;dur=393
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+    status:
+      code: 400
+      message: Bad Request
+version: 1

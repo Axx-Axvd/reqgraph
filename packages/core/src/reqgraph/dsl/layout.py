@@ -20,6 +20,15 @@ TASK_HEIGHT = {2: 100, 3: 120}
 GAP_X = 40  # between tasks of neighbouring columns (author: 50 too loose, 30 too tight)
 GAP_Y = 40  # between rows of a lane
 TEXT_PADDING = 7  # bpmn-js keeps 5 px on each side; 2 px of reserve for font differences
+EXTERNAL_LABEL = 90  # bpmn-js wraps names of events and gateways (drawn under them) to 90 px
+LABEL_GAP = 10  # between such a name and the neighbouring column
+INNER = 10  # between the lane border and the first / last column
+
+# One process = one page: A4 landscape with 2 cm margins (25.7 x 17 cm at 96 dpi), labels are
+# 12 px = 9 pt at scale 1; the author chose 6 pt as the smallest readable size (23.10.2026).
+PAGE = (971, 643)
+BASE_FONT_PT = 9.0
+MIN_FONT_PT = 6.0
 LABEL_BAND = 30  # left band of a pool / lane with its name
 MARGIN = 40
 
@@ -167,10 +176,17 @@ def layout(dsl: ProcessDSL) -> Layout:
         rows[lane] = max(rows.get(lane, 1), len(members))
 
     task = task_size(dsl)
-    column_width, row_height = task[0] + GAP_X, task[1] + GAP_Y
+    size = {e.id: _size(e.type, task) for e in dsl.nodes}
+    row_height = task[1] + GAP_Y
+    # a column is as wide as its widest element: columns of events and gateways are narrow,
+    # but leave room for their names written under them
     columns = max(column.values()) + 1
+    column_width = [EXTERNAL_LABEL + LABEL_GAP] * columns
+    for element_id, col in column.items():
+        column_width[col] = max(column_width[col], size[element_id][0] + GAP_X)
+    column_x = [sum(column_width[:col]) for col in range(columns)]
     left = MARGIN + (LABEL_BAND if dsl.lanes else 0)
-    width = columns * column_width + MARGIN
+    width = sum(column_width) + 2 * INNER
     lane_y: dict[str | None, int] = {}
     y = MARGIN
     lane_order: list[str | None] = list(dsl.lanes) if dsl.lanes else [None]
@@ -185,7 +201,6 @@ def layout(dsl: ProcessDSL) -> Layout:
 
     # column by column, a cell is ordered by the height of the predecessors (fewer crossings);
     # elements without placed predecessors keep the DSL order
-    size = {e.id: _size(e.type, task) for e in dsl.nodes}
     centre: dict[str, int] = {}
     forward = [f for f in flows if f.id not in result.back_flows]
     for (lane, col), members in sorted(cells.items(), key=lambda item: item[0][1]):
@@ -197,7 +212,7 @@ def layout(dsl: ProcessDSL) -> Layout:
         ordered = sorted(members, key=lambda m: (level(m), members.index(m)))
         for index, element_id in enumerate(ordered):
             w, h = size[element_id]
-            cx = left + MARGIN + col * column_width + column_width // 2
+            cx = left + INNER + column_x[col] + column_width[col] // 2
             cy = lane_y[lane] + index * row_height + row_height // 2
             centre[element_id] = cy
             result.shapes[element_id] = Bounds(cx - w // 2, cy - h // 2, w, h)
@@ -225,3 +240,22 @@ def layout(dsl: ProcessDSL) -> Layout:
             ]
         result.waypoints[f.id] = points
     return result
+
+
+def extent(result: Layout) -> tuple[int, int]:
+    """Width and height of what is drawn (the pool, or the shapes when there are no lanes)."""
+    boxes = [result.pool] if result.pool is not None else list(result.shapes.values())
+    x0 = min(b.x for b in boxes if b is not None)
+    y0 = min(b.y for b in boxes if b is not None)
+    x1 = max(b.x + b.w for b in boxes if b is not None)
+    y1 = max(b.y + b.h for b in boxes if b is not None)
+    for points in result.waypoints.values():
+        y1 = max(y1, *(p.y for p in points))
+    return x1 - x0, y1 - y0
+
+
+def page_font_pt(result: Layout) -> float:
+    """Size of the labels when the whole diagram is fitted on one A4 landscape page."""
+    width, height = extent(result)
+    scale = min(PAGE[0] / width, PAGE[1] / height, 1.0)
+    return round(BASE_FONT_PT * scale, 1)

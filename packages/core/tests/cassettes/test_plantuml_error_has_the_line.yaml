@@ -1,0 +1,55 @@
+interactions:
+- request:
+    body: '@startuml
+
+      usecase "A" as UC01
+
+      UC01 -->
+
+      @enduml
+
+      '
+    headers:
+      Connection:
+      - close
+      Content-Length:
+      - '47'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Host:
+      - kroki.io
+      User-Agent:
+      - reqgraph/0.1.0
+    method: POST
+    uri: https://kroki.io/plantuml/svg
+  response:
+    body:
+      string: 'Error 400: Syntax Error? (Assumed diagram type: component) (line: 2)'
+    headers:
+      CF-RAY:
+      - a4f3c245a90581d5-IAD
+      Connection:
+      - close
+      Content-Length:
+      - '68'
+      Content-Type:
+      - text/plain
+      Date:
+      - Fri, 23 Oct 2026 21:15:45 GMT
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=D3RNl6bzcPhqsXt3s99Jqnq4lSGg2S5f0%2FLp5bxjENoSQwdjckU800cLsxIFxnvgBX5Rj4QSkpeKnera77GdFoecuIpFwv4wa3JQKYNcBJ1sRCQCbWzapWDDuQ%3D%3D"}]}'
+      Server:
+      - cloudflare
+      Server-Timing:
+      - cfCacheStatus;desc="DYNAMIC"
+      - cfEdge;dur=63,cfOrigin;dur=244
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+    status:
+      code: 400
+      message: Bad Request
+version: 1

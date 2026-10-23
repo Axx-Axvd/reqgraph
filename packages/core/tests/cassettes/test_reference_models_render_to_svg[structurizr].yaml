@@ -1,0 +1,266 @@
+interactions:
+- request:
+    body: "workspace \"\u0413\u0430\u0440\u0430\u0436 61\" \"\u042D\u0442\u0430\u043B\u043E\u043D\u043D\u044B\u0439
+      \u043F\u0440\u043E\u0435\u043A\u0442 reqgraph (\u0443\u0441\u043B\u043E\u0432\u043D\u044B\u0439
+      \u043F\u0440\u0438\u043C\u0435\u0440)\" {\n\n    !identifiers hierarchical\n\n
+      \   model {\n        client = person \"\u0427\u0430\u0441\u0442\u043D\u044B\u0439
+      \u043A\u043B\u0438\u0435\u043D\u0442\" \"\u0417\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442\u0441\u044F
+      \u043D\u0430 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435
+      \u0447\u0435\u0440\u0435\u0437 \u0441\u0430\u0439\u0442.\"\n        corp = person
+      \"\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
+      \u043A\u043B\u0438\u0435\u043D\u0442\" \"\u041C\u0435\u043D\u0435\u0434\u0436\u0435\u0440
+      \u0430\u0432\u0442\u043E\u043F\u0430\u0440\u043A\u0430, \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442
+      \u043F\u043E \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u0443.\"\n        admin
+      = person \"\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\"
+      \"\u0423\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435\u043C
+      \u043C\u0430\u0441\u0442\u0435\u0440\u043E\u0432 \u0438 \u0437\u0430\u043F\u0438\u0441\u044F\u043C\u0438.\"\n\n
+      \       garage = softwareSystem \"\u0413\u0430\u0440\u0430\u0436 61: \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C\"
+      \"\u0417\u0430\u043F\u0438\u0441\u044C \u043A\u043B\u0438\u0435\u043D\u0442\u043E\u0432,
+      \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F, \u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0435
+      \u0441\u0447\u0435\u0442\u0430.\" {\n            properties {\n                \"reqgraph.id\"
+      \"C4-SYS\"\n            }\n            web = container \"\u0412\u0435\u0431-\u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435\"
+      \"\u0421\u0430\u0439\u0442 \u0434\u043B\u044F \u043A\u043B\u0438\u0435\u043D\u0442\u043E\u0432
+      \u0438 \u043A\u0430\u0431\u0438\u043D\u0435\u0442 \u0430\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\u0430.\"
+      \"Next.js\" {\n                properties {\n                    \"reqgraph.id\"
+      \"C4-CNT-01\"\n                }\n            }\n            api = container
+      \"API\" \"\u0417\u0430\u043F\u0438\u0441\u044C, \u0441\u043B\u043E\u0442\u044B,
+      \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u044B, \u0441\u0447\u0435\u0442\u0430.\"
+      \"Python, FastAPI\" {\n                properties {\n                    \"reqgraph.id\"
+      \"C4-CNT-02\"\n                }\n            }\n            db = container
+      \"\u0411\u0430\u0437\u0430 \u0434\u0430\u043D\u043D\u044B\u0445\" \"\u041A\u043B\u0438\u0435\u043D\u0442\u044B,
+      \u0437\u0430\u043F\u0438\u0441\u0438, \u0441\u043C\u0435\u043D\u044B, \u0434\u043E\u0433\u043E\u0432\u043E\u0440\u044B,
+      \u0441\u0447\u0435\u0442\u0430. \u0420\u0430\u0437\u043C\u0435\u0449\u0435\u043D\u0430
+      \u0432 \u0420\u0424 (CON-001).\" \"PostgreSQL\" {\n                tags \"Database\"\n
+      \               properties {\n                    \"reqgraph.id\" \"C4-CNT-03\"\n
+      \               }\n            }\n            notifier = container \"\u0421\u0435\u0440\u0432\u0438\u0441
+      \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0439\" \"\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F
+      \u0438 \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u043F\u043E
+      SMS.\" \"Python worker\" {\n                properties {\n                    \"reqgraph.id\"
+      \"C4-CNT-04\"\n                }\n            }\n        }\n\n        sms =
+      softwareSystem \"SMS-\u0448\u043B\u044E\u0437\" \"\u0412\u043D\u0435\u0448\u043D\u0438\u0439
+      \u0441\u0435\u0440\u0432\u0438\u0441 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0438
+      SMS.\" {\n            tags \"External\"\n            properties {\n                \"reqgraph.id\"
+      \"C4-EXT-01\"\n            }\n        }\n\n        client -> garage.web \"\u0417\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442\u0441\u044F,
+      \u043E\u0442\u043C\u0435\u043D\u044F\u0435\u0442 \u0437\u0430\u043F\u0438\u0441\u044C\"
+      \"HTTPS\"\n        corp -> garage.web \"\u0417\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442
+      \u0430\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u0438, \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442
+      \u0441\u0447\u0435\u0442\u0430\" \"HTTPS\"\n        admin -> garage.web \"\u0412\u0435\u0434\u0451\u0442
+      \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435, \u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442
+      \u043D\u0435\u044F\u0432\u043A\u0438\" \"HTTPS\"\n        garage.web -> garage.api
+      \"\u0412\u044B\u0437\u044B\u0432\u0430\u0435\u0442\" \"HTTPS/JSON\"\n        garage.api
+      -> garage.db \"\u0427\u0438\u0442\u0430\u0435\u0442 \u0438 \u043F\u0438\u0448\u0435\u0442\"
+      \"SQL\"\n        garage.api -> garage.notifier \"\u0421\u0442\u0430\u0432\u0438\u0442
+      \u0437\u0430\u0434\u0430\u0447\u0438 \u043D\u0430 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0443\"
+      \"\u043E\u0447\u0435\u0440\u0435\u0434\u044C \u0432 \u0411\u0414\"\n        garage.notifier
+      -> garage.db \"\u0427\u0438\u0442\u0430\u0435\u0442 \u0437\u0430\u043F\u0438\u0441\u0438
+      \u0434\u043B\u044F \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0439\"
+      \"SQL\"\n        garage.notifier -> sms \"\u041E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442
+      SMS\" \"HTTPS\"\n        garage.api -> sms \"\u041E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442
+      SMS-\u043A\u043E\u0434\" \"HTTPS\"\n    }\n\n    views {\n        systemContext
+      garage \"context\" {\n            include *\n            autolayout lr\n        }\n
+      \       container garage \"containers\" {\n            include *\n            autolayout
+      lr\n        }\n        styles {\n            element \"Database\" {\n                shape
+      cylinder\n            }\n            element \"External\" {\n                background
+      #999999\n            }\n        }\n    }\n}\n"
+    headers:
+      Connection:
+      - close
+      Content-Length:
+      - '3289'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Host:
+      - kroki.io
+      User-Agent:
+      - reqgraph/0.1.0
+    method: POST
+    uri: https://kroki.io/structurizr/svg
+  response:
+    body:
+      string: "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+        version=\"1.1\" data-diagram-type=\"DESCRIPTION\" style=\"width:1726px;height:552px;background:#FFFFFF;\"
+        width=\"1726px\" height=\"552px\" viewBox=\"0 0 1726 552\" zoomAndPan=\"magnify\"
+        preserveAspectRatio=\"none\" contentStyleType=\"text/css\"><?plantuml 1.2026.8?><defs/><g
+        font-family=\"sans-serif\" lengthAdjust=\"spacing\"><g class=\"title\" data-source-line=\"1\"><text
+        x=\"531.272\" y=\"32.277\" fill=\"#444\" font-size=\"24\" textLength=\"657.375\"
+        font-weight=\"700\">System Context View: \u0413\u0430\u0440\u0430\u0436 61:
+        \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C</text></g><!--entity
+        \u0427\u0430\u0441\u0442\u043D\u044B\u0439\u043A\u043B\u0438\u0435\u043D\u0442--><g
+        class=\"entity\" data-qualified-name=\".............\" id=\"ent0001\" data-source-line=\"49\"><rect
+        x=\"24.74\" y=\"69.658\" width=\"428.762\" height=\"152.703\" fill=\"#FFF\"
+        style=\"stroke:#444;stroke-width:2;\" rx=\"2.5\" ry=\"2.5\"/><text x=\"117.443\"
+        y=\"103.791\" fill=\"#444\" font-size=\"26\" textLength=\"128.73\" font-weight=\"700\">\u0427\u0430\u0441\u0442\u043D\u044B\u0439</text><text
+        x=\"246.173\" y=\"103.791\" fill=\"#444\" font-size=\"26\" font-weight=\"700\">\_</text><text
+        x=\"255.225\" y=\"103.791\" fill=\"#444\" font-size=\"26\" textLength=\"105.574\"
+        font-weight=\"700\">\u043A\u043B\u0438\u0435\u043D\u0442</text><text x=\"205.711\"
+        y=\"124.775\" fill=\"#444\" font-size=\"16\" textLength=\"66.82\">[Person]</text><text
+        x=\"235.306\" y=\"150.826\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"34.74\" y=\"178.763\" fill=\"#444\" font-size=\"24\" textLength=\"178.758\">\u0417\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442\u0441\u044F</text><text
+        x=\"213.498\" y=\"178.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"221.127\" y=\"178.763\" fill=\"#444\" font-size=\"24\" textLength=\"30.398\">\u043D\u0430</text><text
+        x=\"251.525\" y=\"178.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"259.154\" y=\"178.763\" fill=\"#444\" font-size=\"24\" textLength=\"184.348\">\u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435</text><text
+        x=\"166.898\" y=\"206.701\" fill=\"#444\" font-size=\"24\" textLength=\"71.707\">\u0447\u0435\u0440\u0435\u0437</text><text
+        x=\"238.605\" y=\"206.701\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"246.234\" y=\"206.701\" fill=\"#444\" font-size=\"24\" textLength=\"65.109\">\u0441\u0430\u0439\u0442.</text></g><!--entity
+        \u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439\u043A\u043B\u0438\u0435\u043D\u0442--><g
+        class=\"entity\" data-qualified-name=\"...................\" id=\"ent0002\"
+        data-source-line=\"50\"><rect x=\"7\" y=\"227.658\" width=\"464.246\" height=\"152.703\"
+        fill=\"#FFF\" style=\"stroke:#444;stroke-width:2;\" rx=\"2.5\" ry=\"2.5\"/><text
+        x=\"62.239\" y=\"261.791\" fill=\"#444\" font-size=\"26\" textLength=\"239.142\"
+        font-weight=\"700\">\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439</text><text
+        x=\"301.381\" y=\"261.791\" fill=\"#444\" font-size=\"26\" font-weight=\"700\">\_</text><text
+        x=\"310.433\" y=\"261.791\" fill=\"#444\" font-size=\"26\" textLength=\"105.574\"
+        font-weight=\"700\">\u043A\u043B\u0438\u0435\u043D\u0442</text><text x=\"205.713\"
+        y=\"282.775\" fill=\"#444\" font-size=\"16\" textLength=\"66.82\">[Person]</text><text
+        x=\"235.309\" y=\"308.826\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"17\" y=\"336.763\" fill=\"#444\" font-size=\"24\" textLength=\"134.145\">\u041C\u0435\u043D\u0435\u0434\u0436\u0435\u0440</text><text
+        x=\"151.145\" y=\"336.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"158.773\" y=\"336.763\" fill=\"#444\" font-size=\"24\" textLength=\"139.98\">\u0430\u0432\u0442\u043E\u043F\u0430\u0440\u043A\u0430,</text><text
+        x=\"298.754\" y=\"336.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"306.383\" y=\"336.763\" fill=\"#444\" font-size=\"24\" textLength=\"116.859\">\u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442</text><text
+        x=\"423.242\" y=\"336.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"430.871\" y=\"336.763\" fill=\"#444\" font-size=\"24\" textLength=\"30.375\">\u043F\u043E</text><text
+        x=\"176.891\" y=\"364.701\" fill=\"#444\" font-size=\"24\" textLength=\"124.465\">\u0434\u043E\u0433\u043E\u0432\u043E\u0440\u0443.</text></g><!--entity
+        \u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440--><g
+        class=\"entity\" data-qualified-name=\".............\" id=\"ent0003\" data-source-line=\"51\"><rect
+        x=\"12.38\" y=\"385.658\" width=\"453.488\" height=\"152.703\" fill=\"#FFF\"
+        style=\"stroke:#444;stroke-width:2;\" rx=\"2.5\" ry=\"2.5\"/><text x=\"121.648\"
+        y=\"419.791\" fill=\"#444\" font-size=\"26\" textLength=\"234.952\" font-weight=\"700\">\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440</text><text
+        x=\"205.714\" y=\"440.775\" fill=\"#444\" font-size=\"16\" textLength=\"66.82\">[Person]</text><text
+        x=\"235.31\" y=\"466.826\" fill=\"#444\" font-size=\"24\">\_</text><text x=\"22.38\"
+        y=\"494.763\" fill=\"#444\" font-size=\"24\" textLength=\"132.926\">\u0423\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442</text><text
+        x=\"155.306\" y=\"494.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"162.935\" y=\"494.763\" fill=\"#444\" font-size=\"24\" textLength=\"166.488\">\u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435\u043C</text><text
+        x=\"329.423\" y=\"494.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"337.052\" y=\"494.763\" fill=\"#444\" font-size=\"24\" textLength=\"118.816\">\u043C\u0430\u0441\u0442\u0435\u0440\u043E\u0432</text><text
+        x=\"163.65\" y=\"522.701\" fill=\"#444\" font-size=\"24\">\u0438</text><text
+        x=\"179.247\" y=\"522.701\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"186.876\" y=\"522.701\" fill=\"#444\" font-size=\"24\" textLength=\"127.723\">\u0437\u0430\u043F\u0438\u0441\u044F\u043C\u0438.</text></g><!--entity
+        \u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C--><g
+        class=\"entity\" data-qualified-name=\".....61............\" id=\"ent0004\"
+        data-source-line=\"52\"><rect x=\"689.25\" y=\"227.658\" width=\"428.539\"
+        height=\"152.703\" fill=\"#FFF\" style=\"stroke:#444;stroke-width:2;\" rx=\"2.5\"
+        ry=\"2.5\"/><text x=\"713.071\" y=\"261.791\" fill=\"#444\" font-size=\"26\"
+        textLength=\"96.142\" font-weight=\"700\">\u0413\u0430\u0440\u0430\u0436</text><text
+        x=\"809.212\" y=\"261.791\" fill=\"#444\" font-size=\"26\" font-weight=\"700\">\_</text><text
+        x=\"818.264\" y=\"261.791\" fill=\"#444\" font-size=\"26\" textLength=\"46.579\"
+        font-weight=\"700\">61:</text><text x=\"864.843\" y=\"261.791\" fill=\"#444\"
+        font-size=\"26\" font-weight=\"700\">\_</text><text x=\"873.895\" y=\"261.791\"
+        fill=\"#444\" font-size=\"26\" textLength=\"220.073\" font-weight=\"700\">\u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C</text><text
+        x=\"829.32\" y=\"282.775\" fill=\"#444\" font-size=\"16\" textLength=\"77.406\">[Software</text><text
+        x=\"906.727\" y=\"282.775\" fill=\"#444\" font-size=\"16\">\_</text><text
+        x=\"911.813\" y=\"282.775\" fill=\"#444\" font-size=\"16\" textLength=\"65.906\">System]</text><text
+        x=\"899.705\" y=\"308.826\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"699.25\" y=\"336.763\" fill=\"#444\" font-size=\"24\" textLength=\"88.723\">\u0417\u0430\u043F\u0438\u0441\u044C</text><text
+        x=\"787.973\" y=\"336.763\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"795.602\" y=\"336.763\" fill=\"#444\" font-size=\"24\" textLength=\"126.328\">\u043A\u043B\u0438\u0435\u043D\u0442\u043E\u0432,</text><text
+        x=\"921.93\" y=\"336.763\" fill=\"#444\" font-size=\"24\">\_</text><text x=\"929.559\"
+        y=\"336.763\" fill=\"#444\" font-size=\"24\" textLength=\"178.23\">\u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F,</text><text
+        x=\"761.547\" y=\"364.701\" fill=\"#444\" font-size=\"24\" textLength=\"197.859\">\u043A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0435</text><text
+        x=\"959.406\" y=\"364.701\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"967.035\" y=\"364.701\" fill=\"#444\" font-size=\"24\" textLength=\"78.457\">\u0441\u0447\u0435\u0442\u0430.</text></g><!--entity
+        SMS\u0448\u043B\u044E\u0437--><g class=\"entity\" data-qualified-name=\"SMS....\"
+        id=\"ent0005\" data-source-line=\"53\"><rect x=\"1290.79\" y=\"241.628\" width=\"422.129\"
+        height=\"124.766\" fill=\"#999\" style=\"stroke:#6B6B6B;stroke-width:2;\"
+        rx=\"2.5\" ry=\"2.5\"/><text x=\"1421.277\" y=\"275.761\" fill=\"#444\" font-size=\"26\"
+        textLength=\"161.154\" font-weight=\"700\">SMS-\u0448\u043B\u044E\u0437</text><text
+        x=\"1427.655\" y=\"296.745\" fill=\"#444\" font-size=\"16\" textLength=\"77.406\">[Software</text><text
+        x=\"1505.061\" y=\"296.745\" fill=\"#444\" font-size=\"16\">\_</text><text
+        x=\"1510.147\" y=\"296.745\" fill=\"#444\" font-size=\"16\" textLength=\"65.906\">System]</text><text
+        x=\"1498.04\" y=\"322.796\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"1300.79\" y=\"350.733\" fill=\"#444\" font-size=\"24\" textLength=\"115.77\">\u0412\u043D\u0435\u0448\u043D\u0438\u0439</text><text
+        x=\"1416.56\" y=\"350.733\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"1424.188\" y=\"350.733\" fill=\"#444\" font-size=\"24\" textLength=\"86.133\">\u0441\u0435\u0440\u0432\u0438\u0441</text><text
+        x=\"1510.321\" y=\"350.733\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"1517.95\" y=\"350.733\" fill=\"#444\" font-size=\"24\" textLength=\"118.535\">\u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0438</text><text
+        x=\"1636.485\" y=\"350.733\" fill=\"#444\" font-size=\"24\">\_</text><text
+        x=\"1644.114\" y=\"350.733\" fill=\"#444\" font-size=\"24\" textLength=\"58.805\">SMS.</text></g><!--link
+        \u0427\u0430\u0441\u0442\u043D\u044B\u0439\u043A\u043B\u0438\u0435\u043D\u0442
+        to \u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C--><g
+        class=\"link\" data-entity-1=\"ent0001\" data-entity-2=\"ent0004\" id=\"lnk6\"
+        data-source-line=\"55\" data-link-type=\"dependency\"><path d=\"M453.92,158.018
+        C526.45,165.708 607.29,178.328 679.25,199.008 C704.87,206.368 726.65,214.385
+        751.88,225.285\" style=\"stroke:#444;stroke-width:2;stroke-dasharray:10,10;\"
+        fill=\"none\" id=\"\u0427\u0430\u0441\u0442\u043D\u044B\u0439\u043A\u043B\u0438\u0435\u043D\u0442-to-\u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C\"/><polygon
+        points=\"756.47,227.268,749.794,220.026,751.88,225.285,746.622,227.37,756.47,227.268\"
+        fill=\"#444\" style=\"stroke:#444;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;\"/><text
+        x=\"487.25\" y=\"81.375\" fill=\"#444\" font-size=\"24\" textLength=\"186.387\">\u0417\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442\u0441\u044F,</text><text
+        x=\"520.238\" y=\"109.313\" fill=\"#444\" font-size=\"24\" textLength=\"120.41\">\u043E\u0442\u043C\u0435\u043D\u044F\u0435\u0442</text><text
+        x=\"537.395\" y=\"137.25\" fill=\"#444\" font-size=\"24\" textLength=\"86.098\">\u0437\u0430\u043F\u0438\u0441\u044C</text><text
+        x=\"548.51\" y=\"157.762\" fill=\"#444\" font-size=\"16\" textLength=\"63.867\">[HTTPS]</text></g><!--link
+        \u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439\u043A\u043B\u0438\u0435\u043D\u0442
+        to \u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C--><g
+        class=\"link\" data-entity-1=\"ent0002\" data-entity-2=\"ent0004\" id=\"lnk7\"
+        data-source-line=\"56\" data-link-type=\"dependency\"><path d=\"M471.33,304.008
+        C542.06,304.008 614.5,304.008 683.99,304.008\" style=\"stroke:#444;stroke-width:2;stroke-dasharray:10,10;\"
+        fill=\"none\" id=\"\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439\u043A\u043B\u0438\u0435\u043D\u0442-to-\u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C\"/><polygon
+        points=\"688.99,304.008,679.99,300.008,683.99,304.008,679.99,308.008,688.99,304.008\"
+        fill=\"#444\" style=\"stroke:#444;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;\"/><text
+        x=\"504.691\" y=\"223.285\" fill=\"#444\" font-size=\"24\" textLength=\"151.125\">\u0417\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442</text><text
+        x=\"500.619\" y=\"251.222\" fill=\"#444\" font-size=\"24\" textLength=\"159.27\">\u0430\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u0438,</text><text
+        x=\"482.25\" y=\"279.16\" fill=\"#444\" font-size=\"24\" textLength=\"117.551\">\u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442</text><text
+        x=\"599.801\" y=\"279.16\" fill=\"#444\" font-size=\"24\">\_</text><text x=\"607.43\"
+        y=\"279.16\" fill=\"#444\" font-size=\"24\" textLength=\"70.828\">\u0441\u0447\u0435\u0442\u0430</text><text
+        x=\"548.32\" y=\"299.672\" fill=\"#444\" font-size=\"16\" textLength=\"63.867\">[HTTPS]</text></g><!--link
+        \u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440
+        to \u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C--><g
+        class=\"link\" data-entity-1=\"ent0003\" data-entity-2=\"ent0004\" id=\"lnk8\"
+        data-source-line=\"57\" data-link-type=\"dependency\"><path d=\"M466.32,469.728
+        C535.85,466.658 611.8,457.658 679.25,437.008 C720.23,424.458 757.289,405.54
+        793.049,383.4\" style=\"stroke:#444;stroke-width:2;stroke-dasharray:10,10;\"
+        fill=\"none\" id=\"\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440-to-\u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C\"/><polygon
+        points=\"797.3,380.768,787.542,382.104,793.049,383.4,791.754,388.906,797.3,380.768\"
+        fill=\"#444\" style=\"stroke:#444;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;\"/><text
+        x=\"541.971\" y=\"328.285\" fill=\"#444\" font-size=\"24\" textLength=\"76.57\">\u0412\u0435\u0434\u0451\u0442</text><text
+        x=\"502.25\" y=\"356.222\" fill=\"#444\" font-size=\"24\" textLength=\"156.012\">\u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435,</text><text
+        x=\"520.672\" y=\"384.16\" fill=\"#444\" font-size=\"24\" textLength=\"119.168\">\u043E\u0442\u043C\u0435\u0447\u0430\u0435\u0442</text><text
+        x=\"535.689\" y=\"412.097\" fill=\"#444\" font-size=\"24\" textLength=\"89.133\">\u043D\u0435\u044F\u0432\u043A\u0438</text><text
+        x=\"548.322\" y=\"432.609\" fill=\"#444\" font-size=\"16\" textLength=\"63.867\">[HTTPS]</text></g><!--link
+        \u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C
+        to SMS\u0448\u043B\u044E\u0437--><g class=\"link\" data-entity-1=\"ent0004\"
+        data-entity-2=\"ent0005\" id=\"lnk9\" data-source-line=\"58\" data-link-type=\"dependency\"><path
+        d=\"M1118.12,304.008 C1174.18,304.008 1229.59,304.008 1285.49,304.008\" style=\"stroke:#444;stroke-width:2;stroke-dasharray:10,10;\"
+        fill=\"none\" id=\"\u0413\u0430\u0440\u0430\u043661\u043E\u043D\u043B\u0430\u0439\u043D\u0437\u0430\u043F\u0438\u0441\u044C-to-SMS\u0448\u043B\u044E\u0437\"/><polygon
+        points=\"1290.49,304.008,1281.49,300.008,1285.49,304.008,1281.49,308.008,1290.49,304.008\"
+        fill=\"#444\" style=\"stroke:#444;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;\"/><text
+        x=\"1128.79\" y=\"251.285\" fill=\"#444\" font-size=\"24\" textLength=\"151.172\">\u041E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442</text><text
+        x=\"1178.788\" y=\"279.222\" fill=\"#444\" font-size=\"24\" textLength=\"51.176\">SMS</text><text
+        x=\"1172.442\" y=\"299.734\" fill=\"#444\" font-size=\"16\" textLength=\"63.867\">[HTTPS]</text></g><?plantuml-src
+        rLNDJnf15B_lN_52hw10nAGKIApHUgY94QjjQWyhZB1XcJMxOq2R9eA7Dj6KrXwQD4qlFVIAj7u3_Wkp_r7Vc-LZLK2QD4swP3SpRzwyz_kzBuGXJ0O9nzXbyUXKAhtZ25Q4MOiBLXQmQh1I7EGdMNVtP5sUmdG4jstPabUulP2ja3p3nRKyTolkOMAIpAGqpM427BQbsxgmRE0MPvh9DWK82smZbnUGDMoM4OR5DQTWS58iWgtp0bw2QDWdv5QMaJ2cvOqi0mHdCqliR35DIpXYnqHl0BPb2NYD2u37UgQGiwrjdfsrJCkEmuDDzJnIf_D8gokVKW_9t-0xEGbp9YioBd0pqLc6bjVAviRQwdPs9faSoy5JWxEx3Znvck368ToNhEIDJ84pnub3T1H0Jvwc546q8rcmR6CNfRevOnevJd3ZaC4lips5T5xFMYM3vtek5_MoKTmkhXbPaO_3L2nybtnmhem6k6uEZC9iUPujB9kPOYo_CIeY3zLpDoBJ6_JxJoAop4oTAjJ96riK3Vy-zAouwhnulhor4Otjwa_CKYSKWodug4R2eKXuTAcCJ_Wc-cYuWnwxq6iCZNfCvpdixq0oANzW4rVSgcov1_82v2MsyBaymMrrdNlz7vbElLnYjcFnLvrMNkVhN7xkTVY1RE3wnAtYkWOu1Ueq38xTYhnoz-KfsgFp5ja5zoqgxg63Cy1p71PkTI80YSIWtagbG7VW9a8_m5jCliWsMhvMtphgazi_PlMLjF3zXRWHA2341jfgerqQTfUo7WGrz8xHJzMZ3UGKy4fR_iItGGZS_Vje3OKxWk87TDB4ivQAUxLp4otSm-gxl5QW6vYHceAihbQy17QJ8vk0rhrWKvAG2iXpyCto6dc_ZzXGaBV8ZFdtuQUMjZP5IRSPU7z8G-hny4R2YKPGLIK5kuDCCNPhGT8Sd0OirOegLapoVOnxJAOZVXf-5ZUvfnVJ8VST9kEzF1kNtn7L9LwYL5rGyr2A6cGTL2bsCto9AKFxWp7VcjKUVjJkWj6quUq6eL1gBAxeUEHOHAzn20mR846FJbCvzOfrM3aihAmifRj12cZZjTG_eD6V6aqQXEWPlGVLcA2HY6NbgVKhR1IheVtqjvaSqTnpFmwP3lsyzF2hYgnvDJUAmJWGYOkl4CU4_CrN-DtHXbP6WFaD?></g></svg>"
+    headers:
+      CF-RAY:
+      - a4f3c240fab9ad56-IAD
+      Connection:
+      - close
+      Content-Length:
+      - '13212'
+      Content-Type:
+      - image/svg+xml
+      Date:
+      - Fri, 23 Oct 2026 21:15:44 GMT
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=lWQm3IaXySsHDo%2F8jjbCmDwJa9muFROvaGTyxh1sHYY%2BNhq5s0Ov5NplTfN40JeO4xo3quwJdLNGfOFSl6iY%2BFHKHVDAVdcPLdLvHWgUNDT5pKWFOgIF%2FiZKkw%3D%3D"}]}'
+      Server:
+      - cloudflare
+      Server-Timing:
+      - cfCacheStatus;desc="DYNAMIC"
+      - cfEdge;dur=38,cfOrigin;dur=466
+      alt-svc:
+      - h3=":443"; ma=86400
+      cache-control:
+      - public, max-age=432000
+      cf-cache-status:
+      - DYNAMIC
+      etag:
+      - '"6.2.3GzsUD0RjuX3gQeVJYRUJ7000"'
+      expires:
+      - Wed, 28 Oct 2026 21:15:44 GMT
+      last-modified:
+      - Mon, 05 Oct 2026 18:06:07 GMT
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -50,8 +50,8 @@ mypy_path = ["packages/core/src", "apps/api/src", "evals"]
 explicit_package_bases = true
 
 [[tool.mypy.overrides]]
-# lxml and networkx ship no type hints; stub packages lag behind the pinned versions
-module = ["lxml", "lxml.*", "networkx", "networkx.*"]
+# lxml, networkx and pydbml ship no type hints; stub packages lag behind or do not exist
+module = ["lxml", "lxml.*", "networkx", "networkx.*", "pydbml", "pydbml.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -60,6 +60,8 @@ testpaths = ["packages/core/tests", "evals/tests"]
 # local socket pair (TCP 127.0.0.1 on Windows), so --disable-socket would break async tests.
 addopts = "--strict-markers --allow-hosts=127.0.0.1,::1 -ra"
 xfail_strict = true
+# pydbml 1.2.1 still calls the old pyparsing API (escChar=...); not our code, nothing to fix here
+filterwarnings = ["ignore::pyparsing.warnings.PyparsingDeprecationWarning:pydbml.*"]
 
 [tool.coverage.run]
 source = ["reqgraph", "reqgraph_evals"]

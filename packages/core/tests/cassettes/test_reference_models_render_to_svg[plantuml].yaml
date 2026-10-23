@@ -1,0 +1,202 @@
+interactions:
+- request:
+    body: "@startuml use_cases\n' \u0421\u043E\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435:
+      \u043F\u0441\u0435\u0432\u0434\u043E\u043D\u0438\u043C = id \u0443\u0437\u043B\u0430
+      \u0433\u0440\u0430\u0444\u0430 \u0431\u0435\u0437 \u0434\u0435\u0444\u0438\u0441\u0430
+      (UC01 -> UC-01, ACT01 -> ACT-01).\nleft to right direction\nskinparam shadowing
+      false\n\nactor \"\u0427\u0430\u0441\u0442\u043D\u044B\u0439 \u043A\u043B\u0438\u0435\u043D\u0442\"
+      as ACT01\nactor \"\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
+      \u043A\u043B\u0438\u0435\u043D\u0442\" as ACT02\nactor \"\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440\"
+      as ACT03\n\nrectangle \"\u0413\u0430\u0440\u0430\u0436 61: \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C\"
+      {\n  usecase \"\u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C\u0441\u044F
+      \u043D\u0430 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435\"
+      as UC01\n  usecase \"\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u044C\"
+      as UC02\n  usecase \"\u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0430\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u0438
+      \u0430\u0432\u0442\u043E\u043F\u0430\u0440\u043A\u0430\" as UC03\n  usecase
+      \"\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435
+      \u043C\u0430\u0441\u0442\u0435\u0440\u043E\u0432\" as UC04\n  usecase \"\u041E\u0442\u043C\u0435\u0442\u0438\u0442\u044C
+      \u043D\u0435\u044F\u0432\u043A\u0443\" as UC05\n  usecase \"\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C
+      \u0435\u0436\u0435\u043C\u0435\u0441\u044F\u0447\u043D\u044B\u0439 \u0441\u0447\u0451\u0442\"
+      as UC06\n  usecase \"\u041F\u0435\u0440\u0435\u043D\u0435\u0441\u0442\u0438
+      \u0437\u0430\u043F\u0438\u0441\u0438 \u043C\u0430\u0441\u0442\u0435\u0440\u0430\"
+      as UC07\n  usecase \"\u0412\u044B\u0433\u0440\u0443\u0437\u0438\u0442\u044C
+      \u0441\u0447\u0435\u0442\u0430 \u0434\u043B\u044F \u0431\u0443\u0445\u0433\u0430\u043B\u0442\u0435\u0440\u0438\u0438\"
+      as UC08\n}\n\nACT01 --> UC01\nACT01 --> UC02\nACT02 --> UC03\nACT02 --> UC06\nACT03
+      --> UC04\nACT03 --> UC05\nACT03 --> UC07\nACT03 --> UC08\nUC05 .> UC04 : <<extend>>\nUC07
+      .> UC04 : <<extend>>\n@enduml\n"
+    headers:
+      Connection:
+      - close
+      Content-Length:
+      - '1123'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Host:
+      - kroki.io
+      User-Agent:
+      - reqgraph/0.1.0
+    method: POST
+    uri: https://kroki.io/plantuml/svg
+  response:
+    body:
+      string: "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+        version=\"1.1\" data-diagram-type=\"DESCRIPTION\" style=\"width:553px;height:754px;background:#FFFFFF;\"
+        width=\"553px\" height=\"754px\" viewBox=\"0 0 553 754\" zoomAndPan=\"magnify\"
+        preserveAspectRatio=\"none\" contentStyleType=\"text/css\"><?plantuml 1.2026.8?><defs/><g
+        font-family=\"sans-serif\" lengthAdjust=\"spacing\"><!--cluster \u0413\u0430\u0440\u0430\u0436
+        61: \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C--><g
+        class=\"cluster\" data-qualified-name=\"..... 61. ......-......\" id=\"ent0004\"
+        data-source-line=\"9\"><rect x=\"227.26\" y=\"7\" width=\"312.03\" height=\"733\"
+        fill=\"none\" style=\"stroke:#181818;stroke-width:1;\" rx=\"2.5\" ry=\"2.5\"/><text
+        x=\"280.726\" y=\"21.995\" fill=\"#000\" font-size=\"14\" textLength=\"205.099\"
+        font-weight=\"700\">\u0413\u0430\u0440\u0430\u0436 61: \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C</text></g><!--entity
+        UC01--><g class=\"entity\" data-qualified-name=\"..... 61. ......-.......UC01\"
+        id=\"ent0005\" data-source-line=\"10\"><ellipse cx=\"383.28\" cy=\"67.996\"
+        rx=\"119.73\" ry=\"26.346\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><text
+        x=\"273.891\" y=\"72.644\" fill=\"#000\" font-size=\"14\" textLength=\"218.777\">\u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C\u0441\u044F
+        \u043D\u0430 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435</text></g><!--entity
+        UC02--><g class=\"entity\" data-qualified-name=\"..... 61. ......-.......UC02\"
+        id=\"ent0006\" data-source-line=\"11\"><ellipse cx=\"383.284\" cy=\"146.997\"
+        rx=\"78.734\" ry=\"18.147\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><text
+        x=\"319.443\" y=\"151.645\" fill=\"#000\" font-size=\"14\" textLength=\"127.682\">\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C
+        \u0437\u0430\u043F\u0438\u0441\u044C</text></g><!--entity UC03--><g class=\"entity\"
+        data-qualified-name=\"..... 61. ......-.......UC03\" id=\"ent0007\" data-source-line=\"12\"><ellipse
+        cx=\"383.284\" cy=\"229.005\" rx=\"131.174\" ry=\"28.635\" fill=\"#F1F1F1\"
+        style=\"stroke:#181818;stroke-width:0.5;\"/><text x=\"261.758\" y=\"233.653\"
+        fill=\"#000\" font-size=\"14\" textLength=\"243.052\">\u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C
+        \u0430\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u0438 \u0430\u0432\u0442\u043E\u043F\u0430\u0440\u043A\u0430</text></g><!--entity
+        UC04--><g class=\"entity\" data-qualified-name=\"..... 61. ......-.......UC04\"
+        id=\"ent0008\" data-source-line=\"13\"><ellipse cx=\"383.284\" cy=\"498.003\"
+        rx=\"140.014\" ry=\"30.403\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><text
+        x=\"252.468\" y=\"502.651\" fill=\"#000\" font-size=\"14\" textLength=\"261.632\">\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C
+        \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u043C\u0430\u0441\u0442\u0435\u0440\u043E\u0432</text></g><!--entity
+        UC05--><g class=\"entity\" data-qualified-name=\"..... 61. ......-.......UC05\"
+        id=\"ent0009\" data-source-line=\"14\"><ellipse cx=\"383.276\" cy=\"398.003\"
+        rx=\"78.716\" ry=\"18.143\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><text
+        x=\"319.456\" y=\"402.652\" fill=\"#000\" font-size=\"14\" textLength=\"127.641\">\u041E\u0442\u043C\u0435\u0442\u0438\u0442\u044C
+        \u043D\u0435\u044F\u0432\u043A\u0443</text></g><!--entity UC06--><g class=\"entity\"
+        data-qualified-name=\"..... 61. ......-.......UC06\" id=\"ent0010\" data-source-line=\"15\"><ellipse
+        cx=\"383.285\" cy=\"319.001\" rx=\"117.705\" ry=\"25.941\" fill=\"#F1F1F1\"
+        style=\"stroke:#181818;stroke-width:0.5;\"/><text x=\"276.06\" y=\"323.649\"
+        fill=\"#000\" font-size=\"14\" textLength=\"214.45\">\u041F\u043E\u043B\u0443\u0447\u0438\u0442\u044C
+        \u0435\u0436\u0435\u043C\u0435\u0441\u044F\u0447\u043D\u044B\u0439 \u0441\u0447\u0451\u0442</text></g><!--entity
+        UC07--><g class=\"entity\" data-qualified-name=\"..... 61. ......-.......UC07\"
+        id=\"ent0011\" data-source-line=\"16\"><ellipse cx=\"383.277\" cy=\"605.003\"
+        rx=\"111.167\" ry=\"24.633\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><text
+        x=\"283.076\" y=\"609.652\" fill=\"#000\" font-size=\"14\" textLength=\"200.402\">\u041F\u0435\u0440\u0435\u043D\u0435\u0441\u0442\u0438
+        \u0437\u0430\u043F\u0438\u0441\u0438 \u043C\u0430\u0441\u0442\u0435\u0440\u0430</text></g><!--entity
+        UC08--><g class=\"entity\" data-qualified-name=\"..... 61. ......-.......UC08\"
+        id=\"ent0012\" data-source-line=\"17\"><ellipse cx=\"383.276\" cy=\"693.995\"
+        rx=\"136.276\" ry=\"29.655\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><text
+        x=\"256.38\" y=\"698.644\" fill=\"#000\" font-size=\"14\" textLength=\"253.791\">\u0412\u044B\u0433\u0440\u0443\u0437\u0438\u0442\u044C
+        \u0441\u0447\u0435\u0442\u0430 \u0434\u043B\u044F \u0431\u0443\u0445\u0433\u0430\u043B\u0442\u0435\u0440\u0438\u0438</text></g><!--entity
+        ACT01--><g class=\"entity\" data-qualified-name=\"ACT01\" id=\"ent0001\" data-source-line=\"5\"><ellipse
+        cx=\"93.135\" cy=\"78.35\" rx=\"8\" ry=\"8\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><path
+        d=\"M93.135,86.35 L93.135,113.35 M80.135,94.35 L106.135,94.35 M93.135,113.35
+        L80.135,128.35 M93.135,113.35 L106.135,128.35\" style=\"stroke:#181818;stroke-width:0.5;\"
+        fill=\"none\"/><text x=\"33.03\" y=\"142.845\" fill=\"#000\" font-size=\"14\"
+        textLength=\"120.21\">\u0427\u0430\u0441\u0442\u043D\u044B\u0439 \u043A\u043B\u0438\u0435\u043D\u0442</text></g><!--entity
+        ACT02--><g class=\"entity\" data-qualified-name=\"ACT02\" id=\"ent0002\" data-source-line=\"6\"><ellipse
+        cx=\"93.131\" cy=\"244.35\" rx=\"8\" ry=\"8\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><path
+        d=\"M93.131,252.35 L93.131,279.35 M80.131,260.35 L106.131,260.35 M93.131,279.35
+        L80.131,294.35 M93.131,279.35 L106.131,294.35\" style=\"stroke:#181818;stroke-width:0.5;\"
+        fill=\"none\"/><text x=\"6\" y=\"308.845\" fill=\"#000\" font-size=\"14\"
+        textLength=\"174.262\">\u041A\u043E\u0440\u043F\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
+        \u043A\u043B\u0438\u0435\u043D\u0442</text></g><!--entity ACT03--><g class=\"entity\"
+        data-qualified-name=\"ACT03\" id=\"ent0003\" data-source-line=\"7\"><ellipse
+        cx=\"93.127\" cy=\"538.35\" rx=\"8\" ry=\"8\" fill=\"#F1F1F1\" style=\"stroke:#181818;stroke-width:0.5;\"/><path
+        d=\"M93.127,546.35 L93.127,573.35 M80.127,554.35 L106.127,554.35 M93.127,573.35
+        L80.127,588.35 M93.127,573.35 L106.127,588.35\" style=\"stroke:#181818;stroke-width:0.5;\"
+        fill=\"none\"/><text x=\"35.08\" y=\"602.845\" fill=\"#000\" font-size=\"14\"
+        textLength=\"116.095\">\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440</text></g><!--link
+        ACT01 to UC01--><g class=\"link\" data-entity-1=\"ent0001\" data-entity-2=\"ent0005\"
+        id=\"lnk13\" data-source-line=\"20\" data-link-type=\"dependency\"><path d=\"M153.49,99.76
+        C190.22,94.66 233.408,88.668 276.048,82.748\" style=\"stroke:#181818;stroke-width:1;\"
+        fill=\"none\" id=\"ACT01-to-UC01\"/><polygon points=\"281,82.06,271.535,79.336,276.048,82.748,272.636,87.26,281,82.06\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        ACT01 to UC02--><g class=\"link\" data-entity-1=\"ent0001\" data-entity-2=\"ent0006\"
+        id=\"lnk14\" data-source-line=\"21\" data-link-type=\"dependency\"><path d=\"M153.49,116.03
+        C200.27,122.37 260.595,130.53 309.455,137.14\" style=\"stroke:#181818;stroke-width:1;\"
+        fill=\"none\" id=\"ACT01-to-UC02\"/><polygon points=\"314.41,137.81,306.027,132.64,309.455,137.14,304.955,140.567,314.41,137.81\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        ACT02 to UC03--><g class=\"link\" data-entity-1=\"ent0002\" data-entity-2=\"ent0007\"
+        id=\"lnk15\" data-source-line=\"22\" data-link-type=\"dependency\"><path d=\"M180.58,260.5
+        C210.42,255.84 239.27,251.331 270.54,246.451\" style=\"stroke:#181818;stroke-width:1;\"
+        fill=\"none\" id=\"ACT02-to-UC03\"/><polygon points=\"275.48,245.68,265.971,243.116,270.54,246.451,267.204,251.02,275.48,245.68\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        ACT02 to UC06--><g class=\"link\" data-entity-1=\"ent0002\" data-entity-2=\"ent0010\"
+        id=\"lnk16\" data-source-line=\"23\" data-link-type=\"dependency\"><path d=\"M180.58,287.5
+        C213.82,292.69 247.02,297.879 281.12,303.199\" style=\"stroke:#181818;stroke-width:1;\"
+        fill=\"none\" id=\"ACT02-to-UC06\"/><polygon points=\"286.06,303.97,277.784,298.63,281.12,303.199,276.551,306.535,286.06,303.97\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        ACT03 to UC04--><g class=\"link\" data-entity-1=\"ent0003\" data-entity-2=\"ent0008\"
+        id=\"lnk17\" data-source-line=\"24\" data-link-type=\"dependency\"><path d=\"M151.4,554.09
+        C190.55,544.58 238.461,532.941 283.671,521.951\" style=\"stroke:#181818;stroke-width:1;\"
+        fill=\"none\" id=\"ACT03-to-UC04\"/><polygon points=\"288.53,520.77,278.84,519.009,283.671,521.951,280.73,526.783,288.53,520.77\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        ACT03 to UC05--><g class=\"link\" data-entity-1=\"ent0003\" data-entity-2=\"ent0009\"
+        id=\"lnk18\" data-source-line=\"25\" data-link-type=\"dependency\"><path d=\"M126.5,529.51
+        C149.93,503.81 183.63,470.99 219.26,450 C251.25,431.15 286.025,419.545 318.195,411.345\"
+        style=\"stroke:#181818;stroke-width:1;\" fill=\"none\" id=\"ACT03-to-UC05\"/><polygon
+        points=\"323.04,410.11,313.331,408.457,318.195,411.345,315.307,416.209,323.04,410.11\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        ACT03 to UC07--><g class=\"link\" data-entity-1=\"ent0003\" data-entity-2=\"ent0011\"
+        id=\"lnk19\" data-source-line=\"26\" data-link-type=\"dependency\"><path d=\"M151.4,575.35
+        C189.89,580.3 236.591,586.293 281.291,592.033\" style=\"stroke:#181818;stroke-width:1;\"
+        fill=\"none\" id=\"ACT03-to-UC07\"/><polygon points=\"286.25,592.67,277.833,587.556,281.291,592.033,276.814,595.491,286.25,592.67\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        ACT03 to UC08--><g class=\"link\" data-entity-1=\"ent0003\" data-entity-2=\"ent0012\"
+        id=\"lnk20\" data-source-line=\"27\" data-link-type=\"dependency\"><path d=\"M147.69,606.5
+        C169.18,620.68 194.65,635.95 219.26,647 C241.43,656.95 261.44,663.97 284.89,670.81\"
+        style=\"stroke:#181818;stroke-width:1;\" fill=\"none\" id=\"ACT03-to-UC08\"/><polygon
+        points=\"289.69,672.21,282.17,665.85,284.89,670.81,279.93,673.53,289.69,672.21\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/></g><!--link
+        UC05 to UC04--><g class=\"link\" data-entity-1=\"ent0009\" data-entity-2=\"ent0008\"
+        id=\"lnk21\" data-source-line=\"28\" data-link-type=\"dependency\"><path d=\"M383.28,416.35
+        C383.28,430.55 383.28,445.54 383.28,462.18\" style=\"stroke:#181818;stroke-width:1;stroke-dasharray:7,7;\"
+        fill=\"none\" id=\"UC05-to-UC04\"/><polygon points=\"383.28,467.18,387.28,458.18,383.28,462.18,379.28,458.18,383.28,467.18\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/><text
+        x=\"341.28\" y=\"446.437\" fill=\"#000\" font-size=\"13\" textLength=\"61.185\">\xABextend\xBB</text></g><!--link
+        UC07 to UC04--><g class=\"link\" data-entity-1=\"ent0011\" data-entity-2=\"ent0008\"
+        id=\"lnk22\" data-source-line=\"29\" data-link-type=\"dependency\"><path d=\"M383.28,579.91
+        C383.28,564.59 383.28,549.9 383.28,533.66\" style=\"stroke:#181818;stroke-width:1;stroke-dasharray:7,7;\"
+        fill=\"none\" id=\"UC07-to-UC04\"/><polygon points=\"383.28,528.66,379.28,537.66,383.28,533.66,387.28,537.66,383.28,528.66\"
+        fill=\"#181818\" style=\"stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;\"/><text
+        x=\"341.28\" y=\"558.947\" fill=\"#000\" font-size=\"13\" textLength=\"61.185\">\xABextend\xBB</text></g><?plantuml-src
+        VLDDQzj04BtlhnXyQGjrYEt43Y4n5F-5vWS8Mt54NJbOAWcKGksqfD10-d4ezD3IKw-oKoMARTb_OVOVzSskvMPBo4NexSvxy-OD-uZu5o_uYcUSw0-SSiuPfxl4Ipq4cl0VtChPdFOfw90-unkf9RxIRq5v9xzZLDuGIbFW3CI47X-qDYjKRj91gxnPUKhFMiyjnWyEdcoeddyOKzodGT0zYgaJ3Fns7FH35Rq8mcDluBsawCZhz4-2i4k7NY_obVBQSNz09VwDnaCzubn_v5lYAGnbObsFIkH5jjUw-3ilu7HflWb86OPwW5XT4pzXe3dkSnb9ZrPqoAnhQqg9Qo_izdmGlg80HNnDzGeIbDoG5DzoNaPe2Jo8q4M9NYkYLv7VzYAXVIkkH5zVeEIIG4r4OOpJ6JA_DhOJkntJN_9rP7x0tDmkK6J8RMaPrOSQ4-149eGCEgCJqlbtk3JJJJafn6gEs4zSBY05hiagDP8cj67HnTedrDZzfSBXII6uTTyyiZ7hBWUuH0fJVLOmjbqB44DO-hnWfCWjDIB85CTsxG3d-lDgvH2f_oSYhbBJJJncTu8KSDVxEeg68_45RV0wp5EnJgIb6IMHLpAJ1OzXz3tUNG9erJBE2hqTzKQfrPCnRmYxTc3Lm6e1Qowi6rWhu9OBjrtOSE6EaXBQi4pQfRqz_pJsmqwpAJUDUs_-0W00?></g></svg>"
+    headers:
+      CF-RAY:
+      - a4f3c23c2d821762-IAD
+      Connection:
+      - close
+      Content-Length:
+      - '11173'
+      Content-Type:
+      - image/svg+xml
+      Date:
+      - Fri, 23 Oct 2026 21:15:43 GMT
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=j6NFiXzQhwuvBmTf%2FDBYVdsykz2kIF4cW2psLVwS%2Bu3qBXAs0Mic2kSDDTIeKLsyvv7fTLNxyBXwQv2P7xicsjGkwP%2By4FoNozS1I%2BhEGIj%2Fo3wEXL8E0DXq9g%3D%3D"}]}'
+      Server:
+      - cloudflare
+      Server-Timing:
+      - cfCacheStatus;desc="DYNAMIC"
+      - cfEdge;dur=22,cfOrigin;dur=448
+      alt-svc:
+      - h3=":443"; ma=86400
+      cache-control:
+      - public, max-age=432000
+      cf-cache-status:
+      - DYNAMIC
+      etag:
+      - '"1.2026.8WtiQ9Bx_rzdSyEcsQMBJnG00"'
+      expires:
+      - Wed, 28 Oct 2026 21:15:43 GMT
+      last-modified:
+      - Mon, 05 Oct 2026 18:06:07 GMT
+    status:
+      code: 200
+      message: OK
+version: 1
