@@ -22,30 +22,32 @@
 
 | Роль | Что важно | $0 (разработка) | Дёшево (основной) | Качество (контроль) |
 |---|---|---|---|---|
-| `Interviewer` | диалог на RU, короткие ответы, 30-40 вызовов | `groq/openai/gpt-oss-120b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
-| `Analyst` | извлечение структуры, JSON по схеме, длинный контекст | `openrouter/nvidia/nemotron-3-super-120b-a12b:free`, `openrouter/minimax/minimax-m3.1-flash:free` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
-| `Modeler` | логика процессов, валидный DSL | `openrouter/nvidia/nemotron-3-super-120b-a12b:free` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/moonshotai/kimi-k2.7-code` |
-| `Standards` | связный деловой текст, стиль ГОСТ | `openrouter/google/gemma-4-31b-it:free` | `openrouter/qwen/qwen3.8-flash` | `openrouter/deepseek/deepseek-v4-pro` |
-| `Reviewer` | рассуждение по отчёту CI | `groq/openai/gpt-oss-120b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
-| `Stakeholder sim` | другая семья, живой стиль | `gemini/gemini-3.5-flash-lite` | `openrouter/meta-llama/llama-3.3-70b-instruct` | — |
-| `Judge (ISO-002, recall)` | другая семья, стабильность | `gemini/gemini-3.5-flash-lite` | `openrouter/z-ai/glm-5.3-flash` | + ручная проверка 20% |
+| `Interviewer` | диалог на RU, короткие ответы, 30-40 вызовов | `groq/openai/gpt-oss-120b` -> `gpt-oss-20b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Analyst` | читает всё интервью (до ~30 тыс. токенов), JSON по схеме | `gemini/gemini-3.5-flash-lite` -> `openrouter/nvidia/nemotron-3.5-super-vl:free` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Modeler` | логика процессов, валидный DSL | `groq/openai/gpt-oss-120b` -> `gpt-oss-20b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/moonshotai/kimi-k2.7-code` |
+| `Standards` | связный деловой текст, стиль ГОСТ | `groq/openai/gpt-oss-120b` -> `gpt-oss-20b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Reviewer` | рассуждение по отчёту CI | `groq/openai/gpt-oss-120b` -> `gpt-oss-20b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
+| `Stakeholder sim` | другая семья, чем все агенты, живой стиль | `groq/qwen/qwen3.8-27b` | `openrouter/meta-llama/llama-3.3-70b-instruct` | — |
+| `Judge (ISO-002, recall)` | другая семья, чем все агенты, стабильность | `groq/qwen/qwen3.8-27b` | `openrouter/z-ai/glm-5.3-flash` | + ручная проверка 20% |
 | `Локально (CPU)` | офлайн-разработка, smoke | `ollama/qwen3:4b`, `ollama/qwen3:1.7b` | — | — |
 
-<sub>Groq даёт 8000 токенов в минуту на модель, поэтому Analyst и Modeler с длинным транскриптом на Groq не помещаются. Бесплатные модели OpenRouter меняются и бывают недоступны (404/429): лестница фолбэков обязательна.</sub>
+Лестницы запасных моделей у агентов: бесплатно — `gpt-oss-120b` -> `gpt-oss-20b` -> `nemotron-3.5-super-vl:free` -> `gemini-3.5-flash-lite`; платно — `deepseek-v4-flash` -> `gemini-3.5-flash-lite`. Одна модель для всех агентов с запасом, симулятор и судья — другая семья (ADR-017).
+
+<sub>Groq даёт 8000 токенов в минуту на модель, поэтому длинный транскрипт на Groq не помещается: роутер пропускает Groq для промпта длиннее ~6000 токенов, а Analyst начинает с Gemini. Бесплатные модели OpenRouter меняются и бывают недоступны (404/429): лестница фолбэков обязательна.</sub>
 
 ## Цены дешёвых моделей
 
 | Модель | $ / 1M вход | $ / 1M выход | Контекст | Заметки |
 |---|---|---|---|---|
 | `DeepSeek V4 Flash` | 0.091 | 0.182 | 1M | основной кандидат; tools и structured output |
-| `DeepSeek V4 Pro` | 0.419 | 0.838 | 1M | сильный в коде и рассуждении |
+| `DeepSeek V4 Pro` | 0.955 | 1.911 | 1M | сильный в коде и рассуждении; 21.10 было 0.419 / 0.838, 23.10 цена выросла |
 | `Qwen 3.8 Flash` / `3.7 Flash` | 0.15 / 0.03 | 0.47 / 0.13 | 1M | у 3.7 нет structured output, только JSON mode |
 | `GLM-5.3 Flash` | 0.15 | 0.50 | 1M | tools и structured output |
 | `MiniMax M3` | 0.30 | 1.20 | 1M | tools и structured output |
 | `Kimi K2.7 Code` | 0.671 | 3.35 | 262K | силён в коде; дороже |
 | `Claude Opus 5 / GPT-5.6 Sol` | 5.00 | 25-30 | — | только как верхняя граница на 1-2 сценариях, если хватит бюджета |
 
-<sub>Источник цен — `GET openrouter.ai/api/v1/models`, 21.10.2026; у разных провайдеров одной модели цены отличаются, для экспериментов провайдер закрепляется (T-601).</sub>
+<sub>Источник цен — `GET openrouter.ai/api/v1/models`, 21.10.2026 (V4 Pro — 23.10); у разных провайдеров одной модели цены отличаются, для экспериментов провайдер закрепляется (T-601).</sub>
 
 ## Сколько стоит эксперимент
 
@@ -56,7 +58,7 @@
 | free-only (Groq + Gemini + :free) | $0, но 50 запросов/день у OpenRouter и 8000 токенов/мин у Groq — не больше нескольких прогонов в день | $0 |
 | DeepSeek V4 Flash везде | ~$0.06 | ~$18 |
 | Qwen 3.8 Flash везде | ~$0.11 | ~$33 |
-| DeepSeek V4 Pro везде | ~$0.27 | ~$81 |
+| DeepSeek V4 Pro везде | ~$0.61 | ~$183 (23.10; было ~$81) |
 
 Бюджет — до $20 в месяц.
 
@@ -89,15 +91,12 @@ providers:
   ollama:     {base_url: "http://localhost:11434/v1", key_env: null, free: true}
 profiles:
   free:                                    # разработка до января (решение автора)
-    interviewer: [groq/openai/gpt-oss-120b, gemini/gemini-3.5-flash-lite]
-    analyst:     [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
-    modeler:     [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
-    standards:   [openrouter/google/gemma-4-31b-it:free, openrouter/dots-studio/dots-3-note-preview:free, groq/openai/gpt-oss-120b]
-    reviewer:    [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b]
-    stakeholder: [gemini/gemini-3.5-flash-lite]          # другая семья
-    judge:       [gemini/gemini-3.5-flash-lite]
+    "*":         [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b, openrouter/nvidia/nemotron-3.5-super-vl:free, gemini/gemini-3.5-flash-lite]
+    analyst:     [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
+    stakeholder: [groq/qwen/qwen3.8-27b]       # другая семья, чем все агенты
+    judge:       [groq/qwen/qwen3.8-27b]
   cheap:                                   # эксперименты (январь–февраль)
-    "*":         [openrouter/deepseek/deepseek-v4-flash, openrouter/qwen/qwen3.8-flash]
+    "*":         [openrouter/deepseek/deepseek-v4-flash, gemini/gemini-3.5-flash-lite]
     stakeholder: [openrouter/meta-llama/llama-3.3-70b-instruct]
     judge:       [openrouter/z-ai/glm-5.3-flash]
   local: {"*": [ollama/qwen3:4b]}
@@ -105,7 +104,7 @@ defaults: {temperature: 0.2, timeout_s: 60, retries: 2, seed: 42}
 budget:   {run_usd: 0.50, run_tokens: 800000}   # -> pydantic-ai UsageLimits
 ```
 
-<sub>Рабочая копия — `packages/core/src/reqgraph/llm/roles.yaml` (T-005); при расхождении главнее она. 23.10.2026: `minimax-m3.1-flash:free` снят с бесплатного тарифа 22.10, `nemotron-3-super-120b-a12b:free` отвечает 404 — заменены. `max_input_tokens` у Groq: промпт длиннее ~6000 токенов сразу уходит на следующую модель (лимит 8000 токенов в минуту); `supports_seed: false` у Gemini: его OpenAI-совместимый API не принимает seed. `output_mode: native` у Groq: структурированный ответ через JSON Schema, а не вызов инструмента (Groq отклоняет неточный вызов инструмента с 400 без возможности повтора). Модели `:free` у OpenRouter бесплатны по id; для провайдеров с `free: true` стоимость считается как 0, для остальных — `response.cost()` (genai-prices). Файл обновляется после probe.</sub>
+<sub>Рабочая копия — `packages/core/src/reqgraph/llm/roles.yaml` (T-005, T-006); при расхождении главнее она. 23.10.2026: `minimax-m3.1-flash:free` снят с бесплатного тарифа 22.10, `nemotron-3-super-120b-a12b:free` отвечает 404 — заменены; профиль free построен по probe и проверке длинного интервью (ниже), правило «симулятор и судья — другая семья» проверяется тестом. `max_input_tokens` у Groq: промпт длиннее ~6000 токенов сразу уходит на следующую модель (лимит 8000 токенов в минуту); `supports_seed: false` у Gemini: его OpenAI-совместимый API не принимает seed. `output_mode: native` у Groq: структурированный ответ через JSON Schema, а не вызов инструмента (Groq отклоняет неточный вызов инструмента с 400 без возможности повтора). Модели `:free` у OpenRouter бесплатны по id; для провайдеров с `free: true` стоимость считается как 0, для остальных — `response.cost()` (genai-prices). Файл обновляется после probe.</sub>
 
 ```mermaid
 flowchart LR
@@ -117,6 +116,8 @@ flowchart LR
 
 ## Мини-бенчмарк моделей (probe)
 
+Целевая версия — таблица ниже. Первый отчёт (T-006, 23.10.2026) использует временные детерминированные оценки вместо настоящих проверок: размытые слова вместо ISO-001, структура графа вместо SCH/SND; настоящие проверки подключаются в T-601 после S1.
+
 | Блок | Задач | Что меряем |
 |---|---|---|
 | Извлечение ФТ/НФТ из фрагмента интервью | 5 | валидный GraphPatch, F1 по эталону, нарушения ISO-001..004 |
@@ -125,11 +126,15 @@ flowchart LR
 | Вопрос интервьюера по покрытию | 5 | попадание в нужную область, длина, отсутствие подсказок ответа |
 | Итог | 20 | качество, $ на задачу, p50/p95 латентность, доля невалидного JSON; датасет и оценщики — pydantic-evals |
 
+Результаты первого отчёта (`evals/reports/probe-2026-10-23-*.md`, 200 ответов, средняя оценка 0–1): `gpt-oss-20b` 0.94, `gpt-oss-120b` 0.93, `gemini-3.5-flash-lite` 0.92 — разница меньше разброса между повторами (0.02–0.04); бесплатная `nemotron-3.5-super-vl:free` 0.84 при 90% валидных ответов и p95 73 с. Блоки «переписать» и «вопрос» почти не различают модели (0.98–1.00), к T-601 их нужно усложнить.
+
+**Длинное интервью** (23.10.2026, ~360 реплик, ~27 тыс. токенов, три факта в начале, середине и конце): Gemini 3.5 Flash-Lite и `nemotron-3.5-super-vl:free` нашли все три; `gpt-oss-20b` на Groq — отказ 413 (8000 токенов в минуту на модель; так же у `gpt-oss-120b` и `qwen3.8-27b`); `nemotron-3-ultra:free` не выдала ответ в нужной форме; `dots-3-note:free` — ошибка у провайдера; `gemma-4-31b:free` — 429; `inkling:free` — только для «агентных» сервисов. Поэтому аналитик начинает с Gemini, а длинные промпты обходят Groq (ADR-017).
+
 `bash`
 
 ```console
-$ reqgraph probe --models groq/openai/gpt-oss-120b,gemini/gemini-3.5-flash-lite,openrouter/minimax/minimax-m3.1-flash:free --repeat 3
-  -> evals/reports/probe-2026-10-30.csv + выбор по ролям в roles.yaml
+$ uv run reqgraph-evals probe --models groq/openai/gpt-oss-120b,gemini/gemini-3.5-flash-lite --repeat 3
+  -> evals/reports/probe-YYYY-MM-DD.csv + .md; выбор по ролям в roles.yaml (первый отчёт: 2026-10-23, T-006)
 ```
 
 > [!IMPORTANT]

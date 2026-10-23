@@ -5,10 +5,10 @@
 (процессы, ERD, UML, C4) -> детерминированные проверки (CI) -> SRS (ISO/IEC/IEEE 29148)
 и ТЗ (ГОСТ 34.602-2020).
 - План по разделам: docs/tech-design/*.md (PDF-версия: docs/tech-design.pdf).
-- Решения: docs/adr/ (001-016; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
+- Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: каркас (T-001), CI (T-003), схема Supabase (T-004) и LLM-слой (T-005) готовы; дальше по S0: T-006.
+- Состояние: S0 — каркас, CI, схема Supabase, LLM-слой и probe моделей (T-001…T-006); дальше S1: T-101 (граф и патчи).
 
 ## Команды
 Работают сейчас:
@@ -17,12 +17,13 @@
 - uv run pytest -q                  # тесты без сети (кассеты в packages/core/tests/cassettes)
 - uv run pytest packages/core/tests/llm/test_live_cassettes.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты LLM (нужна сеть)
 - uv run ruff check . && uv run ruff format --check .
-- uv run mypy packages/core
+- uv run mypy packages/core evals/reqgraph_evals
 - uv run pre-commit install         # один раз: хуки ruff, mypy и базовые проверки перед коммитом
 - uv run reqgraph --version
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
+- uv run reqgraph-evals probe --models <провайдер/модель,...> --repeat 3   # мини-экзамен моделей (evals/README.md)
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
 
 Появятся с задачами (до этого не запускать):
@@ -62,7 +63,7 @@
 - Одна задача = одна ветка (feat/T-xxx) = один PR в main. Мержит автор.
 
 ## Тесты
-- Юнит-тесты не ходят в сеть (pytest-socket, --disable-socket). Вызовы LLM — только кассеты
+- Юнит-тесты не ходят в сеть (pytest-socket, --allow-hosts=127.0.0.1,::1: asyncio нужен localhost). Вызовы LLM — только кассеты
   (pytest-recording) с вырезанными заголовками authorization и x-goog-api-key.
 - Golden/snapshot-тесты: компилятор BPMN, отчёт CI (JSON и MD), экспортёры.
 - Каждая проверка: fixtures/good и fixtures/bad + тест; мутационные тесты на garage61.

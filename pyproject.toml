@@ -4,17 +4,18 @@
 name = "reqgraph-workspace"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["reqgraph", "reqgraph-api"]
+dependencies = ["reqgraph", "reqgraph-api", "reqgraph-evals"]
 
 [tool.uv]
 package = false
 
 [tool.uv.workspace]
-members = ["packages/core", "apps/api"]
+members = ["packages/core", "apps/api", "evals"]
 
 [tool.uv.sources]
 reqgraph = { workspace = true }
 reqgraph-api = { workspace = true }
+reqgraph-evals = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -45,18 +46,18 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-mypy_path = ["packages/core/src", "apps/api/src"]
+mypy_path = ["packages/core/src", "apps/api/src", "evals"]
 explicit_package_bases = true
 
 [tool.pytest.ini_options]
-testpaths = ["packages/core/tests"]
+testpaths = ["packages/core/tests", "evals/tests"]
 # Network is blocked by allowing connections only to localhost: asyncio event loops need a
 # local socket pair (TCP 127.0.0.1 on Windows), so --disable-socket would break async tests.
 addopts = "--strict-markers --allow-hosts=127.0.0.1,::1 -ra"
 xfail_strict = true
 
 [tool.coverage.run]
-source = ["reqgraph"]
+source = ["reqgraph", "reqgraph_evals"]
 branch = true
 
 [tool.coverage.report]

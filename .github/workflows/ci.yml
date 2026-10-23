@@ -30,7 +30,7 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy packages/core
+      - run: uv run mypy packages/core evals/reqgraph_evals
       - run: uv run pytest -q --cov
       - name: pre-commit hooks
         if: matrix.os == 'ubuntu-latest'

@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- ADR-017: agents on one model with reserves; the stakeholder simulator and the judge are another family
+  (enforced by a test). Free profile built by probe and a long-interview check; Qwen on Groq for simulator and judge.
+- Model probe (T-006): workspace member `evals/` (`reqgraph-evals probe | rescore`) on pydantic-evals, 20 tasks in
+  4 blocks, deterministic scores, CSV with reproducibility fields and stored answers; first report 2026-10-23.
+- `structured(..., model_id=...)` pins one model without fallback.
 - LLM layer (T-005): `reqgraph.llm.structured()` on pydantic-ai with `roles.yaml` (profiles free / cheap / local),
   fallback ladder, per-provider context limit and seed support, run budget, actual and list cost; cassettes for
   OpenRouter, Groq and Gemini. Session rule `docs/prompts/plans.md` (plans with a plain-language part).
@@ -30,6 +35,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- 06_models, 07_deploy, 09_eval: current free models, DeepSeek V4 Pro price (0.955 / 1.911 on 2026-10-23), payment from
+  Russia through ruble aggregators, risk R7. CLAUDE.md: network-blocking flag, mypy command.
 - Free OpenRouter models in `roles.yaml`: minimax-m3.1-flash:free (retired) and nemotron-3-super:free (404) replaced.
 - Tests block the network with `--allow-hosts=127.0.0.1,::1` instead of `--disable-socket`: asyncio needs a local
   socket pair (TCP on Windows); any external connection still fails.

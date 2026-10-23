@@ -22,3 +22,4 @@ ADR 001–012 перенесены из таблицы «Ключевые реш
 | [014](014-soundness-pm4py-adapter.md) | Soundness через pm4py с переводчиком DSL | принято |
 | [015](015-demo-streamlit.md) | Демо — одно Streamlit-приложение, Supabase только как Postgres | отклонено |
 | [016](016-export-pandoc.md) | Экспорт DOCX через pandoc | принято |
+| [017](017-one-model-family-rule.md) | Агенты на одной модели с запасом; симулятор и судья — другой семьи | принято |

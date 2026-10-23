@@ -1,0 +1,26 @@
+# Evals: probe of models (T-006), later harness, baselines and metrics (T-304, T-405).
+# Entry layer: depends on reqgraph, reqgraph never imports it.
+[project]
+name = "reqgraph-evals"
+version = "0.1.0"
+description = "reqgraph evaluation: model probe, experiment harness, metrics"
+license = "MIT"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "jinja2==3.1.6",
+    "pydantic-evals==2.60.0",
+    "reqgraph",
+]
+
+[project.scripts]
+reqgraph-evals = "reqgraph_evals.cli:app"
+
+[tool.uv.sources]
+reqgraph = { workspace = true }
+
+[tool.uv.build-backend]
+module-root = ""
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14"]
+build-backend = "uv_build"

@@ -9,11 +9,11 @@ Cerebras исключён из проекта (решение автора, см
 | Сервис | Где взять ключ | Переменная | Бесплатно на 21.10.2026 | Роль |
 |---|---|---|---|---|
 | OpenRouter | https://openrouter.ai/settings/keys | `OPENROUTER_API_KEY` | модели `:free` и роутер `openrouter/free`; **50 запросов в день** без покупки кредитов (по `/api/v1/key`); порог для повышения дневного лимита — в документации `openrouter.ai/docs/api/reference/limits`; ключу можно задать лимит в $ | основной провайдер, бейзлайны |
-| Groq | https://console.groq.com/keys | `GROQ_API_KEY` | `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`: **1000 запросов в день, 8000 токенов в минуту** на модель (заголовки ответа). `llama-3.3-70b-versatile` больше недоступна | Interviewer и симулятор в dev |
-| Google AI Studio | https://aistudio.google.com/apikey | `GEMINI_API_KEY` | `gemini-3.5-flash-lite` отвечает; `gemini-3.5-flash` и `gemini-flash-latest` 21.10 отдавали 503 (перегрузка); `gemini-2.5-flash` закрыта для новых ключей. Точные RPM и RPD смотрите в AI Studio → **Rate limits** своего проекта: официальная страница из VM недоступна, а сторонние цифры противоречат друг другу | симулятор и судья (другая семья) |
+| Groq | https://console.groq.com/keys | `GROQ_API_KEY` | `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`: **1000 запросов в день, 8000 токенов в минуту** на модель (заголовки ответа). `llama-3.3-70b-versatile` больше недоступна | агенты на коротких задачах, симулятор и судья (Qwen) в dev (ADR-017) |
+| Google AI Studio | https://aistudio.google.com/apikey | `GEMINI_API_KEY` | `gemini-3.5-flash-lite` отвечает; `gemini-3.5-flash` и `gemini-flash-latest` 21.10 отдавали 503 (перегрузка); `gemini-2.5-flash` закрыта для новых ключей. Точные RPM и RPD смотрите в AI Studio → **Rate limits** своего проекта: официальная страница из VM недоступна, а сторонние цифры противоречат друг другу | запас агентов и Analyst на длинных интервью (ADR-017); из России официально недоступен — платно через агрегатор |
 
 > [!WARNING]
-> - **Groq: TPM 8000.** Один вызов Analyst с транскриптом 30–40 ходов (~10–15 тыс. токенов) в лимит не помещается. На Groq — только короткие роли: Interviewer и симулятор.
+> - **Groq: TPM 8000.** Один вызов Analyst с транскриптом 30–40 ходов (~10–15 тыс. токенов) в лимит не помещается. На Groq — только короткие задачи; Analyst начинает с Gemini, длинные промпты роутер обходят Groq сам (ADR-017).
 > - **Google AI Studio.** На бесплатном тарифе запросы могут использоваться для улучшения продуктов Google. Личные данные туда не отправляем.
 
 ### Как положить ключи

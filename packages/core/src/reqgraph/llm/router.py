@@ -154,12 +154,23 @@ async def structured[T](
     profile: str | None = None,
     budget: RunBudget | None = None,
     on_call: Callable[[CallStats], None] | None = None,
+    model_id: str | None = None,
 ) -> tuple[T, CallStats]:
-    """Ask the role's models for an ``output_type`` object; return it with call statistics."""
+    """Ask the role's models for an ``output_type`` object; return it with call statistics.
+
+    ``model_id`` ("provider/model") pins one model without fallback: used by probe (T-006) to
+    compare models on the same tasks.
+    """
     cfg = _config()
     if budget is not None:
         budget.check()
-    steps = _fitting_steps(role, profile, len(prompt) + len(instructions or ""))
+    if model_id is not None:
+        step = Step.parse(model_id)
+        if step.provider not in cfg.providers:
+            raise ValueError(f"неизвестный провайдер «{step.provider}» в «{model_id}»")
+        steps: tuple[Step, ...] = (step,)
+    else:
+        steps = _fitting_steps(role, profile, len(prompt) + len(instructions or ""))
     models = [_build_model(s) for s in steps]
     model = models[0] if len(models) == 1 else FallbackModel(*models)
     # seed is set per model in _build_model: not every provider accepts it.

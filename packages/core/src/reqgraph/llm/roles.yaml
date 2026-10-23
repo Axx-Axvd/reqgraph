@@ -2,6 +2,7 @@
 # Ids are "<provider>/<model id at that provider>". The first model is primary, the next ones are
 # fallbacks on 429 / 5xx / timeout. Updated after probe (T-006, T-601); models verified 2026-10-23
 # (minimax-m3.1-flash:free retired 2026-10-22; nemotron-3-super-120b-a12b:free answered 404).
+# One model family for all agents with reserves (ADR-017); simulator and judge are another family.
 providers:
   openrouter:
     base_url: https://openrouter.ai/api/v1
@@ -24,16 +25,18 @@ providers:
     free: true
 
 profiles:
-  free:                              # development until January (author's decision 2026-10-21)
-    interviewer: [groq/openai/gpt-oss-120b, gemini/gemini-3.5-flash-lite]
-    analyst: [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
-    modeler: [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
-    standards: [openrouter/google/gemma-4-31b-it:free, openrouter/dots-studio/dots-3-note-preview:free, groq/openai/gpt-oss-120b]
-    reviewer: [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b]
-    stakeholder: [gemini/gemini-3.5-flash-lite]   # another model family than the agents
-    judge: [gemini/gemini-3.5-flash-lite]
-  cheap:                             # experiments (January-February), one model for all methods
-    "*": [openrouter/deepseek/deepseek-v4-flash, openrouter/qwen/qwen3.8-flash]
+  free:                              # development until January (author's decision 2026-10-21, 2026-10-23)
+    # Short tasks go to Groq (fast, 1000 requests/day per model); a prompt longer than the provider's
+    # max_input_tokens skips Groq up front. Checked live 2026-10-23 on a 27k-token interview:
+    # Gemini and nemotron-3.5-super-vl:free found all 3 hidden facts, Groq answers 413.
+    "*": [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b, openrouter/nvidia/nemotron-3.5-super-vl:free, gemini/gemini-3.5-flash-lite]
+    # The analyst reads the whole interview: start where the context is large and the daily limit high.
+    analyst: [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
+    # Simulator and judge: another model family than every agent (CLAUDE.md, checked by a test).
+    stakeholder: [groq/qwen/qwen3.8-27b]
+    judge: [groq/qwen/qwen3.8-27b]
+  cheap:                             # experiments (January-February): one model for all methods, Gemini as reserve
+    "*": [openrouter/deepseek/deepseek-v4-flash, gemini/gemini-3.5-flash-lite]
     stakeholder: [openrouter/meta-llama/llama-3.3-70b-instruct]
     judge: [openrouter/z-ai/glm-5.3-flash]
   local:                             # offline stand and smoke tests
