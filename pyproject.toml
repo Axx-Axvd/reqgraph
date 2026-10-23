@@ -50,8 +50,9 @@ explicit_package_bases = true
 
 [tool.pytest.ini_options]
 testpaths = ["packages/core/tests"]
-# --allow-unix-socket: asyncio event loops need a local socketpair; network stays blocked.
-addopts = "--strict-markers --disable-socket --allow-unix-socket -ra"
+# Network is blocked by allowing connections only to localhost: asyncio event loops need a
+# local socket pair (TCP 127.0.0.1 on Windows), so --disable-socket would break async tests.
+addopts = "--strict-markers --allow-hosts=127.0.0.1,::1 -ra"
 xfail_strict = true
 
 [tool.coverage.run]

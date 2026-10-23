@@ -31,7 +31,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 ### Changed
 
 - Free OpenRouter models in `roles.yaml`: minimax-m3.1-flash:free (retired) and nemotron-3-super:free (404) replaced.
-- pytest runs with `--allow-unix-socket` (asyncio needs a local socketpair; network stays blocked).
+- Tests block the network with `--allow-hosts=127.0.0.1,::1` instead of `--disable-socket`: asyncio needs a local
+  socket pair (TCP on Windows); any external connection still fails.
 - `runs` gets reproducibility fields (config jsonb, seed, package_version, tokens, timestamps); ER diagram in 04_data updated.
 - CLAUDE.md: commands split into working now and arriving with tasks T-004, T-101, T-105, T-507 (T-002).
 - `scripts/doctor.py` and `scripts/github_bootstrap.py` formatted with ruff (line length 100), no behaviour change.
