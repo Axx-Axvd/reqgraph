@@ -166,3 +166,11 @@ def test_seed_only_for_providers_that_accept_it() -> None:
     gemini = router._build_model(cfg.ladder("stakeholder", "free")[0])
     assert (groq.settings or {}).get("seed") == cfg.defaults.seed
     assert "seed" not in (gemini.settings or {})
+
+
+def test_output_mode_from_provider() -> None:
+    cfg = load_roles()
+    groq = router._build_model(cfg.ladder("reviewer", "free")[0])
+    gemini = router._build_model(cfg.ladder("stakeholder", "free")[0])
+    assert groq.profile.get("default_structured_output_mode") == "native"
+    assert gemini.profile.get("default_structured_output_mode") == "tool"

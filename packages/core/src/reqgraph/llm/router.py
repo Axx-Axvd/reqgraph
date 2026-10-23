@@ -101,11 +101,13 @@ def _build_model(step: Step) -> Model:
     settings = ModelSettings()
     if cfg.defaults.seed is not None and provider.supports_seed:
         settings["seed"] = cfg.defaults.seed
-    return OpenAIChatModel(
-        step.model,
-        provider=OpenAIProvider(base_url=_base_url(provider), api_key=_api_key(provider)),
-        settings=settings,
-    )
+    client = OpenAIProvider(base_url=_base_url(provider), api_key=_api_key(provider))
+    model = OpenAIChatModel(step.model, provider=client, settings=settings)
+    if provider.output_mode is None:
+        return model
+    profile = model.profile.copy()
+    profile["default_structured_output_mode"] = provider.output_mode
+    return OpenAIChatModel(step.model, provider=client, settings=settings, profile=profile)
 
 
 def _fitting_steps(role: str, profile: str | None, prompt_chars: int) -> tuple[Step, ...]:
