@@ -35,7 +35,7 @@ def main(
 def schemas(
     out: Annotated[Path, typer.Option("--out", help="Folder for *.schema.json.")] = Path("schemas"),
 ) -> None:
-    """Write the public JSON Schemas (GraphPatch, ArtifactGraph) from the Pydantic models."""
+    """Write the public JSON Schemas (GraphPatch, ArtifactGraph, ProjectConfig) from Pydantic."""
     from reqgraph.schemas import SCHEMAS, render
 
     out.mkdir(parents=True, exist_ok=True)

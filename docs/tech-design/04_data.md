@@ -125,7 +125,21 @@ garage61/
 └── exports/                   # SRS_ISO29148.docx TZ_GOST34_602.docx req.reqif
 ```
 
-<sub>FileStore читает и пишет эту папку (CLI, тесты, git). SupabaseStore хранит тот же граф целиком в `graph_revisions.graph` (jsonb) — проект 100-300 требований занимает сотни килобайт, поэтому 500 МБ бесплатной базы хватает на тысячи ревизий; старые ревизии и чекпоинты чистит ежедневная задача.</sub>
+<sub>FileStore (`reqgraph.graph.store`, T-102) читает и пишет эту папку (CLI, тесты, git). SupabaseStore хранит тот же граф целиком в `graph_revisions.graph` (jsonb) — проект 100-300 требований занимает сотни килобайт, поэтому 500 МБ бесплатной базы хватает на тысячи ревизий; старые ревизии и чекпоинты чистит ежедневная задача.</sub>
+
+**Что читает и пишет FileStore**
+
+| Файл | Что в графе | Запись |
+|---|---|---|
+| `reqgraph.yaml` | настройки проекта (`ProjectConfig`, схема `schemas/project-config.schema.json`, версия 1) | без изменений — как был |
+| `requirements/*.yaml` | BR, UR, FR, NFR, CON, ACT и связи `refines`, `derived_from`, `realized_by`, `depends_on`, `conflicts_with` в узле-источнике | без изменений — как был; изменился — канонический вид (узлы по id, порядок полей как в эталоне) |
+| `interview/transcript.jsonl` | TURN | так же |
+| `models/processes/*.process.json` | PRC (весь DSL в узле) | так же; новый процесс — `PRC-xx.process.json`; удалённый — файл удаляется |
+| `models/**/*.dbml`, `*.puml`, `*.dsl` | ENT, UC, C4 — временный сканер по соглашениям эталона (до T-104) | байт в байт; изменения ENT/UC/C4 в графе пока отклоняются |
+| `trace/edges.yaml` | не читается в граф, сверяется (расхождение — предупреждение) | пересоздаётся |
+| `trace/ids.yaml` | «высшие отметки» счётчиков id | только если удалённые номера выше существующих |
+
+Не пишутся: разделы документа (SEC) и связи `rendered_in` — их пересоздаёт экспорт (S4). Не трогаются: `README.md`, `REVIEW.md`, `reports/`, `exports/`, `interview/coverage.json`.
 
 ## Схема Supabase
 
