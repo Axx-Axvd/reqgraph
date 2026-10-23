@@ -8,6 +8,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Model probe (T-006): workspace member `evals/` (`reqgraph-evals probe | rescore`) on pydantic-evals, 20 tasks in
+  4 blocks, deterministic scores, CSV with reproducibility fields and stored answers; first report 2026-10-23.
+- `structured(..., model_id=...)` pins one model without fallback.
 - LLM layer (T-005): `reqgraph.llm.structured()` on pydantic-ai with `roles.yaml` (profiles free / cheap / local),
   fallback ladder, per-provider context limit and seed support, run budget, actual and list cost; cassettes for
   OpenRouter, Groq and Gemini. Session rule `docs/prompts/plans.md` (plans with a plain-language part).

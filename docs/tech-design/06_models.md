@@ -128,8 +128,8 @@ flowchart LR
 `bash`
 
 ```console
-$ reqgraph probe --models groq/openai/gpt-oss-120b,gemini/gemini-3.5-flash-lite,openrouter/minimax/minimax-m3.1-flash:free --repeat 3
-  -> evals/reports/probe-2026-10-30.csv + выбор по ролям в roles.yaml
+$ uv run reqgraph-evals probe --models groq/openai/gpt-oss-120b,gemini/gemini-3.5-flash-lite --repeat 3
+  -> evals/reports/probe-YYYY-MM-DD.csv + .md; выбор по ролям в roles.yaml (первый отчёт: 2026-10-23, T-006)
 ```
 
 > [!IMPORTANT]

@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-016; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: каркас (T-001), CI (T-003), схема Supabase (T-004) и LLM-слой (T-005) готовы; дальше по S0: T-006.
+- Состояние: S0 — каркас, CI, схема Supabase, LLM-слой и probe моделей (T-001…T-006); дальше S1: T-101 (граф и патчи).
 
 ## Команды
 Работают сейчас:
@@ -23,6 +23,7 @@
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
+- uv run reqgraph-evals probe --models <провайдер/модель,...> --repeat 3   # мини-экзамен моделей (evals/README.md)
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
 
 Появятся с задачами (до этого не запускать):
