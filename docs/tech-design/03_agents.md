@@ -96,9 +96,9 @@ async def analyst(state: RunState, rt: Runtime) -> dict:
         role="analyst", prompt=ctx, output_type=GraphPatch,
         retries=2)                             # ошибка схемы -> повтор с текстом ошибки
     patch = guard(patch, allowed=ALLOWED, locked=state["graph"].approved_ids())
-    graph = state["graph"].apply(patch, ids=rt.ids)  # id выдаёт код
+    result = state["graph"].apply(patch, ids=rt.ids)  # id выдаёт код; ApplyResult(graph, id_map, diff)
     await rt.events.emit("agent_end", agent="analyst", stats=patch.stats())
-    return {"graph": graph, "tasks": [t for t in state["tasks"] if t not in tasks]}
+    return {"graph": result.graph, "tasks": [t for t in state["tasks"] if t not in tasks]}
 ```
 
 ## Карточки агентов

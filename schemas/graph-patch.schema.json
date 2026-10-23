@@ -1,0 +1,237 @@
+{
+  "$defs": {
+    "AddOp": {
+      "additionalProperties": false,
+      "description": "Create a node. The id is issued by code; `tmp_id` names the node inside this patch.",
+      "properties": {
+        "fields": {
+          "additionalProperties": true,
+          "title": "Fields",
+          "type": "object"
+        },
+        "kind": {
+          "$ref": "#/$defs/NodeKind"
+        },
+        "op": {
+          "const": "add",
+          "title": "Op",
+          "type": "string"
+        },
+        "tmp_id": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Tmp Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "kind",
+        "tmp_id"
+      ],
+      "title": "AddOp",
+      "type": "object"
+    },
+    "LinkOp": {
+      "additionalProperties": false,
+      "description": "Add an edge. `from`/`to`: real ids, sub-element refs (PRC-01.T05) or tmp_ids of the patch.",
+      "properties": {
+        "from": {
+          "minLength": 1,
+          "title": "From",
+          "type": "string"
+        },
+        "op": {
+          "const": "link",
+          "title": "Op",
+          "type": "string"
+        },
+        "rel": {
+          "$ref": "#/$defs/Rel"
+        },
+        "to": {
+          "minLength": 1,
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "from",
+        "rel",
+        "to"
+      ],
+      "title": "LinkOp",
+      "type": "object"
+    },
+    "NodeKind": {
+      "enum": [
+        "BR",
+        "UR",
+        "FR",
+        "NFR",
+        "CON",
+        "ACT",
+        "PRC",
+        "ENT",
+        "UC",
+        "C4",
+        "TURN",
+        "SEC"
+      ],
+      "title": "NodeKind",
+      "type": "string"
+    },
+    "Rel": {
+      "enum": [
+        "refines",
+        "realized_by",
+        "derived_from",
+        "rendered_in",
+        "conflicts_with",
+        "depends_on"
+      ],
+      "title": "Rel",
+      "type": "string"
+    },
+    "RemoveOp": {
+      "additionalProperties": false,
+      "description": "Delete a node and the edges that touch it. The reason is recorded in the history.",
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "op": {
+          "const": "remove",
+          "title": "Op",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "reason"
+      ],
+      "title": "RemoveOp",
+      "type": "object"
+    },
+    "UnlinkOp": {
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "minLength": 1,
+          "title": "From",
+          "type": "string"
+        },
+        "op": {
+          "const": "unlink",
+          "title": "Op",
+          "type": "string"
+        },
+        "rel": {
+          "$ref": "#/$defs/Rel"
+        },
+        "to": {
+          "minLength": 1,
+          "title": "To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "from",
+        "rel",
+        "to"
+      ],
+      "title": "UnlinkOp",
+      "type": "object"
+    },
+    "UpdateOp": {
+      "additionalProperties": false,
+      "description": "Change fields of an existing node; `id` and `kind` cannot be changed.",
+      "properties": {
+        "fields": {
+          "additionalProperties": true,
+          "title": "Fields",
+          "type": "object"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "op": {
+          "const": "update",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "op",
+        "id",
+        "fields"
+      ],
+      "title": "UpdateOp",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Output of any agent. Applied all-or-nothing by ArtifactGraph.apply().",
+  "properties": {
+    "ops": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "add": "#/$defs/AddOp",
+            "link": "#/$defs/LinkOp",
+            "remove": "#/$defs/RemoveOp",
+            "unlink": "#/$defs/UnlinkOp",
+            "update": "#/$defs/UpdateOp"
+          },
+          "propertyName": "op"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/AddOp"
+          },
+          {
+            "$ref": "#/$defs/LinkOp"
+          },
+          {
+            "$ref": "#/$defs/UnlinkOp"
+          },
+          {
+            "$ref": "#/$defs/UpdateOp"
+          },
+          {
+            "$ref": "#/$defs/RemoveOp"
+          }
+        ]
+      },
+      "title": "Ops",
+      "type": "array"
+    },
+    "rationale": {
+      "default": "",
+      "title": "Rationale",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "ops"
+  ],
+  "title": "GraphPatch",
+  "type": "object"
+}
