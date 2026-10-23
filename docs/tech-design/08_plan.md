@@ -73,7 +73,7 @@ gantt
 <sub>`Definition of Done`</sub>
 
 - [x] **examples/garage61 читается и пишется без потерь** — round-trip тест FileStore (T-102)
-- [ ] **DSL -> BPMN проходит XSD и открывается в bpmn-js** — golden-тесты компилятора
+- [x] **DSL -> BPMN проходит XSD и открывается в bpmn-js** — golden-тесты компилятора (T-103)
 - [ ] **reqgraph check выдаёт отчёт JSON и MD** — все проверки с good/bad фикстурами
 - [ ] **покрытие checks/ и dsl/ >= 90%** — мутационные тесты на garage61
 

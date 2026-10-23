@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1: T-101 (граф и патчи) и T-102 (FileStore) сделаны, дальше T-103 (DSL процессов и BPMN).
+- Состояние: S0 закрыт (T-001…T-006); S1: T-101 (граф и патчи), T-102 (FileStore), T-103 (DSL процессов → BPMN) сделаны, дальше T-104 (DBML, PlantUML, Structurizr, Kroki).
 
 ## Команды
 Работают сейчас:
@@ -20,7 +20,9 @@
 - uv run mypy packages/core evals/reqgraph_evals
 - uv run pre-commit install         # один раз: хуки ruff, mypy и базовые проверки перед коммитом
 - uv run reqgraph --version
-- uv run reqgraph schemas           # JSON Schema из Pydantic в schemas/ (GraphPatch, ArtifactGraph)
+- uv run reqgraph schemas           # JSON Schema из Pydantic в schemas/ (GraphPatch, ArtifactGraph, ProjectConfig, ProcessDSL)
+- uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>   # DSL процесса -> BPMN 2.0 (Camunda Modeler, bpmn-js)
+- REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl   # пересоздать golden BPMN после намеренной правки компилятора
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)

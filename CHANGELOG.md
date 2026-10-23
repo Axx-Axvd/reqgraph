@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Process DSL and BPMN compiler (T-103): `reqgraph.dsl.process.ProcessDSL` (**public schema, version 1:**
+  `schemas/process-dsl.schema.json`), `compile_bpmn()` to BPMN 2.0 XML with lanes and diagram layout
+  (`dsl/layout.py`, networkx), element ids equal graph references (`PRC-01.T05`), `validate_bpmn()` against the
+  official OMG XSD bundled in `dsl/xsd/` (from camunda-bpmn-model 7.24.0, Apache-2.0); golden BPMN tests;
+  CLI `reqgraph bpmn`. New dependencies of `packages/core`: `lxml==6.1.3`, `networkx==3.7` (BSD).
 - Project store (T-102): `reqgraph.graph.store.FileStore` reads a project folder into `Project` (config, graph,
   texts) and writes it back; unchanged files are written byte for byte, changed ones in a canonical form;
   `trace/edges.yaml` is regenerated, `trace/ids.yaml` keeps id high-water marks; interim scanner of DBML,

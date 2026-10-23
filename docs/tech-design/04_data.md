@@ -70,6 +70,21 @@
 
 <sub>Типы узлов DSL v1: start, end, task, user_task, service_task, timer, message, xor, and, event_based. Компилятор строит BPMN 2.0 XML с дорожками и DI-раскладкой (слои по топологической сортировке, дорожки по lane), затем XSD и PM4Py-проверку soundness.</sub>
 
+**Формат DSL v1** (публичная схема `schemas/process-dsl.schema.json`, модель `reqgraph.dsl.process.ProcessDSL`, T-103)
+
+| Поле | Что | Правило |
+|---|---|---|
+| `dsl_version` | версия формата | `1` |
+| `id`, `name` | `PRC-01`, название | обязательны |
+| `refines` | UR, которые процесс уточняет | метаданные DSL, не связь графа (сверка — T-107) |
+| `lanes` | дорожки сверху вниз | названия не повторяются |
+| `nodes[]` | `id` (`S`, `T01`, `G01`: латиница, с заглавной), `type`, `name`, `lane`, `realizes` (FR), `event` (`timer`/`message`, только у `start`), `timer` (когда срабатывает; обязателен у `timer` и у старта-таймера) | id не повторяются; `lane` — из `lanes` |
+| `flows[]` | `["S","T01"]` или `["G01","T04","да"]` — подпись ветки | концы — существующие шаги |
+
+Проверяется только форма; логика процесса (всё достижимо, процесс sound) — проверки SND-* (T-106). Шаг без `lane` ставится в дорожку предыдущего шага.
+
+**Id в BPMN = ссылки графа.** Шаг `T05` процесса `PRC-01` в BPMN имеет id `PRC-01.T05` — ровно как в `realized_by`; стрелки — `PRC-01.F01…` по порядку `flows`. Компилятор: `reqgraph.dsl.bpmn_compile.compile_bpmn()`, проверка по официальным XSD OMG — `reqgraph.dsl.bpmn_xsd.validate_bpmn()`, из командной строки — `uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>`.
+
 ```mermaid
 flowchart LR
   M[Modeler · LLM<br/>пишет только JSON DSL] --> J[process.json] --> V[Pydantic<br/>схема + ссылки на FR]
