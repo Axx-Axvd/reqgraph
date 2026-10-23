@@ -158,3 +158,11 @@ async def test_missing_key_uses_placeholder(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     step = load_roles().ladder("reviewer", "free")[0]
     assert router._api_key(load_roles().providers[step.provider]) == "placeholder"
+
+
+def test_seed_only_for_providers_that_accept_it() -> None:
+    cfg = load_roles()
+    groq = router._build_model(cfg.ladder("reviewer", "free")[0])
+    gemini = router._build_model(cfg.ladder("stakeholder", "free")[0])
+    assert (groq.settings or {}).get("seed") == cfg.defaults.seed
+    assert "seed" not in (gemini.settings or {})

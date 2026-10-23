@@ -23,6 +23,7 @@ class Provider(BaseModel):
     key_env: str | None
     free: bool = False
     max_input_tokens: int | None = None
+    supports_seed: bool = True
 
 
 class Step(BaseModel):

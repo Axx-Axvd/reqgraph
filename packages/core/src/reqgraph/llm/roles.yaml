@@ -1,6 +1,7 @@
 # Model ladder per role (ADR-011, ADR-013); read by llm/config.py, built by llm/router.py.
 # Ids are "<provider>/<model id at that provider>". The first model is primary, the next ones are
-# fallbacks on 429 / 5xx / timeout. Updated after probe (T-006, T-601); models verified 2026-10-21.
+# fallbacks on 429 / 5xx / timeout. Updated after probe (T-006, T-601); models verified 2026-10-23
+# (minimax-m3.1-flash:free retired 2026-10-22; nemotron-3-super-120b-a12b:free answered 404).
 providers:
   openrouter:
     base_url: https://openrouter.ai/api/v1
@@ -14,6 +15,7 @@ providers:
     base_url: https://generativelanguage.googleapis.com/v1beta/openai/
     key_env: GEMINI_API_KEY
     free: true
+    supports_seed: false             # OpenAI-compatible endpoint rejects "seed" (400, checked 2026-10-23)
   ollama:
     base_url: http://localhost:11434/v1
     base_url_env: OLLAMA_BASE_URL
@@ -23,9 +25,9 @@ providers:
 profiles:
   free:                              # development until January (author's decision 2026-10-21)
     interviewer: [groq/openai/gpt-oss-120b, gemini/gemini-3.5-flash-lite]
-    analyst: [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
-    modeler: [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
-    standards: [openrouter/google/gemma-4-31b-it:free, groq/openai/gpt-oss-120b]
+    analyst: [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
+    modeler: [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
+    standards: [openrouter/google/gemma-4-31b-it:free, openrouter/dots-studio/dots-3-note-preview:free, groq/openai/gpt-oss-120b]
     reviewer: [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b]
     stakeholder: [gemini/gemini-3.5-flash-lite]   # another model family than the agents
     judge: [gemini/gemini-3.5-flash-lite]

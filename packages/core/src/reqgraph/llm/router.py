@@ -96,10 +96,15 @@ def _config() -> RolesConfig:
 
 
 def _build_model(step: Step) -> Model:
-    provider = _config().providers[step.provider]
+    cfg = _config()
+    provider = cfg.providers[step.provider]
+    settings = ModelSettings()
+    if cfg.defaults.seed is not None and provider.supports_seed:
+        settings["seed"] = cfg.defaults.seed
     return OpenAIChatModel(
         step.model,
         provider=OpenAIProvider(base_url=_base_url(provider), api_key=_api_key(provider)),
+        settings=settings,
     )
 
 
@@ -155,9 +160,8 @@ async def structured[T](
     steps = _fitting_steps(role, profile, len(prompt) + len(instructions or ""))
     models = [_build_model(s) for s in steps]
     model = models[0] if len(models) == 1 else FallbackModel(*models)
+    # seed is set per model in _build_model: not every provider accepts it.
     settings = ModelSettings(temperature=cfg.defaults.temperature, timeout=cfg.defaults.timeout_s)
-    if cfg.defaults.seed is not None:
-        settings["seed"] = cfg.defaults.seed
     token_cap = cfg.budget.run_tokens if budget is None else budget.tokens - budget.spent_tokens
     agent = Agent(
         model, output_type=output_type, instructions=instructions, retries=cfg.defaults.retries
