@@ -84,15 +84,15 @@
 # Читает llm/router.py и собирает pydantic-ai FallbackModel для роли (ADR-013).
 providers:
   openrouter: {base_url: "https://openrouter.ai/api/v1", key_env: OPENROUTER_API_KEY}
-  groq:       {base_url: "https://api.groq.com/openai/v1", key_env: GROQ_API_KEY, free: true}
-  gemini:     {base_url: "https://generativelanguage.googleapis.com/v1beta/openai/", key_env: GEMINI_API_KEY, free: true}
+  groq:       {base_url: "https://api.groq.com/openai/v1", key_env: GROQ_API_KEY, free: true, max_input_tokens: 6000}
+  gemini:     {base_url: "https://generativelanguage.googleapis.com/v1beta/openai/", key_env: GEMINI_API_KEY, free: true, supports_seed: false}
   ollama:     {base_url: "http://localhost:11434/v1", key_env: null, free: true}
 profiles:
   free:                                    # разработка до января (решение автора)
     interviewer: [groq/openai/gpt-oss-120b, gemini/gemini-3.5-flash-lite]
-    analyst:     [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
-    modeler:     [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
-    standards:   [openrouter/google/gemma-4-31b-it:free, groq/openai/gpt-oss-120b]
+    analyst:     [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
+    modeler:     [openrouter/nvidia/nemotron-3.5-super-vl:free, openrouter/nvidia/nemotron-3-ultra-550b-a55b:free]
+    standards:   [openrouter/google/gemma-4-31b-it:free, openrouter/dots-studio/dots-3-note-preview:free, groq/openai/gpt-oss-120b]
     reviewer:    [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b]
     stakeholder: [gemini/gemini-3.5-flash-lite]          # другая семья
     judge:       [gemini/gemini-3.5-flash-lite]
@@ -105,7 +105,7 @@ defaults: {temperature: 0.2, timeout_s: 60, retries: 2, seed: 42}
 budget:   {run_usd: 0.50, run_tokens: 800000}   # -> pydantic-ai UsageLimits
 ```
 
-<sub>Модели `:free` у OpenRouter бесплатны по id; для провайдеров с `free: true` стоимость считается как 0, для остальных — `response.cost()` (genai-prices). Файл обновляется после probe.</sub>
+<sub>Рабочая копия — `packages/core/src/reqgraph/llm/roles.yaml` (T-005); при расхождении главнее она. 23.10.2026: `minimax-m3.1-flash:free` снят с бесплатного тарифа 22.10, `nemotron-3-super-120b-a12b:free` отвечает 404 — заменены. `max_input_tokens` у Groq: промпт длиннее ~6000 токенов сразу уходит на следующую модель (лимит 8000 токенов в минуту); `supports_seed: false` у Gemini: его OpenAI-совместимый API не принимает seed. `output_mode: native` у Groq: структурированный ответ через JSON Schema, а не вызов инструмента (Groq отклоняет неточный вызов инструмента с 400 без возможности повтора). Модели `:free` у OpenRouter бесплатны по id; для провайдеров с `free: true` стоимость считается как 0, для остальных — `response.cost()` (genai-prices). Файл обновляется после probe.</sub>
 
 ```mermaid
 flowchart LR

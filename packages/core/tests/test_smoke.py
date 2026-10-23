@@ -7,6 +7,7 @@ from importlib.metadata import version
 
 import pytest
 import reqgraph
+from pytest_socket import SocketConnectBlockedError
 from reqgraph.cli import app
 from typer.testing import CliRunner
 
@@ -35,7 +36,8 @@ def test_layer_packages_import(layer: str) -> None:
     assert module.__doc__
 
 
-@pytest.mark.filterwarnings("ignore:A test tried to use socket.socket")
+@pytest.mark.filterwarnings("ignore:A test tried to use socket.socket.connect")
 def test_network_is_disabled_in_unit_tests() -> None:
-    with pytest.raises(Exception, match="socket"):
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    with sock, pytest.raises(SocketConnectBlockedError):
+        sock.connect(("1.1.1.1", 443))
