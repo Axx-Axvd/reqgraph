@@ -42,6 +42,7 @@
 
 - **Критерий приёмки:** supabase db reset без ошибок (в GitHub Actions и на ноутбуке автора); тест RLS: чужой проект не виден
 - **Зависит от:** T-001
+- **Статус:** миграции, seed и тест RLS (17 проверок) в feat/T-004; GitHub Actions — задача `db`; ноутбук автора — проверка автора
 
 ### T-005 — llm/: roles.yaml и роутер на pydantic-ai (FallbackModel, UsageLimits, genai-prices)
 
@@ -263,7 +264,7 @@
 ### S0 · Фундамент (19.10 - 01.11, M0)
 
 - [x] uv run pytest и pnpm build зелёные в GitHub Actions — ci.yml на каждый push (PR #48, ubuntu и windows, 22.10)
-- [ ] supabase db reset поднимает все таблицы и RLS — миграции 0001-0002
+- [x] supabase db reset поднимает все таблицы и RLS — миграции 0001-0002 (T-004: init и rls, тест pgTAP в CI)
 - [ ] LLM-слой вызывает OpenRouter, Groq и Gemini одной функцией — usage и $ пишутся в лог
 - [ ] probe-отчёт по 3-4 моделям сохранён — выбран стартовый профиль free
 

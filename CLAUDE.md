@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-016; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug); дневник — docs/journal.md.
-- Состояние: каркас монорепо (T-001) и CI (T-003) готовы; дальше по S0: T-004 -> T-005 -> T-006.
+- Состояние: каркас монорепо (T-001), CI (T-003) и схема Supabase с RLS (T-004) готовы; дальше по S0: T-005 -> T-006.
 
 ## Команды
 Работают сейчас:
@@ -20,10 +20,11 @@
 - uv run pre-commit install         # один раз: хуки ruff, mypy и базовые проверки перед коммитом
 - uv run reqgraph --version
 - pnpm install && pnpm -C apps/web dev | lint | build
+- pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
+- pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
 
 Появятся с задачами (до этого не запускать):
-- supabase start && supabase db reset   # локальная база и миграции (T-004)
 - uv run reqgraph schemas           # JSON Schema из Pydantic (T-101)
 - uv run reqgraph check examples/garage61   # отчёт CI по проекту (T-105)
 - docker compose up                 # офлайн-стенд: web + api + supabase + ollama (T-507)

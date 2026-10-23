@@ -170,11 +170,19 @@ erDiagram
     uuid id PK
     uuid project_id FK
     text kind
-    text status
+    text status "queued|running|waiting_input|succeeded|failed|cancelled"
     int iteration
     text model_profile
+    jsonb config "модели по ролям, провайдер, температура, хэши промптов"
+    int seed
+    text package_version
+    bigint tokens_in
+    bigint tokens_out
     numeric cost_usd
     text error
+    timestamptz created_at
+    timestamptz started_at
+    timestamptz finished_at
   }
   run_events {
     bigint id PK
@@ -191,7 +199,7 @@ erDiagram
     jsonb coverage
   }
 ```
-Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. RLS: всё через `projects.owner_id = auth.uid()`.
+Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. RLS: всё через `projects.owner_id = auth.uid()`. У `runs` счётчики и фильтры — колонки, остальные параметры воспроизводимости — в `config` (решение автора 23.10, T-004). Бакет Storage `exports` и его политики — в T-501. Миграции: `supabase/migrations/`, тест RLS: `supabase/tests/rls_test.sql`.
 
 *рис.7 - таблицы public и служебная схема lg для чекпоинтов LangGraph*
 
