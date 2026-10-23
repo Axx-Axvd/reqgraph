@@ -39,6 +39,36 @@ def mutate(folder: Path, mutation: dict[str, Any]) -> None:
     if "add" in mutation:
         rel, source = mutation["add"]
         shutil.copyfile(BAD / source, folder / rel)
+    for rel, node_id, field, value in mutation.get("edit", []):
+        _edit_node(folder / rel, node_id, lambda node, f=field, v=value: _set(node, f, v))
+    if "delete_node" in mutation:
+        rel, node_id = mutation["delete_node"]
+        _edit_node(folder / rel, node_id, None)
+
+
+def _set(node: dict[str, Any], field: str, value: Any) -> None:
+    if value is None:
+        node.pop(field, None)
+    else:
+        node[field] = value
+
+
+def _edit_node(path: Path, node_id: str, change: Any) -> None:
+    """Change (or delete, change=None) one node of a requirements file; formatting is not kept."""
+    nodes = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert any(n["id"] == node_id for n in nodes), f"в {path.name} нет {node_id}"
+    if change is None:
+        nodes = [n for n in nodes if n["id"] != node_id]
+    else:
+        for node in nodes:
+            if node["id"] == node_id:
+                change(node)
+    path.write_text(yaml.safe_dump(nodes, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+
+def test_every_review_mutation_is_covered() -> None:
+    """The table «Ожидаемые мутации» of garage61/REVIEW.md has 10 rows."""
+    assert sum(bool(m.get("review")) for m in MUTATIONS) == 10
 
 
 def test_reference_project_is_clean() -> None:
