@@ -4,7 +4,9 @@ import re
 from enum import StrEnum
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
+
+from reqgraph.graph.errors import BadFields
 
 Status = Literal["draft", "reviewed", "approved"]
 Priority = Literal["must", "should", "could", "wont"]
@@ -222,3 +224,20 @@ REF_FIELDS: dict[NodeKind, dict[str, NodeKind]] = {
 
 def parse_node(data: dict[str, Any]) -> Node:
     return NODE_ADAPTER.validate_python(data)
+
+
+def validation_text(exc: ValidationError, kind: str) -> str:
+    """Pydantic errors as `field: message; ...` without the discriminator in the location."""
+    parts = []
+    for err in exc.errors():
+        loc = [str(x) for x in err["loc"] if x != kind]
+        parts.append(f"{'.'.join(loc) or 'узел'}: {err['msg']}")
+    return "; ".join(parts)
+
+
+def node_from_dict(data: dict[str, Any], label: str) -> Node:
+    """parse_node() raising BadFields that names `label` (node id, file), not ValidationError."""
+    try:
+        return NODE_ADAPTER.validate_python(data)
+    except ValidationError as exc:
+        raise BadFields(f"{label}: {validation_text(exc, str(data.get('kind')))}") from None

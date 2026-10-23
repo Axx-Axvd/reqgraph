@@ -2,7 +2,7 @@
 
 import json
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -19,7 +19,7 @@ from reqgraph.graph.errors import (
     UnknownRef,
 )
 from reqgraph.graph.ids import IdAllocator
-from reqgraph.graph.nodes import NODE_ADAPTER, REF_FIELDS, Node, NodeKind
+from reqgraph.graph.nodes import REF_FIELDS, Node, NodeKind, node_from_dict
 from reqgraph.graph.patch import (
     SCHEMA_VERSION,
     TMP_ID,
@@ -120,21 +120,6 @@ def _not_allowed(src: str, rel: Rel, dst: str) -> str:
     )
 
 
-def _validation_text(exc: ValidationError, kind: str) -> str:
-    parts = []
-    for err in exc.errors():
-        loc = [str(x) for x in err["loc"] if x != kind]
-        parts.append(f"{'.'.join(loc) or 'узел'}: {err['msg']}")
-    return "; ".join(parts)
-
-
-def _parse(data: dict[str, Any], label: str) -> Node:
-    try:
-        return NODE_ADAPTER.validate_python(data)
-    except ValidationError as exc:
-        raise BadFields(f"{label}: {_validation_text(exc, str(data.get('kind')))}") from None
-
-
 class ArtifactGraph(BaseModel):
     """Nodes, edges and the high-water marks of the id counters (ids are never reused)."""
 
@@ -165,6 +150,27 @@ class ArtifactGraph(BaseModel):
     @classmethod
     def empty(cls) -> "ArtifactGraph":
         return cls()
+
+    @classmethod
+    def from_parts(
+        cls,
+        nodes: Iterable[Node],
+        edges: Iterable[Edge],
+        high_water: Mapping[str, int] | None = None,
+    ) -> "ArtifactGraph":
+        """Graph from nodes with ids already issued (a project folder): checks integrity.
+
+        Counters start after the largest id present, or after `high_water` if it is higher.
+        """
+        by_id: dict[str, Node] = {}
+        for node in nodes:
+            if node.id in by_id:
+                raise DuplicateId(f"узел {node.id} встречается дважды")
+            by_id[node.id] = node
+        edge_list = list(edges)
+        _check_integrity(by_id, edge_list)
+        counters = IdAllocator.from_graph(cls(nodes=by_id, high_water=dict(high_water or {})))
+        return cls(nodes=by_id, edges=tuple(edge_list), high_water=counters.snapshot())
 
     def get(self, node_id: str) -> Node | None:
         return self.nodes.get(node_id)
@@ -321,7 +327,7 @@ class _Apply:
         node_id = self.id_map[op.tmp_id]
         self._forbid_approval(node_id, op.fields)
         data = {**self._resolve_refs(op.kind, op.fields), "id": node_id, "kind": op.kind.value}
-        self.nodes[node_id] = _parse(data, f"{node_id} (tmp_id {op.tmp_id})")
+        self.nodes[node_id] = node_from_dict(data, f"{node_id} (tmp_id {op.tmp_id})")
 
     # --- link / unlink ---------------------------------------------------------------------
 
@@ -373,7 +379,7 @@ class _Apply:
         old = self.nodes[node_id]
         data = old.model_dump()
         data.update(self._resolve_refs(NodeKind(old.kind), op.fields))
-        self.nodes[node_id] = _parse(data, node_id)
+        self.nodes[node_id] = node_from_dict(data, node_id)
 
     def _remove(self, op: RemoveOp) -> None:
         node_id = self._existing(op.id)
