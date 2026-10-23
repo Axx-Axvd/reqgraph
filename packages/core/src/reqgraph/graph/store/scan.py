@@ -1,6 +1,7 @@
 """Interim scanner of diagram files: ids and names of ENT, UC and C4 nodes (garage61 conventions).
 
-Replaced by real parsers in T-104 (pydbml, PlantUML and Structurizr through Kroki). Conventions
+The fallback of FileStore: entry points pass the parsers of dsl/ (pydbml for DBML; PlantUML and
+Structurizr compile through Kroki), the graph layer itself cannot import dsl/. Conventions
 (examples/garage61/REVIEW.md, No. 3): DBML — `Note: 'ENT-xx'` inside a table; PlantUML — an alias
 without the dash (`UC01` = UC-01, `ACT01` = ACT-01); Structurizr — the property `reqgraph.id`.
 """

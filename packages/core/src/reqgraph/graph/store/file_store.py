@@ -5,7 +5,7 @@ and the diagram files; writing puts it back. A file whose content did not change
 byte for byte (comments and hand formatting survive); a changed file gets the canonical text.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from reqgraph.graph.edges import Edge
@@ -19,17 +19,11 @@ from reqgraph.graph.store.scan import scan_c4, scan_dbml, scan_puml
 
 # Diagram texts kept in the project; other files under models/ (images and the like) are not ours.
 MODEL_SUFFIXES = frozenset({".dbml", ".puml", ".dsl", ".bpmn", ".svg"})
-_SCANNERS: dict[str, Callable[[str, str], Sequence[Node]]] = {
-    ".dbml": scan_dbml,
-    ".puml": scan_puml,
-    ".dsl": scan_c4,
-}
+Reader = Callable[[str, str], Sequence[Node]]
+# Simple scanner of the diagram files; entry points pass the parsers of dsl/ instead
+# (`FileStore(root, readers=reqgraph.dsl.readers.model_readers())`).
+DEFAULT_READERS: dict[str, Reader] = {".dbml": scan_dbml, ".puml": scan_puml, ".dsl": scan_c4}
 DIAGRAM_KINDS = (NodeKind.ENT, NodeKind.UC, NodeKind.C4)
-
-
-def _scan(rel: str, text: str) -> list[Node]:
-    scanner = _SCANNERS.get(Path(rel).suffix)
-    return list(scanner(text, rel)) if scanner else []
 
 
 def _is_model_file(rel: str) -> bool:
@@ -39,8 +33,21 @@ def _is_model_file(rel: str) -> bool:
 class FileStore:
     """Project store in a folder. Paths inside the project are POSIX and relative to `root`."""
 
-    def __init__(self, root: Path | str) -> None:
+    def __init__(self, root: Path | str, readers: Mapping[str, Reader] | None = None) -> None:
         self.root = Path(root)
+        self.readers = dict(DEFAULT_READERS if readers is None else readers)
+
+    def _scan(self, rel: str, text: str) -> list[Node]:
+        """Nodes of a diagram file by its suffix; a parse error names the file."""
+        reader = self.readers.get(Path(rel).suffix)
+        if reader is None:
+            return []
+        try:
+            return list(reader(text, rel))
+        except GraphError:
+            raise
+        except ValueError as exc:  # DslError of dsl/ and the like
+            raise StoreError(str(exc)) from None
 
     # --- reading ---------------------------------------------------------------------------
 
@@ -97,7 +104,7 @@ class FileStore:
                     process = process.model_copy(update={"bpmn_path": bpmn})
                 scanned: list[Node] = [process]
             else:
-                scanned = _scan(rel, text)
+                scanned = self._scan(rel, text)
             for node in scanned:
                 found.append((node, rel))
                 layout[node.id] = rel
@@ -205,19 +212,19 @@ class FileStore:
             if removed and rel.endswith(fmt.PROCESS_SUFFIX):
                 (self.root / rel).unlink(missing_ok=True)
 
-    @staticmethod
-    def _refuse_unwritable_changes(project: Project) -> None:
-        """Diagram files are not generated from the graph yet (T-104): refuse to lose changes."""
+    def _refuse_unwritable_changes(self, project: Project) -> None:
+        """Diagram files are text written by people and the Modeler, never generated from the
+        graph: a change of an ENT, UC or C4 node that is not in its file would be lost."""
         scanned: dict[str, Node] = {}
         for rel, text in project.files.items():
             if _is_model_file(rel):
-                scanned |= {n.id: n for n in _scan(rel, text)}
+                scanned |= {n.id: n for n in self._scan(rel, text)}
         in_graph = {n.id: n for kind in DIAGRAM_KINDS for n in project.graph.nodes_of(kind)}
         differ = sorted(
             i for i in scanned.keys() | in_graph.keys() if scanned.get(i) != in_graph.get(i)
         )
         if differ:
             raise StoreError(
-                f"узлы {', '.join(differ)} изменены в графе, а файлы диаграмм (DBML, PlantUML, "
-                "Structurizr) из графа пока не пишутся — это задача T-104; измените файл диаграммы"
+                f"узлы {', '.join(differ)} изменены в графе, но не в файлах диаграмм: модели "
+                "данных, сценариев и C4 меняются правкой самих файлов (DBML, PlantUML, Structurizr)"
             )
