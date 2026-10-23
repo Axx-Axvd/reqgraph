@@ -1,4 +1,5 @@
-// Модель данных «Гараж 61». Id сущности графа — в Note таблицы (ENT-xx).
+// Модель данных «Гараж 61». Id и русское название сущности графа — в Note таблицы
+// (ENT-xx · Название): по названию TRC-005 ищет сущность в формулировках ФТ.
 // Атрибут сущности адресуется как ENT-xx.<column>, например ENT-05.status.
 
 Project garage61 {
@@ -18,7 +19,7 @@ Table client {
   full_name varchar
   phone varchar [unique, not null, note: 'подтверждён SMS-кодом (FR-004)']
   created_at timestamp [not null]
-  Note: 'ENT-01'
+  Note: 'ENT-01 · Клиент'
 }
 
 Table service {
@@ -27,7 +28,7 @@ Table service {
   specialization varchar [not null, note: 'какая специализация мастера нужна']
   duration_min int [not null]
   base_price numeric [not null]
-  Note: 'ENT-02'
+  Note: 'ENT-02 · Услуга'
 }
 
 Table car {
@@ -36,14 +37,14 @@ Table car {
   model varchar
   client_id int [ref: > client.id]
   contract_id int [ref: > contract.id, note: 'заполнен для машин корпоративного автопарка']
-  Note: 'ENT-03'
+  Note: 'ENT-03 · Автомобиль'
 }
 
 Table master {
   id int [pk, increment]
   full_name varchar [not null]
   specialization varchar [not null]
-  Note: 'ENT-04'
+  Note: 'ENT-04 · Мастер'
 }
 
 Table master_shift {
@@ -52,7 +53,7 @@ Table master_shift {
   shift_date date [not null]
   starts_at time [not null]
   ends_at time [not null]
-  Note: 'ENT-08'
+  Note: 'ENT-08 · Смена мастера'
 }
 
 Table booking {
@@ -64,7 +65,7 @@ Table booking {
   starts_at timestamp [not null]
   status booking_status [not null, default: 'confirmed']
   created_at timestamp [not null]
-  Note: 'ENT-05'
+  Note: 'ENT-05 · Запись'
 }
 
 Table contract {
@@ -73,7 +74,7 @@ Table contract {
   inn varchar [not null]
   payment_delay_days int [not null, default: 30]
   valid_until date [not null]
-  Note: 'ENT-06'
+  Note: 'ENT-06 · Договор'
 }
 
 Table invoice {
@@ -83,5 +84,5 @@ Table invoice {
   amount numeric [not null]
   issued_at date [not null]
   due_date date [not null, note: 'issued_at + contract.payment_delay_days']
-  Note: 'ENT-07'
+  Note: 'ENT-07 · Счёт'
 }
