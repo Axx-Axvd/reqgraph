@@ -72,17 +72,35 @@ def test_ears_patterns(statement: str, ears: bool) -> None:
 
 
 def test_trc005_is_skipped_without_russian_entity_names() -> None:
-    project = FileStore(GARAGE61, readers=model_readers()).load()
-    with pytest.raises(CheckSkipped, match="русских названий"):
-        EntitiesInErd().run(project.graph, CheckContext(project))
-
-
-def test_trc005_with_russian_entity_names() -> None:
     project = FileStore(GARAGE61).load()
     ops = [
-        {"op": "update", "id": "ENT-05", "fields": {"name": "запись"}},  # FR-003: «создать запись»
-        {"op": "update", "id": "ENT-02", "fields": {"name": "автомобиль"}},  # FR-001: не названа
+        {"op": "update", "id": n.id, "fields": {"name": f"table_{n.id[-2:]}"}}
+        for n in project.graph.nodes_of("ENT")
     ]
     graph = project.graph.apply(GraphPatch.model_validate({"ops": ops}), actor="user").graph
-    found = EntitiesInErd().run(graph, CheckContext(project.with_graph(graph)))
-    assert [f.node_ids for f in found] == [["FR-001", "ENT-02"]]
+    with pytest.raises(CheckSkipped, match="русских названий"):
+        EntitiesInErd().run(graph, CheckContext(project.with_graph(graph)))
+
+
+def test_trc005_on_the_reference_project() -> None:
+    """garage61 names its entities in Russian (`Note: 'ENT-05 · Запись'`), every FR names them."""
+    project = FileStore(GARAGE61, readers=model_readers()).load()
+    assert project.graph.get("ENT-08").name == "Смена мастера"  # type: ignore[union-attr]
+    assert EntitiesInErd().run(project.graph, CheckContext(project)) == []
+
+
+@pytest.mark.parametrize(
+    ("entity", "name", "found"),
+    [
+        ("ENT-05", "Запись", []),  # FR-003: «создать запись»
+        ("ENT-02", "Автомобиль", [["FR-001", "ENT-02"]]),  # FR-001 speaks about services
+        ("ENT-08", "Смена мастера", []),  # FR-002: «смен мастеров» — every word, any form
+        ("ENT-08", "Смена бригадира", [["FR-002", "ENT-08"]]),  # one word of two is not enough
+    ],
+)
+def test_trc005_with_russian_entity_names(entity: str, name: str, found: list[list[str]]) -> None:
+    project = FileStore(GARAGE61).load()
+    ops = [{"op": "update", "id": entity, "fields": {"name": name}}]
+    graph = project.graph.apply(GraphPatch.model_validate({"ops": ops}), actor="user").graph
+    result = EntitiesInErd().run(graph, CheckContext(project.with_graph(graph)))
+    assert [f.node_ids for f in result] == found

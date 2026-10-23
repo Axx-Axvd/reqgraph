@@ -23,7 +23,7 @@ def test_entities_carry_their_columns() -> None:
     found = {e.id: e for e in entities(model, "erd.dbml")}
     assert len(found) == 8
     client = found["ENT-01"]
-    assert client.name == "client"
+    assert client.name == "Клиент"  # `Note: 'ENT-01 · Клиент'`: the Russian name of the entity
     phone = next(a for a in client.attributes if a.name == "phone")
     assert (phone.type, phone.note) == ("varchar", "подтверждён SMS-кодом (FR-004)")
 
@@ -46,6 +46,25 @@ def test_reference_to_a_missing_table() -> None:
 
 def test_table_without_entity_note_is_not_an_entity() -> None:
     model = parse_dbml("Table audit {\n  id int\n}\n", "erd.dbml")
+    assert entities(model, "erd.dbml") == []
+
+
+@pytest.mark.parametrize(
+    ("note", "name"),
+    [
+        ("ENT-01", "client"),
+        ("ENT-01 · Клиент", "Клиент"),
+        ("ENT-01·Смена мастера", "Смена мастера"),
+    ],
+)
+def test_entity_name_from_the_note(note: str, name: str) -> None:
+    model = parse_dbml(f"Table client {{\n  id int\n  Note: '{note}'\n}}\n", "erd.dbml")
+    (entity,) = entities(model, "erd.dbml")
+    assert (entity.id, entity.name) == ("ENT-01", name)
+
+
+def test_note_that_only_mentions_an_id_is_not_an_entity() -> None:
+    model = parse_dbml("Table log {\n  id int\n  Note: 'см. ENT-01'\n}\n", "erd.dbml")
     assert entities(model, "erd.dbml") == []
 
 

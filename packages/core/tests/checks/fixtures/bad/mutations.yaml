@@ -87,6 +87,9 @@
     - [requirements/functional.yaml, FR-001, depends_on, [FR-002]]
     - [requirements/functional.yaml, FR-002, depends_on, [FR-001]]
   expect: {TRC-004: [FR-001, FR-002]}
+- name: fr011_does_not_name_the_invoice
+  replace: [requirements/functional.yaml, "счёт за работы", "документ за работы"]
+  expect: {TRC-005: [FR-011, ENT-07]}
 - name: con002_without_source
   review: true
   edit: [[requirements/constraints.yaml, CON-002, derived_from, null]]

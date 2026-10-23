@@ -23,6 +23,11 @@ def test_dbml_tables_with_an_entity_note() -> None:
     assert [(a.name, a.type) for a in ent.attributes] == [("id", "int"), ("phone", "varchar")]
 
 
+def test_dbml_entity_name_from_the_note() -> None:
+    (ent,) = scan_dbml(DBML.replace("'ENT-01'", "'ENT-01 · Клиент'"), "erd.dbml")
+    assert (ent.id, ent.name) == ("ENT-01", "Клиент")
+
+
 def test_dbml_duplicate_entity_id() -> None:
     with pytest.raises(StoreError, match="ENT-01"):
         scan_dbml(DBML + DBML, "erd.dbml")

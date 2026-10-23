@@ -64,7 +64,7 @@ def test_processes_keep_the_whole_dsl() -> None:
 
 def test_model_elements_are_found_in_diagram_files() -> None:
     g = load().graph
-    assert g.nodes["ENT-05"].name == "booking"  # type: ignore[union-attr]
+    assert g.nodes["ENT-05"].name == "Запись"  # type: ignore[union-attr]
     assert {a.name for a in g.nodes["ENT-05"].attributes} >= {"id", "status"}  # type: ignore[union-attr]
     uc = g.nodes["UC-01"]
     assert (uc.name, uc.actor) == ("Записаться на обслуживание", "ACT-01")  # type: ignore[union-attr]
