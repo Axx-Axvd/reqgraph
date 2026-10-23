@@ -1,0 +1,47 @@
+# Model ladder per role (ADR-011, ADR-013); read by llm/config.py, built by llm/router.py.
+# Ids are "<provider>/<model id at that provider>". The first model is primary, the next ones are
+# fallbacks on 429 / 5xx / timeout. Updated after probe (T-006, T-601); models verified 2026-10-21.
+providers:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    key_env: OPENROUTER_API_KEY      # models ending with ":free" cost $0 (50 requests/day without credits)
+  groq:
+    base_url: https://api.groq.com/openai/v1
+    key_env: GROQ_API_KEY
+    free: true
+    max_input_tokens: 6000           # 8000 tokens per minute per model: long prompts go to the next step
+  gemini:
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+    key_env: GEMINI_API_KEY
+    free: true
+  ollama:
+    base_url: http://localhost:11434/v1
+    base_url_env: OLLAMA_BASE_URL
+    key_env: null
+    free: true
+
+profiles:
+  free:                              # development until January (author's decision 2026-10-21)
+    interviewer: [groq/openai/gpt-oss-120b, gemini/gemini-3.5-flash-lite]
+    analyst: [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
+    modeler: [openrouter/nvidia/nemotron-3-super-120b-a12b:free, openrouter/minimax/minimax-m3.1-flash:free]
+    standards: [openrouter/google/gemma-4-31b-it:free, groq/openai/gpt-oss-120b]
+    reviewer: [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b]
+    stakeholder: [gemini/gemini-3.5-flash-lite]   # another model family than the agents
+    judge: [gemini/gemini-3.5-flash-lite]
+  cheap:                             # experiments (January-February), one model for all methods
+    "*": [openrouter/deepseek/deepseek-v4-flash, openrouter/qwen/qwen3.8-flash]
+    stakeholder: [openrouter/meta-llama/llama-3.3-70b-instruct]
+    judge: [openrouter/z-ai/glm-5.3-flash]
+  local:                             # offline stand and smoke tests
+    "*": [ollama/qwen3:4b]
+
+defaults:
+  temperature: 0.2
+  timeout_s: 60
+  retries: 2
+  seed: 42
+
+budget:                              # per run; REQGRAPH_RUN_BUDGET_USD overrides run_usd
+  run_usd: 0.50
+  run_tokens: 800000
