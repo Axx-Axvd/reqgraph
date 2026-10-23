@@ -6,6 +6,7 @@ license = "MIT"
 authors = [{ name = "Rybalkin A.A." }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "pydantic==2.14.1",
     "pydantic-ai-slim[openai]==2.60.0",
     "pyyaml==6.0.3",
     "typer==0.27.3",

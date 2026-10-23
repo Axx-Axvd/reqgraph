@@ -1,5 +1,6 @@
 """Command-line entry point: ``reqgraph``."""
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -28,6 +29,20 @@ def main(
     ] = False,
 ) -> None:
     """reqgraph: interview -> requirements -> models as code -> CI -> SRS and TZ."""
+
+
+@app.command("schemas")
+def schemas(
+    out: Annotated[Path, typer.Option("--out", help="Folder for *.schema.json.")] = Path("schemas"),
+) -> None:
+    """Write the public JSON Schemas (GraphPatch, ArtifactGraph) from the Pydantic models."""
+    from reqgraph.schemas import SCHEMAS, render
+
+    out.mkdir(parents=True, exist_ok=True)
+    for name in SCHEMAS:
+        path = out / f"{name}.schema.json"
+        path.write_text(render(name), encoding="utf-8", newline="\n")
+        typer.echo(f"записано: {path}")
 
 
 if __name__ == "__main__":
