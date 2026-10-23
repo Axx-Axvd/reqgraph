@@ -138,7 +138,7 @@ garage61/
 ├── models/c4/workspace.dsl
 ├── trace/edges.yaml           # все рёбра графа
 ├── interview/                 # transcript.jsonl coverage.json
-├── reports/                   # ci-report.json ci-report.md
+├── reports/                   # ci-report.json ci-report.md (пишет `reqgraph check`)
 └── exports/                   # SRS_ISO29148.docx TZ_GOST34_602.docx req.reqif
 ```
 

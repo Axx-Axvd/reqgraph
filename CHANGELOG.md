@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Checks framework (T-105): `reqgraph.checks` — `Finding` (with a fingerprint for the repeat detector), `BaseCheck`,
+  `CheckContext` (parsed processes and ERD, SVG through Kroki), `@register`, `run_checks()` (async; disabled and
+  skipped checks, a crashing check becomes an error finding); **public schema, version 1:**
+  `schemas/ci-report.schema.json` — stable JSON and Russian Markdown; CLI `reqgraph check` (exit codes 0/1/2,
+  `reports/ci-report.{json,md}`).
 - Models as code (T-104): `reqgraph.dsl.dbml` (pydbml: tables, columns, relations, enums; entities `ENT-xx`),
   `dsl.plantuml` / `dsl.c4` readers, `dsl.readers.model_readers()` for `FileStore(root, readers=...)`;
   `dsl.kroki.render_svg()` — SVG of DBML, PlantUML, Structurizr and BPMN through Kroki (`KROKI_URL`), compile

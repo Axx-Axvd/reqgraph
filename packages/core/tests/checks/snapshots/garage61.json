@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "project": "garage61",
+  "checks": [
+    {
+      "id": "SCH-900",
+      "title": "сценарии использования рисуются",
+      "group": "sch",
+      "status": "skipped",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 1
+    },
+    {
+      "id": "SND-900",
+      "title": "у процессов есть имя",
+      "group": "snd",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 2
+    },
+    {
+      "id": "ISO-900",
+      "title": "формулировки короче 120 символов",
+      "group": "iso",
+      "status": "warning",
+      "errors": 0,
+      "warnings": 6,
+      "infos": 0
+    },
+    {
+      "id": "TRC-900",
+      "title": "у ФТ приоритет must",
+      "group": "trc",
+      "status": "failed",
+      "errors": 4,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "TPL-900",
+      "title": "проверка с ошибкой в коде",
+      "group": "tpl",
+      "status": "failed",
+      "errors": 1,
+      "warnings": 0,
+      "infos": 0
+    }
+  ],
+  "findings": [
+    {
+      "check_id": "SCH-900",
+      "severity": "info",
+      "node_ids": [],
+      "message": "пропущено: Kroki недоступен — проверка без сети",
+      "hint": null,
+      "owner": "modeler"
+    },
+    {
+      "check_id": "SND-900",
+      "severity": "info",
+      "node_ids": [
+        "PRC-01"
+      ],
+      "message": "PRC-01: имя есть",
+      "hint": null,
+      "owner": "modeler"
+    },
+    {
+      "check_id": "SND-900",
+      "severity": "info",
+      "node_ids": [
+        "PRC-02"
+      ],
+      "message": "PRC-02: имя есть",
+      "hint": null,
+      "owner": "modeler"
+    },
+    {
+      "check_id": "ISO-900",
+      "severity": "warning",
+      "node_ids": [
+        "FR-002"
+      ],
+      "message": "FR-002: формулировка длиннее 120 символов",
+      "hint": null,
+      "owner": "analyst"
+    },
+    {
+      "check_id": "ISO-900",
+      "severity": "warning",
+      "node_ids": [
+        "FR-009"
+      ],
+      "message": "FR-009: формулировка длиннее 120 символов",
+      "hint": null,
+      "owner": "analyst"
+    },
+    {
+      "check_id": "ISO-900",
+      "severity": "warning",
+      "node_ids": [
+        "FR-010"
+      ],
+      "message": "FR-010: формулировка длиннее 120 символов",
+      "hint": null,
+      "owner": "analyst"
+    },
+    {
+      "check_id": "ISO-900",
+      "severity": "warning",
+      "node_ids": [
+        "FR-011"
+      ],
+      "message": "FR-011: формулировка длиннее 120 символов",
+      "hint": null,
+      "owner": "analyst"
+    },
+    {
+      "check_id": "ISO-900",
+      "severity": "warning",
+      "node_ids": [
+        "FR-013"
+      ],
+      "message": "FR-013: формулировка длиннее 120 символов",
+      "hint": null,
+      "owner": "analyst"
+    },
+    {
+      "check_id": "ISO-900",
+      "severity": "warning",
+      "node_ids": [
+        "FR-014"
+      ],
+      "message": "FR-014: формулировка длиннее 120 символов",
+      "hint": null,
+      "owner": "analyst"
+    },
+    {
+      "check_id": "TRC-900",
+      "severity": "error",
+      "node_ids": [
+        "FR-010"
+      ],
+      "message": "FR-010: приоритет should, а не must",
+      "hint": "поднимите приоритет или уберите требование из первой версии",
+      "owner": "analyst"
+    },
+    {
+      "check_id": "TRC-900",
+      "severity": "error",
+      "node_ids": [
+        "FR-011"
+      ],
+      "message": "FR-011: приоритет should, а не must",
+      "hint": "поднимите приоритет или уберите требование из первой версии",
+      "owner": "analyst"
+    },
+    {
+      "check_id": "TRC-900",
+      "severity": "error",
+      "node_ids": [
+        "FR-012"
+      ],
+      "message": "FR-012: приоритет could, а не must",
+      "hint": "поднимите приоритет или уберите требование из первой версии",
+      "owner": "analyst"
+    },
+    {
+      "check_id": "TRC-900",
+      "severity": "error",
+      "node_ids": [
+        "FR-014"
+      ],
+      "message": "FR-014: приоритет should, а не must",
+      "hint": "поднимите приоритет или уберите требование из первой версии",
+      "owner": "analyst"
+    },
+    {
+      "check_id": "TPL-900",
+      "severity": "error",
+      "node_ids": [],
+      "message": "проверка упала: RuntimeError: деление на ноль в шаблоне",
+      "hint": "ошибка в коде проверки",
+      "owner": "standards"
+    }
+  ],
+  "summary": {
+    "errors": 5,
+    "warnings": 6,
+    "infos": 3,
+    "passed": 1,
+    "warned": 1,
+    "failed": 2,
+    "skipped": 1
+  }
+}
