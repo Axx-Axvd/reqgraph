@@ -132,3 +132,14 @@ async def test_rate_limit_is_waited_out(monkeypatch: pytest.MonkeyPatch) -> None
     )
     rows = await probe.run_model("groq/limited", 1, probe.build_dataset())
     assert all(r.valid for r in rows)
+
+
+async def test_rescore_reproduces_scores_from_stored_answers(
+    fake_models: None, tmp_path: Path
+) -> None:
+    rows = await probe.run_model("groq/fake-model", 1, probe.build_dataset())
+    path = tmp_path / "probe.csv"
+    probe.write_csv(rows, path)
+    again = probe.rescore(probe.read_csv(path))
+    assert [r.score for r in again] == [r.score for r in rows]
+    assert again[0].model_id == "groq/fake-model"

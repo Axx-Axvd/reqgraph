@@ -6,7 +6,7 @@ import hashlib
 import json
 import statistics
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import date
 from importlib.metadata import version
 from pathlib import Path
@@ -108,24 +108,28 @@ def render(block: str, case: dict[str, Any], prompts: Path | None = None) -> tup
     return env.get_template(f"{block}.md").render(**case), sha
 
 
+def score_answer(block: str, case: dict[str, Any], answer: BaseModel) -> dict[str, float]:
+    """Deterministic score of one answer (scoring.py)."""
+    match block:
+        case "extract":
+            assert isinstance(answer, Extraction)
+            return scoring.score_extract(answer, case["expected"])
+        case "process":
+            assert isinstance(answer, ProcessSketch)
+            return scoring.score_process(answer, case["expected"])
+        case "rewrite":
+            assert isinstance(answer, Rewrite)
+            return scoring.score_rewrite(answer, case["keep"])
+        case _:
+            assert isinstance(answer, Question)
+            return scoring.score_question(answer, case)
+
+
 class BlockScore(Evaluator[ProbeInput, ProbeOutput, None]):
-    """Deterministic score of one answer (scoring.py), reported as named scores."""
+    """pydantic-evals wrapper around score_answer: named scores per case."""
 
     def evaluate(self, ctx: EvaluatorContext[ProbeInput, ProbeOutput, None]) -> dict[str, float]:
-        case, answer = ctx.inputs.case, ctx.output.answer
-        match ctx.inputs.block:
-            case "extract":
-                assert isinstance(answer, Extraction)
-                return scoring.score_extract(answer, case["expected"])
-            case "process":
-                assert isinstance(answer, ProcessSketch)
-                return scoring.score_process(answer, case["expected"])
-            case "rewrite":
-                assert isinstance(answer, Rewrite)
-                return scoring.score_rewrite(answer, case["keep"])
-            case _:
-                assert isinstance(answer, Question)
-                return scoring.score_question(answer, case)
+        return score_answer(ctx.inputs.block, ctx.inputs.case, ctx.output.answer)
 
 
 JUDGE_RUBRIC = (
@@ -240,6 +244,61 @@ async def run_model(
                 )
             )
     return rows
+
+
+def read_csv(path: Path) -> list[Row]:
+    def opt_float(v: str) -> float | None:
+        return float(v) if v else None
+
+    with path.open(encoding="utf-8", newline="") as fh:
+        return [
+            Row(
+                date=d["date"],
+                model_id=d["model_id"],
+                provider=d["provider"],
+                block=d["block"],
+                case=d["case"],
+                repeat=int(d["repeat"]),
+                valid=int(d["valid"]),
+                score=float(d["score"]),
+                scores=d["scores"],
+                judge=d["judge"],
+                input_tokens=int(d["input_tokens"]),
+                output_tokens=int(d["output_tokens"]),
+                requests=int(d["requests"]),
+                cost_usd=float(d["cost_usd"]),
+                list_cost_usd=opt_float(d["list_cost_usd"]),
+                latency_ms=int(d["latency_ms"]),
+                temperature=float(d["temperature"]),
+                seed=int(d["seed"]) if d["seed"] else None,
+                prompt_sha=d["prompt_sha"],
+                package_version=d["package_version"],
+                error=d["error"],
+                answer=d["answer"],
+            )
+            for d in csv.DictReader(fh)
+        ]
+
+
+def rescore(rows: Sequence[Row]) -> list[Row]:
+    """Recompute scores from stored answers (after a fix in scoring or expectations); models are
+    not called again. Failed rows stay failed."""
+    cases = {c["name"]: (block, c) for block, c in load_cases()}
+    out = []
+    for r in rows:
+        if r.valid:
+            block, case = cases[r.case]
+            answer = OUTPUT_TYPES[block].model_validate_json(r.answer)
+            scores = score_answer(block, case, answer)
+            r = replace(
+                r,
+                score=scores["score"],
+                scores=json.dumps(
+                    {k: v for k, v in scores.items() if k != "score"}, ensure_ascii=False
+                ),
+            )
+        out.append(r)
+    return out
 
 
 def write_csv(rows: Sequence[Row], path: Path) -> None:

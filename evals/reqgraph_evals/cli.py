@@ -41,3 +41,15 @@ def probe_cmd(
     (out / f"{stem}.md").write_text(summary, encoding="utf-8")
     typer.echo(summary)
     typer.echo(f"-> {out / stem}.csv, {stem}.md")
+
+
+@app.command("rescore")
+def rescore_cmd(
+    report: Annotated[Path, typer.Argument(help="CSV отчёта probe", exists=True, dir_okay=False)],
+) -> None:
+    """Пересчитать оценки по сохранённым ответам (модели не вызываются); перезаписать CSV и MD."""
+    rows = probe.rescore(probe.read_csv(report))
+    probe.write_csv(rows, report)
+    summary = probe.summary_markdown(rows)
+    report.with_suffix(".md").write_text(summary, encoding="utf-8")
+    typer.echo(summary)
