@@ -11,7 +11,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Checks ISO-001…005 and TRC-001…006 (T-107): vague words (own dictionary `checks/vague_words.yaml`, Russian by
   pymorphy3 lemmas), one statement per FR, verifiability, placeholders, EARS form; BR refined, FR realized, no orphan
   model elements, references to steps and attributes, refines / depends_on cycles, DSL `realizes` mirrors
-  `realized_by`, entities named in FRs (needs Russian entity names, otherwise skipped), sources are client turns.
+  `realized_by`, entities named in FRs (Russian entity name from the DBML note `ENT-05 · Запись`, otherwise skipped),
+  sources are client turns. garage61: Russian entity names added (author's decision), all 20 checks pass.
   All 10 mutations of garage61/REVIEW.md are covered. New dependencies of `packages/core`: `pymorphy3==2.0.6`
   (MIT, created lazily), `rapidfuzz==3.14.6` (MIT).
 - Checks SCH-001…005 and SND-001…004 (T-106): BPMN against the XSD, process DSL and its references, DBML, PlantUML

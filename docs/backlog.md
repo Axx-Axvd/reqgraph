@@ -98,7 +98,7 @@
 
 - **Критерий приёмки:** good/bad фикстуры; мутационные тесты на garage61
 - **Зависит от:** T-105
-- **Статус:** сделано в feat/T-107: `checks/iso.py` (ISO-001…005), `checks/trace.py` (TRC-001…006), `checks/text.py` + словарь `checks/vague_words.yaml`. Эталон чист по всем 20 проверкам (19 пройдено, TRC-005 пропущена — у сущностей нет русских названий, вопрос автору); все 10 мутаций REVIEW.md и ещё 14 своих ловятся (`tests/checks/fixtures/bad/mutations.yaml`); две мутации REVIEW.md (удалить metric у NFR-002, refines на UR-099) отклоняются уже при чтении проекта
+- **Статус:** сделано в feat/T-107: `checks/iso.py` (ISO-001…005), `checks/trace.py` (TRC-001…006), `checks/text.py` + словарь `checks/vague_words.yaml`. Эталон чист по всем 20 проверкам (все пройдены; русские названия сущностей — `Note: 'ENT-xx · Название'` в DBML, решение автора); все 10 мутаций REVIEW.md и ещё 14 своих ловятся (`tests/checks/fixtures/bad/mutations.yaml`); две мутации REVIEW.md (удалить metric у NFR-002, refines на UR-099) отклоняются уже при чтении проекта
 
 ## E2 · Агенты
 
