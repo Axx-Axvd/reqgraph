@@ -36,7 +36,7 @@
 
 - **Критерий приёмки:** lint, types, tests, web build на push и PR; правило для main: PR и зелёный ci обязательны
 - **Зависит от:** T-001
-- **Статус:** ci.yml в ветке feat/T-003; правило для main включается отдельно, после зелёного прогона и «ок» автора (меняет настройки GitHub)
+- **Статус:** ci.yml зелёный на ubuntu и windows (PR #48); правило для main включается отдельно, по «ок» автора (меняет настройки GitHub)
 
 ### T-004 — Supabase CLI: миграции 0001_init (схема 04_data), 0002_rls, seed
 
@@ -262,7 +262,7 @@
 
 ### S0 · Фундамент (19.10 - 01.11, M0)
 
-- [ ] uv run pytest и pnpm build зелёные в GitHub Actions — ci.yml на каждый push
+- [x] uv run pytest и pnpm build зелёные в GitHub Actions — ci.yml на каждый push (PR #48, ubuntu и windows, 22.10)
 - [ ] supabase db reset поднимает все таблицы и RLS — миграции 0001-0002
 - [ ] LLM-слой вызывает OpenRouter, Groq и Gemini одной функцией — usage и $ пишутся в лог
 - [ ] probe-отчёт по 3-4 моделям сохранён — выбран стартовый профиль free
