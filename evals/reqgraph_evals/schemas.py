@@ -15,15 +15,15 @@ class Extraction(BaseModel):
 
 
 class Node(BaseModel):
-    id: str
+    id: str = Field(description="короткий латинский идентификатор узла: start, t1, g1, end1")
     kind: Literal["start", "task", "xor", "end"]
-    name: str
+    name: str = Field(description="название по-русски; задача начинается с глагола")
 
 
 class Flow(BaseModel):
-    source: str
-    target: str
-    condition: str | None = None
+    source: str = Field(description="id узла, из которого идёт переход")
+    target: str = Field(description="id узла, в который идёт переход")
+    condition: str | None = Field(default=None, description="условие перехода из развилки xor")
 
 
 class ProcessSketch(BaseModel):

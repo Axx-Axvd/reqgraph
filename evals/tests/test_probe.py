@@ -110,3 +110,8 @@ def test_judge_only_on_rewrite_cases(fake_models: None) -> None:
     dataset = probe.build_dataset(judge=True)
     judged = {c.inputs.block for c in dataset.cases if c.evaluators}
     assert judged == {"rewrite"}
+
+
+async def test_answers_are_stored_for_manual_review(fake_models: None) -> None:
+    rows = await probe.run_model("groq/fake-model", 1, probe.build_dataset())
+    assert all(r.answer.startswith("{") for r in rows)

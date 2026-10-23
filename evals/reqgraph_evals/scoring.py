@@ -155,13 +155,17 @@ def score_question(out: Question, case: Mapping[str, Any]) -> Scores:
     q = out.question.strip()
     low = q.lower().replace("ё", "е")
     hidden = [h.lower().replace("ё", "е") for h in case.get("hidden", [])]
-    area = str(case.get("area", "")).lower().replace("ё", "е")
+    raw_area = case.get("area", [])
+    areas = [
+        a.lower().replace("ё", "е") for a in ([raw_area] if isinstance(raw_area, str) else raw_area)
+    ]
+    told = f"{out.area} {q}".lower().replace("ё", "е")
     return _with_score(
         {
             "is_question": float(q.endswith("?")),
             "single": float(q.count("?") == 1),
             "short": float(len(q) <= 200),
             "no_hint": float(not any(h in low for h in hidden)),
-            "on_topic": float(bool(area) and (area in out.area.lower() or area in low)),
+            "on_topic": float(any(a in told for a in areas)),
         }
     )

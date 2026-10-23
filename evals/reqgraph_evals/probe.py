@@ -5,7 +5,7 @@ import hashlib
 import json
 import statistics
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import date
 from importlib.metadata import version
 from pathlib import Path
@@ -46,6 +46,7 @@ CSV_FIELDS = [
     "prompt_sha",
     "package_version",
     "error",
+    "answer",
 ]
 
 
@@ -86,7 +87,7 @@ class Row:
     prompt_sha: str = ""
     package_version: str = ""
     error: str = ""
-    extra: dict[str, Any] = field(default_factory=dict)
+    answer: str = ""
 
 
 def load_cases(path: Path | None = None) -> list[tuple[str, dict[str, Any]]]:
@@ -203,6 +204,7 @@ async def run_model(
                     seed=seed,
                     prompt_sha=inp.prompt_sha,
                     package_version=pkg,
+                    answer=out.answer.model_dump_json(),
                 )
             )
         for fc in report.failures:

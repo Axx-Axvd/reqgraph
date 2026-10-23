@@ -128,7 +128,7 @@ def test_rewrite_good_and_bad() -> None:
 
 
 def test_question_rules() -> None:
-    case = {"area": "роли", "hidden": ["смотритель", "экскурсовод"]}
+    case = {"area": ["рол", "прав"], "hidden": ["смотритель", "экскурсовод"]}
     good = Question(
         question="Какие сотрудники будут работать в системе и что каждый из них может делать?",
         area="роли сотрудников",
