@@ -105,7 +105,7 @@ defaults: {temperature: 0.2, timeout_s: 60, retries: 2, seed: 42}
 budget:   {run_usd: 0.50, run_tokens: 800000}   # -> pydantic-ai UsageLimits
 ```
 
-<sub>Рабочая копия — `packages/core/src/reqgraph/llm/roles.yaml` (T-005); при расхождении главнее она. 23.10.2026: `minimax-m3.1-flash:free` снят с бесплатного тарифа 22.10, `nemotron-3-super-120b-a12b:free` отвечает 404 — заменены. `max_input_tokens` у Groq: промпт длиннее ~6000 токенов сразу уходит на следующую модель (лимит 8000 токенов в минуту); `supports_seed: false` у Gemini: его OpenAI-совместимый API не принимает seed. Модели `:free` у OpenRouter бесплатны по id; для провайдеров с `free: true` стоимость считается как 0, для остальных — `response.cost()` (genai-prices). Файл обновляется после probe.</sub>
+<sub>Рабочая копия — `packages/core/src/reqgraph/llm/roles.yaml` (T-005); при расхождении главнее она. 23.10.2026: `minimax-m3.1-flash:free` снят с бесплатного тарифа 22.10, `nemotron-3-super-120b-a12b:free` отвечает 404 — заменены. `max_input_tokens` у Groq: промпт длиннее ~6000 токенов сразу уходит на следующую модель (лимит 8000 токенов в минуту); `supports_seed: false` у Gemini: его OpenAI-совместимый API не принимает seed. `output_mode: native` у Groq: структурированный ответ через JSON Schema, а не вызов инструмента (Groq отклоняет неточный вызов инструмента с 400 без возможности повтора). Модели `:free` у OpenRouter бесплатны по id; для провайдеров с `free: true` стоимость считается как 0, для остальных — `response.cost()` (genai-prices). Файл обновляется после probe.</sub>
 
 ```mermaid
 flowchart LR
