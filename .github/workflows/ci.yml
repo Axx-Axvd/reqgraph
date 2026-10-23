@@ -1,0 +1,69 @@
+# CI: ruff, mypy, pytest (no network), web lint and build. Runs on every push and pull request.
+# Branch protection for main requires the single aggregate check "ci" (see the last job).
+# Migrations check (supabase db reset) is added in T-004.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: python (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy packages/core
+      - run: uv run pytest -q --cov
+      - name: pre-commit hooks
+        if: matrix.os == 'ubuntu-latest'
+        run: uv run pre-commit run --all-files
+
+  web:
+    name: web (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -C apps/web lint
+      - run: pnpm -C apps/web build
+
+  # One stable check name for branch protection, whatever the matrix looks like.
+  ci:
+    if: always()
+    needs: [python, web]
+    runs-on: ubuntu-latest
+    steps:
+      - name: all jobs must succeed
+        run: |
+          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}"
+          test "${{ needs.python.result }}" = "success" && test "${{ needs.web.result }}" = "success"
