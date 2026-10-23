@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1: T-101…T-104 сделаны (граф, FileStore, DSL → BPMN, DBML/PlantUML/C4 и SVG через Kroki), дальше T-105 (каркас проверок и `reqgraph check`).
+- Состояние: S0 закрыт (T-001…T-006); S1: T-101…T-105 сделаны (граф, FileStore, DSL → BPMN, модели и Kroki, каркас проверок и `reqgraph check`), дальше T-106 (SCH, SND).
 
 ## Команды
 Работают сейчас:
@@ -20,10 +20,11 @@
 - uv run mypy packages/core evals/reqgraph_evals
 - uv run pre-commit install         # один раз: хуки ruff, mypy и базовые проверки перед коммитом
 - uv run reqgraph --version
-- uv run reqgraph schemas           # JSON Schema из Pydantic в schemas/ (GraphPatch, ArtifactGraph, ProjectConfig, ProcessDSL)
+- uv run reqgraph schemas           # JSON Schema из Pydantic в schemas/ (GraphPatch, ArtifactGraph, ProjectConfig, ProcessDSL, CIReport)
 - uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>   # DSL процесса -> BPMN 2.0 (Camunda Modeler, bpmn-js)
 - REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl   # пересоздать golden BPMN после намеренной правки компилятора
 - uv run reqgraph render <файл.dbml|.puml|.dsl|.bpmn> -o <схема.svg>   # SVG через Kroki (KROKI_URL), с кэшем
+- uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # отчёт проверок в reports/; код 1 при ошибках (проверки — с T-106)
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
@@ -32,7 +33,6 @@
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
 
 Появятся с задачами (до этого не запускать):
-- uv run reqgraph check examples/garage61   # отчёт CI по проекту (T-105)
 - docker compose up                 # офлайн-стенд: web + api + supabase + ollama (T-507)
 
 ## Инварианты (не нарушать)

@@ -86,6 +86,7 @@
 
 - **Критерий приёмки:** стабильный JSON, snapshot-тест, код выхода 1 при error
 - **Зависит от:** T-101
+- **Статус:** сделано в feat/T-105: `checks/` (Finding, BaseCheck, CheckContext, @register, run_checks), отчёт CIReport — публичная схема v1, JSON без времени и в фиксированном порядке (снапшоты JSON и MD на garage61 с учебными проверками), `reqgraph check` с кодами 0/1/2. Реальные проверки — T-106, T-107, T-404
 
 ### T-106 — SCH-001..005, SND-001..004 (SND-002 — pm4py с переводчиком DSL)
 
