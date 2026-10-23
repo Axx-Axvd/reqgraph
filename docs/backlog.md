@@ -74,6 +74,7 @@
 
 - **Критерий приёмки:** XSD проходит; golden XML; открывается в bpmn-js и Camunda Modeler
 - **Зависит от:** T-101
+- **Статус:** сделано в feat/T-103: оба процесса garage61 и 3 фикстуры проходят официальные XSD OMG, golden BPMN в тестах, bpmn-js 18.31.1 открывает все без предупреждений (скриншоты в PR); формат DSL — публичная схема v1. Camunda Modeler — проверка автора на ноутбуке (`uv run reqgraph bpmn …`)
 
 ### T-104 — dsl: DBML (pydbml), PlantUML, Structurizr и SVG через Kroki с кэшем
 
@@ -279,7 +280,7 @@
 ### S1 · Граф, DSL, проверки (02.11 - 15.11, M1)
 
 - [x] examples/garage61 читается и пишется без потерь — round-trip тест FileStore (T-102, 23.10)
-- [ ] DSL -> BPMN проходит XSD и открывается в bpmn-js — golden-тесты компилятора
+- [x] DSL -> BPMN проходит XSD и открывается в bpmn-js — golden-тесты компилятора (T-103, 23.10)
 - [ ] reqgraph check выдаёт отчёт JSON и MD — все проверки с good/bad фикстурами
 - [ ] покрытие checks/ и dsl/ >= 90% — мутационные тесты на garage61
 

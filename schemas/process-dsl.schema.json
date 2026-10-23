@@ -1,0 +1,186 @@
+{
+  "$defs": {
+    "ProcessElement": {
+      "additionalProperties": false,
+      "description": "A step of the process: task, event or gateway. `id` is local: T01, G01, S, E1.",
+      "properties": {
+        "event": {
+          "anyOf": [
+            {
+              "enum": [
+                "timer",
+                "message"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Event"
+        },
+        "id": {
+          "pattern": "^[A-Z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lane": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lane"
+        },
+        "name": {
+          "default": "",
+          "title": "Name",
+          "type": "string"
+        },
+        "realizes": {
+          "default": [],
+          "items": {
+            "pattern": "^FR-\\d{3,}$",
+            "type": "string"
+          },
+          "title": "Realizes",
+          "type": "array"
+        },
+        "timer": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timer"
+        },
+        "type": {
+          "enum": [
+            "start",
+            "end",
+            "task",
+            "user_task",
+            "service_task",
+            "timer",
+            "message",
+            "xor",
+            "and",
+            "event_based"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "ProcessElement",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "dsl_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Dsl Version",
+      "type": "integer"
+    },
+    "flows": {
+      "default": [],
+      "items": {
+        "anyOf": [
+          {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "pattern": "^[A-Z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "pattern": "^[A-Z][A-Za-z0-9_]*$",
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          {
+            "maxItems": 3,
+            "minItems": 3,
+            "prefixItems": [
+              {
+                "pattern": "^[A-Z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "pattern": "^[A-Z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          }
+        ]
+      },
+      "title": "Flows",
+      "type": "array"
+    },
+    "id": {
+      "pattern": "^PRC-\\d{2,}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "lanes": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Lanes",
+      "type": "array"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/ProcessElement"
+      },
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "refines": {
+      "default": [],
+      "items": {
+        "pattern": "^UR-\\d{3,}$",
+        "type": "string"
+      },
+      "title": "Refines",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "nodes"
+  ],
+  "title": "ProcessDSL",
+  "type": "object"
+}

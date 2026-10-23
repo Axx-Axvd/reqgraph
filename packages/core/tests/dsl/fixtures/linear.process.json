@@ -1,0 +1,11 @@
+{
+  "dsl_version": 1,
+  "id": "PRC-11",
+  "name": "Линейный процесс без дорожек",
+  "nodes": [
+    {"id": "S", "type": "start", "name": "Начало"},
+    {"id": "T01", "type": "task", "name": "Сделать дело", "realizes": ["FR-001"]},
+    {"id": "E", "type": "end", "name": "Конец"}
+  ],
+  "flows": [["S", "T01"], ["T01", "E"]]
+}

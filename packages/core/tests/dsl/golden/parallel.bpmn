@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="PRC-12.definitions" targetNamespace="urn:reqgraph:process:PRC-12" exporter="reqgraph">
+  <bpmn:collaboration id="PRC-12.collaboration">
+    <bpmn:participant id="PRC-12.pool" name="Параллельные ветки в двух дорожках" processRef="PRC-12"/>
+  </bpmn:collaboration>
+  <bpmn:process id="PRC-12" name="Параллельные ветки в двух дорожках" isExecutable="false">
+    <bpmn:laneSet id="PRC-12.lanes">
+      <bpmn:lane id="PRC-12.L1" name="Менеджер">
+        <bpmn:flowNodeRef>PRC-12.S</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-12.G01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-12.T01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-12.G02</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-12.E</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="PRC-12.L2" name="Склад">
+        <bpmn:flowNodeRef>PRC-12.T02</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="PRC-12.S" name="Заказ получен">
+      <bpmn:outgoing>PRC-12.F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="PRC-12.G01">
+      <bpmn:incoming>PRC-12.F01</bpmn:incoming>
+      <bpmn:outgoing>PRC-12.F02</bpmn:outgoing>
+      <bpmn:outgoing>PRC-12.F03</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="PRC-12.T01" name="Выставить счёт">
+      <bpmn:incoming>PRC-12.F02</bpmn:incoming>
+      <bpmn:outgoing>PRC-12.F04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="PRC-12.T02" name="Зарезервировать товар">
+      <bpmn:incoming>PRC-12.F03</bpmn:incoming>
+      <bpmn:outgoing>PRC-12.F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="PRC-12.G02">
+      <bpmn:incoming>PRC-12.F04</bpmn:incoming>
+      <bpmn:incoming>PRC-12.F05</bpmn:incoming>
+      <bpmn:outgoing>PRC-12.F06</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:endEvent id="PRC-12.E" name="Заказ готов">
+      <bpmn:incoming>PRC-12.F06</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="PRC-12.F01" sourceRef="PRC-12.S" targetRef="PRC-12.G01"/>
+    <bpmn:sequenceFlow id="PRC-12.F02" sourceRef="PRC-12.G01" targetRef="PRC-12.T01"/>
+    <bpmn:sequenceFlow id="PRC-12.F03" sourceRef="PRC-12.G01" targetRef="PRC-12.T02"/>
+    <bpmn:sequenceFlow id="PRC-12.F04" sourceRef="PRC-12.T01" targetRef="PRC-12.G02"/>
+    <bpmn:sequenceFlow id="PRC-12.F05" sourceRef="PRC-12.T02" targetRef="PRC-12.G02"/>
+    <bpmn:sequenceFlow id="PRC-12.F06" sourceRef="PRC-12.G02" targetRef="PRC-12.E"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="PRC-12.diagram">
+    <bpmndi:BPMNPlane id="PRC-12.plane" bpmnElement="PRC-12.collaboration">
+      <bpmndi:BPMNShape id="PRC-12.pool.di" bpmnElement="PRC-12.pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1020" height="280"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.L1.di" bpmnElement="PRC-12.L1" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="990" height="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.L2.di" bpmnElement="PRC-12.L2" isHorizontal="true">
+        <dc:Bounds x="70" y="180" width="990" height="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.S.di" bpmnElement="PRC-12.S">
+        <dc:Bounds x="187" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.G01.di" bpmnElement="PRC-12.G01">
+        <dc:Bounds x="370" y="85" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.T01.di" bpmnElement="PRC-12.T01">
+        <dc:Bounds x="510" y="60" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.T02.di" bpmnElement="PRC-12.T02">
+        <dc:Bounds x="510" y="200" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.G02.di" bpmnElement="PRC-12.G02">
+        <dc:Bounds x="750" y="85" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-12.E.di" bpmnElement="PRC-12.E">
+        <dc:Bounds x="947" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="PRC-12.F01.di" bpmnElement="PRC-12.F01">
+        <di:waypoint x="223" y="110"/>
+        <di:waypoint x="370" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-12.F02.di" bpmnElement="PRC-12.F02">
+        <di:waypoint x="420" y="110"/>
+        <di:waypoint x="510" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-12.F03.di" bpmnElement="PRC-12.F03">
+        <di:waypoint x="420" y="110"/>
+        <di:waypoint x="465" y="110"/>
+        <di:waypoint x="465" y="250"/>
+        <di:waypoint x="510" y="250"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-12.F04.di" bpmnElement="PRC-12.F04">
+        <di:waypoint x="660" y="110"/>
+        <di:waypoint x="750" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-12.F05.di" bpmnElement="PRC-12.F05">
+        <di:waypoint x="660" y="250"/>
+        <di:waypoint x="705" y="250"/>
+        <di:waypoint x="705" y="110"/>
+        <di:waypoint x="750" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-12.F06.di" bpmnElement="PRC-12.F06">
+        <di:waypoint x="800" y="110"/>
+        <di:waypoint x="947" y="110"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

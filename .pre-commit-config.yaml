@@ -5,9 +5,9 @@ repos:
     rev: v6.0.0
     hooks:
       - id: end-of-file-fixer
-        exclude: ^examples/garage61/
+        exclude: ^(examples/garage61/|packages/core/src/reqgraph/dsl/xsd/)  # OMG XSD: byte for byte
       - id: trailing-whitespace
-        exclude: ^(examples/garage61/|.*\.md$)
+        exclude: ^(examples/garage61/|packages/core/src/reqgraph/dsl/xsd/|.*\.md$)
       - id: check-yaml
       - id: check-toml
       - id: check-json

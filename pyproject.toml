@@ -49,6 +49,11 @@ strict = true
 mypy_path = ["packages/core/src", "apps/api/src", "evals"]
 explicit_package_bases = true
 
+[[tool.mypy.overrides]]
+# lxml and networkx ship no type hints; stub packages lag behind the pinned versions
+module = ["lxml", "lxml.*", "networkx", "networkx.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["packages/core/tests", "evals/tests"]
 # Network is blocked by allowing connections only to localhost: asyncio event loops need a
