@@ -1,5 +1,7 @@
 # reqgraph
 
+[![ci](https://github.com/Axx-Axvd/reqgraph/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Axx-Axvd/reqgraph/actions/workflows/ci.yml)
+
 **Verifiable primary documentation for software projects.** A multi-agent system that interviews a stakeholder, writes business, user, functional and non-functional requirements, builds process, data and architecture models as code, runs them through deterministic checks (CI for requirements) and exports an ISO/IEC/IEEE 29148 SRS and a GOST 34.602-2020 specification from one artifact graph.
 
 > Status: **sprint S0** (October 2026). The technical design, roadmap and a reference project are in place; the monorepo skeleton is ready (T-001). Target release v1.0: 21 February 2027.
@@ -74,3 +76,5 @@ Python 3.12 · LangGraph · pydantic-ai · FastAPI · PM4Py · Kroki · pandoc �
 ### Лицензии зависимостей
 
 Собственный код reqgraph — MIT. Проверка soundness процессов использует [pm4py](https://pypi.org/project/pm4py/) (AGPL-3.0-or-later), поэтому сборка и публичное демо вместе с pm4py подчиняются AGPL; исходники открыты в этом репозитории (ADR-014). bpmn-js (MIT с условием) требует оставлять видимым водяной знак bpmn.io. Остальные зависимости — MIT, BSD, Apache-2.0, LGPL (psycopg) и MPL-2.0 (hypothesis, только тесты).
+
+Сейчас (S0) в runtime только typer (MIT); веб — Next.js и React (MIT); инструменты разработки — ruff, mypy, pytest, pre-commit, TypeScript, ESLint (MIT и Apache-2.0). Новая зависимость добавляется с обоснованием в PR (см. CLAUDE.md).
