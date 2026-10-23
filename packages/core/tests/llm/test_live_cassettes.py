@@ -1,12 +1,12 @@
 """One real call per provider, replayed from cassettes without network (T-005).
 
 Re-record (needs network and keys; in a cloud session the proxy injects keys):
-    uv run pytest packages/core/tests/llm/test_live_cassettes.py --record-mode=rewrite --force-enable-socket
+    uv run pytest packages/core/tests/llm/test_live_cassettes.py \\
+        --record-mode=rewrite --force-enable-socket
 """
 
 import pytest
 from pydantic import BaseModel, Field
-
 from reqgraph.llm import structured
 
 pytestmark = [pytest.mark.anyio, pytest.mark.vcr]
