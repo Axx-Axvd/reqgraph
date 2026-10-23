@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Project store (T-102): `reqgraph.graph.store.FileStore` reads a project folder into `Project` (config, graph,
+  texts) and writes it back; unchanged files are written byte for byte, changed ones in a canonical form;
+  `trace/edges.yaml` is regenerated, `trace/ids.yaml` keeps id high-water marks; interim scanner of DBML,
+  PlantUML and Structurizr files for ENT/UC/C4 ids (replaced in T-104). `ArtifactGraph.from_parts()`.
+  **Public schema, version 1:** `schemas/project-config.schema.json` (format of `reqgraph.yaml`).
 - Artifact graph (T-101): `reqgraph.graph` with 12 node kinds, 6 relations and the table of allowed kind pairs,
   `GraphPatch` (ops `add`, `link`, `unlink`, `update`, `remove`), `ArtifactGraph.apply()` (all or nothing, returns
   `ApplyResult` with the id map and a diff), `IdAllocator` (ids issued by code, never reused), lock on `approved`
