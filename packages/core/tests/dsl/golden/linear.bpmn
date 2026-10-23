@@ -17,21 +17,21 @@
   <bpmndi:BPMNDiagram id="PRC-11.diagram">
     <bpmndi:BPMNPlane id="PRC-11.plane" bpmnElement="PRC-11">
       <bpmndi:BPMNShape id="PRC-11.S.di" bpmnElement="PRC-11.S">
-        <dc:Bounds x="142" y="92" width="36" height="36"/>
+        <dc:Bounds x="82" y="92" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-11.T01.di" bpmnElement="PRC-11.T01">
-        <dc:Bounds x="260" y="60" width="120" height="100"/>
+        <dc:Bounds x="170" y="60" width="120" height="100"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="PRC-11.E.di" bpmnElement="PRC-11.E">
-        <dc:Bounds x="462" y="92" width="36" height="36"/>
+        <dc:Bounds x="342" y="92" width="36" height="36"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="PRC-11.F01.di" bpmnElement="PRC-11.F01">
-        <di:waypoint x="178" y="110"/>
-        <di:waypoint x="260" y="110"/>
+        <di:waypoint x="118" y="110"/>
+        <di:waypoint x="170" y="110"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="PRC-11.F02.di" bpmnElement="PRC-11.F02">
-        <di:waypoint x="380" y="110"/>
-        <di:waypoint x="462" y="110"/>
+        <di:waypoint x="290" y="110"/>
+        <di:waypoint x="342" y="110"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

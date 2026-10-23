@@ -3,7 +3,15 @@
 import itertools
 
 import pytest
-from reqgraph.dsl.layout import Bounds, layout, task_size, wrap
+from reqgraph.dsl.layout import (
+    MIN_FONT_PT,
+    Bounds,
+    extent,
+    layout,
+    page_font_pt,
+    task_size,
+    wrap,
+)
 from reqgraph.dsl.process import TASKS, ProcessDSL, parse_process
 
 from .conftest import all_processes, load
@@ -103,3 +111,34 @@ def test_wrap_keeps_words_whole_and_breaks_after_a_hyphen() -> None:
     assert wrap("Отправить SMS-подтверждение", 150) == ["Отправить", "SMS-подтверждение"]
     assert wrap("Отправить SMS-подтверждение", 120) == ["Отправить SMS-", "подтверждение"]
     assert wrap("Зарезервировать", 100) is None  # bpmn-js would break the word itself
+
+
+# --- one process = one page (decision of the author, 23.10.2026) ---------------------------------
+
+
+def test_columns_of_events_and_gateways_are_narrow() -> None:
+    shapes = layout(parse_process(load(all_processes()["PRC-01_booking"]))).shapes
+    start_to_task = shapes["T01"].cx - shapes["S"].cx
+    task_to_task = shapes["T02"].cx - shapes["T01"].cx
+    assert start_to_task < task_to_task
+
+
+@pytest.mark.parametrize("name", ["PRC-01_booking", "PRC-02_reminder"])
+def test_reference_processes_fit_one_landscape_page(name: str) -> None:
+    result = layout(parse_process(load(all_processes()[name])))
+    assert page_font_pt(result) >= MIN_FONT_PT
+
+
+def test_a_long_chain_does_not_fit_one_page() -> None:
+    nodes = [{"id": "S", "type": "start"}]
+    nodes += [{"id": f"T{i:02d}", "type": "task", "name": f"Шаг {i}"} for i in range(1, 16)]
+    nodes += [{"id": "E", "type": "end"}]
+    ids = [n["id"] for n in nodes]
+    flows = [[a, b] for a, b in itertools.pairwise(ids)]
+    result = layout(parse_process({"id": "PRC-01", "name": "x", "nodes": nodes, "flows": flows}))
+    assert page_font_pt(result) < MIN_FONT_PT
+
+
+def test_small_processes_keep_full_size_on_the_page() -> None:
+    result = layout(parse_process(load(all_processes()["linear"])))
+    assert extent(result)[0] < 400 and page_font_pt(result) == 9.0
