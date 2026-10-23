@@ -22,8 +22,10 @@ dev = [
     "pre-commit==4.7.0",
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
+    "pytest-recording==0.14.0",
     "pytest-socket==0.8.1",
     "ruff==0.17.1",
+    "types-pyyaml==6.0.12.20260906",
 ]
 
 [tool.ruff]
@@ -48,7 +50,8 @@ explicit_package_bases = true
 
 [tool.pytest.ini_options]
 testpaths = ["packages/core/tests"]
-addopts = "--strict-markers --disable-socket -ra"
+# --allow-unix-socket: asyncio event loops need a local socketpair; network stays blocked.
+addopts = "--strict-markers --disable-socket --allow-unix-socket -ra"
 xfail_strict = true
 
 [tool.coverage.run]
