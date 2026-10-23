@@ -103,12 +103,20 @@ async def test_long_prompt_skips_small_context_provider(fake_models: dict[str, M
     assert groq_limit is not None
     long_prompt = "слово " * (groq_limit * 2)
     _, stats = await structured("interviewer", long_prompt, Requirement, profile="free")
-    assert stats.provider == "gemini"  # Groq skipped up front instead of failing with 429
+    assert (
+        stats.provider == "openrouter"
+    )  # both Groq steps skipped up front instead of failing with 429
+
+
+async def test_analyst_reads_long_interviews_on_gemini_first(fake_models: dict[str, Model]) -> None:
+    long_prompt = "слово " * 30_000
+    _, stats = await structured("analyst", long_prompt, Requirement, profile="free")
+    assert stats.provider == "gemini"
 
 
 def test_no_model_fits_is_an_error() -> None:
     with pytest.raises(ValueError, match="не помещается"):
-        model_for("reviewer", "free", prompt_chars=10**7)
+        model_for("stakeholder", "free", prompt_chars=10**7)  # Groq only, and the prompt is huge
 
 
 async def test_budget_stops_the_run(fake_models: dict[str, Model]) -> None:
@@ -163,7 +171,7 @@ async def test_missing_key_uses_placeholder(monkeypatch: pytest.MonkeyPatch) -> 
 def test_seed_only_for_providers_that_accept_it() -> None:
     cfg = load_roles()
     groq = router._build_model(cfg.ladder("reviewer", "free")[0])
-    gemini = router._build_model(cfg.ladder("stakeholder", "free")[0])
+    gemini = router._build_model(cfg.ladder("analyst", "free")[0])
     assert (groq.settings or {}).get("seed") == cfg.defaults.seed
     assert "seed" not in (gemini.settings or {})
 
@@ -181,6 +189,6 @@ async def test_model_id_with_unknown_provider_is_rejected(fake_models: dict[str,
 def test_output_mode_from_provider() -> None:
     cfg = load_roles()
     groq = router._build_model(cfg.ladder("reviewer", "free")[0])
-    gemini = router._build_model(cfg.ladder("stakeholder", "free")[0])
+    gemini = router._build_model(cfg.ladder("analyst", "free")[0])
     assert groq.profile.get("default_structured_output_mode") == "native"
     assert gemini.profile.get("default_structured_output_mode") == "tool"

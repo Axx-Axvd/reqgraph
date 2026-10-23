@@ -28,15 +28,17 @@ def anyio_backend() -> str:
 
 
 @pytest.mark.parametrize(
-    ("role", "profile", "provider"),
+    ("role", "model_id", "provider"),
     [
-        ("reviewer", "free", "groq"),
-        ("stakeholder", "free", "gemini"),
-        ("analyst", "free", "openrouter"),
+        ("reviewer", None, "groq"),
+        ("stakeholder", None, "groq"),  # Qwen on Groq: another family than the agents
+        ("analyst", None, "gemini"),  # long-context role starts on Gemini
+        ("analyst", "openrouter/nvidia/nemotron-3.5-super-vl:free", "openrouter"),
     ],
+    ids=["reviewer-groq", "stakeholder-groq-qwen", "analyst-gemini", "analyst-openrouter-nemotron"],
 )
-async def test_structured_through_provider(role: str, profile: str, provider: str) -> None:
-    req, stats = await structured(role, PROMPT, Requirement, profile=profile)
+async def test_structured_through_provider(role: str, model_id: str | None, provider: str) -> None:
+    req, stats = await structured(role, PROMPT, Requirement, profile="free", model_id=model_id)
     assert stats.provider == provider
     assert "должна" in req.statement.lower()
     assert req.acceptance

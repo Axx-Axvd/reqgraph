@@ -37,6 +37,54 @@ def test_free_models_are_marked_free() -> None:
     assert not cfg.is_free(cfg.ladder("analyst", "cheap")[0])  # DeepSeek is paid
 
 
+FAMILIES = {
+    "gpt-oss": "openai",
+    "nemotron": "nvidia",
+    "gemini": "google",
+    "gemma": "google",
+    "qwen": "alibaba",
+    "llama": "meta",
+    "glm": "zhipu",
+    "deepseek": "deepseek",
+    "kimi": "moonshot",
+    "minimax": "minimax",
+}
+AGENT_ROLES = ["*", "interviewer", "analyst", "modeler", "standards", "reviewer"]
+EXAMINER_ROLES = ["stakeholder", "judge"]
+
+
+def family(model: str) -> str:
+    for marker, name in FAMILIES.items():
+        if marker in model.lower():
+            return name
+    raise AssertionError(f"неизвестное семейство модели {model}: добавьте в FAMILIES")
+
+
+@pytest.mark.parametrize("profile", ["free", "cheap"])
+def test_simulator_and_judge_are_another_family_than_agents(profile: str) -> None:
+    """CLAUDE.md: the simulator and the judge must not share a family with the agents."""
+    cfg = load_roles()
+    agents = {
+        family(s.model)
+        for role in AGENT_ROLES
+        if role in cfg.profiles[profile]
+        for s in cfg.ladder(role, profile)
+    }
+    for role in EXAMINER_ROLES:
+        examiners = {family(s.model) for s in cfg.ladder(role, profile)}
+        assert examiners, f"{role} has no models in {profile}"
+        assert not examiners & agents, (
+            f"{role} shares a family with agents in {profile}: {examiners & agents}"
+        )
+
+
+def test_long_context_role_starts_on_a_provider_without_a_tight_limit() -> None:
+    """The analyst reads the whole interview, so its first model must not be a small-context one."""
+    cfg = load_roles()
+    first = cfg.ladder("analyst", "free")[0]
+    assert cfg.providers[first.provider].max_input_tokens is None
+
+
 def test_unknown_provider_is_rejected(tmp_path: Path) -> None:
     bad = tmp_path / "roles.yaml"
     bad.write_text(
@@ -48,12 +96,18 @@ def test_unknown_provider_is_rejected(tmp_path: Path) -> None:
         load_roles(bad)
 
 
-def test_unknown_profile_and_role_are_errors() -> None:
+def test_unknown_profile_and_role_are_errors(tmp_path: Path) -> None:
     cfg = load_roles()
     with pytest.raises(ConfigError, match="профил"):
         cfg.ladder("analyst", "premium")
+    no_wildcard = tmp_path / "roles.yaml"
+    no_wildcard.write_text(
+        "providers:\n  groq: {base_url: 'https://x', key_env: GROQ_API_KEY}\n"
+        "profiles:\n  free: {analyst: [groq/m]}\n",
+        encoding="utf-8",
+    )
     with pytest.raises(ConfigError, match="рол"):
-        cfg.ladder("nobody", "free")
+        load_roles(no_wildcard).ladder("nobody", "free")
 
 
 def test_profile_comes_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1,0 +1,116 @@
+interactions:
+- request:
+    body: "{\"model\":\"qwen/qwen3.8-27b\",\"stream\":false,\"messages\":[{\"role\":\"user\",\"content\":\"\u041A\u043B\u0438\u0435\u043D\u0442
+      \u0430\u0432\u0442\u043E\u0441\u0435\u0440\u0432\u0438\u0441\u0430 \u0441\u043A\u0430\u0437\u0430\u043B:
+      <client>\u0425\u043E\u0447\u0443, \u0447\u0442\u043E\u0431\u044B \u0437\u0430
+      \u0441\u0443\u0442\u043A\u0438 \u0434\u043E \u0432\u0438\u0437\u0438\u0442\u0430
+      \u043F\u0440\u0438\u0445\u043E\u0434\u0438\u043B\u0430 SMS-\u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043B\u043A\u0430</client>.
+      \u0421\u0444\u043E\u0440\u043C\u0443\u043B\u0438\u0440\u0443\u0439 \u043E\u0434\u043D\u043E
+      \u0444\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u043E\u0435
+      \u0442\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u0435.\"}],\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"Requirement\",\"schema\":{\"properties\":{\"statement\":{\"description\":\"\u043E\u0434\u043D\u043E
+      \u0442\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u0435 \u0432 \u0444\u043E\u0440\u043C\u0435
+      \xAB\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u0434\u043E\u043B\u0436\u043D\u0430
+      ...\xBB\",\"type\":\"string\"},\"acceptance\":{\"description\":\"\u043A\u0440\u0438\u0442\u0435\u0440\u0438\u0438
+      \u043F\u0440\u0438\u0451\u043C\u043A\u0438\",\"items\":{\"type\":\"string\"},\"minItems\":1,\"type\":\"array\"}},\"required\":[\"statement\",\"acceptance\"],\"type\":\"object\",\"additionalProperties\":false},\"strict\":true}},\"seed\":42,\"temperature\":0.2}"
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '808'
+      content-type:
+      - application/json
+      host:
+      - api.groq.com
+      user-agent:
+      - pydantic-ai/2.60.0
+      x-stainless-arch:
+      - x64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - Linux
+      x-stainless-package-version:
+      - 3.37.0
+      x-stainless-read-timeout:
+      - '60.0'
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.12.13
+    method: POST
+    uri: https://api.groq.com/openai/v1/chat/completions
+  response:
+    body:
+      string: "{\"id\":\"chatcmpl-e9e7fc97-6a0a-4f48-bb73-293f1668d89d\",\"object\":\"chat.completion\",\"created\":1792766207,\"model\":\"qwen/qwen3.8-27b\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"acceptance\\\":
+        [\\\"\u041F\u0440\u0438 \u043D\u0430\u0441\u0442\u0443\u043F\u043B\u0435\u043D\u0438\u0438
+        \u0434\u0430\u0442\u044B, \u043F\u0440\u0435\u0434\u0448\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0435\u0439
+        \u0432\u0438\u0437\u0438\u0442\u0443 \u043D\u0430 24 \u0447\u0430\u0441\u0430,
+        \u0441\u0438\u0441\u0442\u0435\u043C\u0430 \u0438\u043D\u0438\u0446\u0438\u0438\u0440\u0443\u0435\u0442
+        \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0443 SMS-\u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u044F
+        \u043D\u0430 \u0442\u0435\u043B\u0435\u0444\u043E\u043D \u043A\u043B\u0438\u0435\u043D\u0442\u0430.\\\",
+        \\\"SMS-\u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442
+        \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044E \u043E \u0434\u0430\u0442\u0435
+        \u0438 \u0432\u0440\u0435\u043C\u0435\u043D\u0438 \u0437\u0430\u043F\u043B\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0433\u043E
+        \u0432\u0438\u0437\u0438\u0442\u0430.\\\", \\\"\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430
+        \u043F\u0440\u043E\u0438\u0441\u0445\u043E\u0434\u0438\u0442 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438
+        \u0431\u0435\u0437 \u0443\u0447\u0430\u0441\u0442\u0438\u044F \u043E\u043F\u0435\u0440\u0430\u0442\u043E\u0440\u0430.\\\"],
+        \\\"statement\\\": \\\"\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u0434\u043E\u043B\u0436\u043D\u0430
+        \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438
+        \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u0442\u044C SMS-\u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435
+        \u043A\u043B\u0438\u0435\u043D\u0442\u0443 \u0437\u0430 24 \u0447\u0430\u0441\u0430
+        \u0434\u043E \u0437\u0430\u043F\u043B\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u043E\u0433\u043E
+        \u0432\u0438\u0437\u0438\u0442\u0430 \u0432 \u0430\u0432\u0442\u043E\u0441\u0435\u0440\u0432\u0438\u0441.\\\"}\"},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"queue_time\":0.126019189,\"prompt_tokens\":55,\"prompt_time\":0.003906253,\"completion_tokens\":105,\"completion_time\":0.217907899,\"total_tokens\":160,\"total_time\":0.221814152},\"usage_breakdown\":null,\"system_fingerprint\":\"fp_c14f15bfae\",\"x_groq\":{\"id\":\"req_01m5mk2rpwe7etedg8aytm0y0w\",\"seed\":42},\"service_tier\":\"on_demand\"}\n"
+    headers:
+      alt-svc:
+      - h3=":443"; ma=86400
+      cache-control:
+      - private, max-age=0, no-store, no-cache, must-revalidate
+      cf-cache-status:
+      - DYNAMIC
+      cf-ray:
+      - a4f179d799b59bb9-IAD
+      connection:
+      - close
+      - keep-alive
+      content-length:
+      - '1282'
+      content-type:
+      - application/json
+      date:
+      - Fri, 23 Oct 2026 14:36:47 GMT
+      server:
+      - cloudflare
+      strict-transport-security:
+      - max-age=15552000
+      transfer-encoding:
+      - chunked
+      vary:
+      - Origin
+      x-groq-region:
+      - yul
+      x-ratelimit-limit-requests:
+      - '1000'
+      x-ratelimit-limit-tokens:
+      - '8000'
+      x-ratelimit-remaining-requests:
+      - '999'
+      x-ratelimit-remaining-tokens:
+      - '7416'
+      x-ratelimit-reset-requests:
+      - 1m26.4s
+      x-ratelimit-reset-tokens:
+      - 4.38s
+      x-request-id:
+      - req_01m5mk2rpwe7etedg8aytm0y0w
+    status:
+      code: 200
+      message: OK
+version: 1
