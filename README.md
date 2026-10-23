@@ -47,7 +47,7 @@ uv run python scripts/doctor.py  # готовность окружения
 |---|---|
 | [docs/tech-design/](docs/tech-design/README.md) | технический проект по разделам: архитектура, агенты, данные, проверки, модели, деплой, план, оценка |
 | [docs/tech-design.pdf](docs/tech-design.pdf) | то же в виде PDF с инфографикой (снимок 20.10.2026; при расхождении главнее Markdown) |
-| [docs/adr/](docs/adr/README.md) | 16 записей о решениях (15 принято, 1 отклонено) |
+| [docs/adr/](docs/adr/README.md) | 17 записей о решениях (16 принято, 1 отклонено) |
 | [docs/backlog.md](docs/backlog.md) | задачи T-001 … T-703 с критериями приёмки (и issues на GitHub) |
 | [docs/setup/](docs/setup/) | окружение Windows, ключи и сервисы, офлайн-профиль, доска GitHub Projects |
 | [docs/research/](docs/research/) | проверенные версии зависимостей и моделей (21.10.2026) |
