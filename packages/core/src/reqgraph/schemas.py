@@ -4,6 +4,7 @@ import json
 
 from pydantic import BaseModel
 
+from reqgraph.dsl.process import ProcessDSL
 from reqgraph.graph import ArtifactGraph, GraphPatch
 from reqgraph.graph.store import ProjectConfig
 
@@ -11,6 +12,7 @@ SCHEMAS: dict[str, type[BaseModel]] = {
     "graph-patch": GraphPatch,
     "artifact-graph": ArtifactGraph,
     "project-config": ProjectConfig,
+    "process-dsl": ProcessDSL,
 }
 
 

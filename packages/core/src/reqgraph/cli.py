@@ -45,5 +45,33 @@ def schemas(
         typer.echo(f"записано: {path}")
 
 
+@app.command("bpmn")
+def bpmn(
+    path: Annotated[Path, typer.Argument(help="Process DSL file (*.process.json).")],
+    out: Annotated[Path | None, typer.Option("--out", "-o", help="BPMN file to write.")] = None,
+) -> None:
+    """Compile a process DSL file to BPMN 2.0 (for Camunda Modeler or bpmn-js)."""
+    import json
+
+    from reqgraph.dsl.bpmn_compile import compile_bpmn
+    from reqgraph.dsl.bpmn_xsd import validate_bpmn
+    from reqgraph.dsl.process import DslError, parse_process
+
+    try:
+        xml = compile_bpmn(parse_process(json.loads(path.read_text(encoding="utf-8"))))
+    except (DslError, json.JSONDecodeError) as exc:
+        typer.echo(f"{path}: {exc}", err=True)
+        raise typer.Exit(1) from None
+    errors = validate_bpmn(xml)
+    if errors:  # a compiler bug: the DSL was valid
+        typer.echo("\n".join(f"{path}: XSD: {e}" for e in errors), err=True)
+        raise typer.Exit(2)
+    if out is None:
+        typer.echo(xml, nl=False)
+    else:
+        out.write_bytes(xml.encode("utf-8"))
+        typer.echo(f"записано: {out}")
+
+
 if __name__ == "__main__":
     app()
