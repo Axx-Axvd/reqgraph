@@ -1,0 +1,10 @@
+scenario,repeat,model,provider,temperature,seed,prompt_hash,package_version,llm_calls,input_tokens,output_tokens,cost_usd,latency_ms,retried,sections,required,empty_required,filled_share,glossary_terms,purpose_chars,scope_chars,error
+dev-01,1,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,3,6213,3933,0.0,22948,False,15,10,1,0.9,8,283,460,
+dev-01,2,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,4,9536,4268,0.0,27670,False,15,10,1,0.9,12,255,368,
+dev-01,3,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,3,6383,4522,0.0,19638,False,15,10,1,0.9,13,296,334,
+dev-02,1,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,6,19837,12395,0.0,58468,False,15,10,0,1.0,12,269,519,
+dev-02,2,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,4,10614,10947,0.0,31511,False,15,10,0,1.0,12,313,572,
+dev-02,3,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,5,16410,9803,0.0,39203,False,15,10,0,1.0,12,245,731,
+dev-03,1,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,4,13970,9496,0.0,38107,False,15,10,0,1.0,10,309,357,
+dev-03,2,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,5,16815,13338,0.0,48015,False,15,10,0,1.0,10,355,675,
+dev-03,3,openai/gpt-oss-120b,groq,0.2,42,85d428c41ab0,0.1.0,5,18030,15049,0.0,51565,False,15,10,0,1.0,10,286,601,

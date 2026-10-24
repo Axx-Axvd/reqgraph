@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`), S2: T-201 (граф прогона агентов на LangGraph) и T-202 (Analyst, guard, промпты Jinja2, 3 dev-брифа) сделаны, дальше T-203 (Modeler).
+- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`; TPL-001 — в T-204), S2: T-201 (граф прогона агентов на LangGraph), T-202 (Analyst, guard, промпты Jinja2, 3 dev-брифа) T-203 (Modeler: процессы и ERD с самопроверкой) и T-204 (Standards: разделы SRS, глоссарий, TPL-001) сделаны, дальше T-205 (Reviewer и цикл ремонта).
 
 ## Команды
 Работают сейчас:
@@ -24,14 +24,16 @@
 - uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>   # DSL процесса -> BPMN 2.0 (Camunda Modeler, bpmn-js)
 - REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl   # пересоздать golden BPMN после намеренной правки компилятора
 - uv run reqgraph render <файл.dbml|.puml|.dsl|.bpmn> -o <схема.svg>   # SVG через Kroki (KROKI_URL), с кэшем
-- uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # 20 проверок, отчёт в reports/; код 1 при ошибках
+- uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # 21 проверка, отчёт в reports/; код 1 при ошибках
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
 - uv run reqgraph-evals probe --models <провайдер/модель,...> --repeat 3   # мини-экзамен моделей (evals/README.md)
 - uv run reqgraph-evals analyst --repeat 3   # Analyst на 3 dev-брифах: валидность патча, доля нарушений ISO-001/003 (нужна сеть)
-- uv run pytest packages/core/tests/agents/test_analyst_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету Analyst после правки промпта
+- uv run reqgraph-evals modeler --repeat 3  # Analyst → Modeler на 3 dev-брифах: SCH-002 за ≤ 3 ответа, доля без SND-001 (нужна сеть)
+- uv run reqgraph-evals standards --repeat 3  # Analyst → Modeler → Standards: доля заполненных разделов SRS (нужна сеть)
+- uv run pytest packages/core/tests/agents/test_analyst_live.py packages/core/tests/agents/test_modeler_live.py packages/core/tests/agents/test_standards_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты агентов после правки промпта
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
 
 Появятся с задачами (до этого не запускать):
