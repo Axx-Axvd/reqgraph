@@ -44,25 +44,33 @@ stateDiagram-v2
 **`packages/core/src/reqgraph/agents/state.py + graph.py`**
 
 ```python
-class RunState(TypedDict):
-    project_id: str
+class RunState(TypedDict):          # то, что чекпоинтер сохраняет после каждого узла
+    mode: Mode                      # interview | brief | check
     graph: ArtifactGraph            # текущая ревизия (Pydantic)
-    transcript: list[Turn]
-    coverage: Coverage              # 9 областей: got / need
+    coverage: Coverage              # 9 областей: got / need (need — из reqgraph.yaml)
+    question: str | None            # вопрос интервьюера, ждущий ответа
+    turns: int                      # ответов получено
     ci: CIReport | None
     tasks: list[RepairTask]
-    iteration: int                  # 0..MAX_ITER (5)
-    budget: Budget                  # токены и $ на прогон
+    iteration: int                  # 0..checks.max_iterations (5)
+    budget: BudgetState             # лимиты и потрачено: переживает перезапуск
+    stop: Stop | None               # budget | needs_human: агенты остановлены, отчёт будет
 
-def build_graph(cfg: RunConfig, checkpointer) -> CompiledStateGraph:
-    g = StateGraph(RunState)
-    for name, fn in [("intake", intake), ("interviewer", interviewer),
-                     ("await_answer", await_answer), ("analyst", analyst),
-                     ("modeler", modeler), ("standards", standards),
-                     ("ci_check", ci_check), ("reviewer", reviewer),
-                     ("export", export), ("persist", persist)]:
-        g.add_node(name, fn)
-    g.add_edge(START, "intake"); g.add_edge("intake", "interviewer")
+@dataclass
+class RunContext:                   # контекст LangGraph (context_schema): не сохраняется
+    project: Project                # файлы моделей для проверок
+    store: ProjectStore | None      # куда persist сохраняет проект
+    events: EventSink               # run_events: память, JSONL, позже Postgres (T-502)
+    models: Mapping[str, Model]     # заглушки по ролям (тесты), иначе — roles.yaml
+    profile, offline, max_iter, max_turns   # из reqgraph.yaml: RunContext.for_project()
+
+def build_graph(checkpointer=None) -> CompiledStateGraph:
+    g = StateGraph(RunState, context_schema=RunContext)
+    for name, node in NODES.items():    # intake, interviewer, await_answer, analyst, modeler,
+        g.add_node(name, node)          # standards, ci_check, reviewer, export, persist
+    g.add_edge(START, "intake")
+    g.add_conditional_edges("intake", mode_gate,   # interview / brief / check
+                            {"interviewer": "interviewer", "analyst": "analyst", "ci_check": "ci_check"})
     g.add_edge("interviewer", "await_answer")
     g.add_conditional_edges("await_answer", coverage_gate,
                             {"ask": "interviewer", "done": "analyst"})
@@ -70,13 +78,13 @@ def build_graph(cfg: RunConfig, checkpointer) -> CompiledStateGraph:
     g.add_edge("standards", "ci_check")
     g.add_conditional_edges("ci_check", ci_gate,
                             {"repair": "reviewer", "done": "export"})
-    g.add_conditional_edges("reviewer", route_tasks,   # к владельцам
+    g.add_conditional_edges("reviewer", route_tasks,   # к первому владельцу задач
                             ["analyst", "modeler", "standards"])
     g.add_edge("export", "persist"); g.add_edge("persist", END)
     return g.compile(checkpointer=checkpointer)
 ```
 
-<sub>Режимы запуска: `mode=interview` (полный граф), `mode=brief` (без интервью: бриф сразу в Analyst — нужен для бейзлайнов и CLI), `mode=check` (только CI над готовым графом). В режиме ремонта узлы analyst / modeler / standards получают только свои задачи и меняют только свои типы узлов.</sub>
+<sub>Режимы запуска: `mode=interview` (полный граф), `mode=brief` (без интервью: бриф сразу в Analyst — нужен для бейзлайнов и CLI), `mode=check` (только CI над готовым графом). В режиме ремонта узлы analyst / modeler / standards получают только свои задачи и меняют только свои типы узлов; ремонт идёт по конвейеру с первого владельца задач, агент без задач пропускает шаг без вызова модели. На эталоне (`project.reference: true`) агенты не запускаются. Чекпоинтер восстанавливает только типы состояния из списка (`checkpoint_serde()`).</sub>
 
 ## Как создаётся агент
 
@@ -88,17 +96,17 @@ def build_graph(cfg: RunConfig, checkpointer) -> CompiledStateGraph:
 PROMPT = load_prompt("analyst/extract.md")      # Jinja2-шаблон
 ALLOWED = {NodeKind.BR, NodeKind.UR, NodeKind.FR, NodeKind.NFR, NodeKind.CON, NodeKind.ACT}
 
-async def analyst(state: RunState, rt: Runtime) -> dict:
+async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict:
+    rt = runtime.context                       # контекст LangGraph
     tasks = [t for t in state["tasks"] if t.owner == "analyst"]
-    ctx = render(PROMPT, graph=state["graph"].view(ALLOWED),
-                 transcript=state["transcript"], tasks=tasks)
-    patch: GraphPatch = await rt.llm.structured(  # pydantic-ai Agent (ADR-013)
-        role="analyst", prompt=ctx, output_type=GraphPatch,
-        retries=2)                             # ошибка схемы -> повтор с текстом ошибки
+    prompt = render(PROMPT, graph=state["graph"].view(ALLOWED), tasks=tasks)
+    patch, budget = await rt.ask(              # llm.structured(): pydantic-ai, ADR-013;
+        "analyst", prompt, GraphPatch, state["budget"])   # ошибка схемы -> повтор с текстом
     patch = guard(patch, allowed=ALLOWED, locked=state["graph"].approved_ids())
-    result = state["graph"].apply(patch, ids=rt.ids)  # id выдаёт код; ApplyResult(graph, id_map, diff)
-    await rt.events.emit("agent_end", agent="analyst", stats=patch.stats())
-    return {"graph": result.graph, "tasks": [t for t in state["tasks"] if t not in tasks]}
+    result = state["graph"].apply(patch, actor="agent")   # id выдаёт код; ApplyResult(graph, id_map, diff)
+    rt.events.emit("agent_end", agent="analyst", diff=result.diff)
+    return {"graph": result.graph, "budget": budget,
+            "tasks": [t for t in state["tasks"] if t not in tasks]}
 ```
 
 ## Карточки агентов
