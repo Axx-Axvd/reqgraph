@@ -83,6 +83,7 @@ class BudgetState(_Model):
 
 class RunState(TypedDict):
     mode: Mode
+    brief: str | None  # brief mode: the text intake turns into client turns
     graph: ArtifactGraph
     coverage: Coverage
     question: str | None  # the interviewer's question waiting for an answer
@@ -100,10 +101,12 @@ def initial_state(
     *,
     budget: BudgetState | None = None,
     need: dict[str, int] | None = None,
+    brief: str | None = None,
 ) -> RunState:
     coverage = Coverage() if need is None else Coverage(got=dict.fromkeys(need, 0), need=need)
     return RunState(
         mode=mode,
+        brief=brief,
         graph=graph,
         coverage=coverage,
         question=None,
