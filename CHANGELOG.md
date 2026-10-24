@@ -8,6 +8,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Standards agent and TPL-001 (T-204): own SRS structure `standards/iso29148_srs.yaml` (section names only, ADR-012;
+  `fill` says where the content comes from, `required` feeds TPL-001); `agents/standards.py` builds sections from the
+  graph by code (actors, BR, UR, FR, NFR, CON, entities, processes, acceptance criteria, assumptions) with
+  `rendered_in` links, the LLM writes purpose, scope and glossary (`StandardsDraft`, one retry when a field is empty);
+  `checks/template.py` — TPL-001 (moved here from T-404: the T-204 threshold is measured with it), skipped until
+  sections exist. `reqgraph-evals standards`.
 - Modeler agent (T-203): `agents/modeler.py` — the model fills `ModelerDraft` (processes almost in the DSL, entities
   as tables), `to_models()` builds the patch and the ERD text (process and entity ids predicted with the allocator
   `apply()` uses, DBML written by code with `Note: 'ENT-xx · Название'`, realized_by from `realizes`); the Modeler
