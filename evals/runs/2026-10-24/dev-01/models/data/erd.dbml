@@ -1,0 +1,36 @@
+// Модель данных проекта. СОБРАНО reqgraph из ответа Modeler (T-203).
+// Id и русское название сущности графа — в Note таблицы (ENT-xx · Название).
+
+Table patient {
+  id int [pk]
+  full_name varchar
+  phone varchar
+  Note: 'ENT-01 · Пациент'
+}
+
+Table doctor {
+  id int [pk]
+  full_name varchar
+  specialty varchar
+  Note: 'ENT-02 · Врач'
+}
+
+Table slot {
+  id int [pk]
+  doctor_id int
+  starts_at timestamp
+  is_booked boolean
+  Note: 'ENT-03 · Слот расписания'
+}
+
+Table booking {
+  id int [pk]
+  patient_id int
+  slot_id int
+  status varchar [note: 'confirmed, cancelled']
+  Note: 'ENT-04 · Запись'
+}
+
+Ref: slot.doctor_id > doctor.id
+Ref: booking.patient_id > patient.id
+Ref: booking.slot_id > slot.id

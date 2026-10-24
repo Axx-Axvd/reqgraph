@@ -1,0 +1,20 @@
+# Акторы (ACT): роли людей, которые работают с системой.
+- id: ACT-01
+  name: "Студент"
+  description: "Студент университета"
+  derived_from: [TURN-0001, TURN-0002, TURN-0003]
+
+- id: ACT-02
+  name: "Преподаватель"
+  description: "Преподаватель университета"
+  derived_from: [TURN-0001, TURN-0002, TURN-0003]
+
+- id: ACT-03
+  name: "Библиотекарь"
+  description: "Библиотекарь университета"
+  derived_from: [TURN-0003]
+
+- id: ACT-04
+  name: "Заведующая библиотекой"
+  description: "Заведующая библиотекой"
+  derived_from: [TURN-0003]

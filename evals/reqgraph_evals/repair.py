@@ -3,6 +3,7 @@ with needs_human? With --reviewer template — the «without Reviewer» ablation
 
 import csv
 import tempfile
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, fields
 from importlib.metadata import version
@@ -35,6 +36,10 @@ class Row:
     errors_first: int = 0  # errors of the first CI report
     errors_final: int = 0
     warnings_final: int = 0
+    errors_left: str = ""  # check ids of the errors in the final report: "ISO-003 x2; SND-001"
+    sch_errors_final: int = 0  # SCH-* errors in the final report (S2 DoD: 0 after repair)
+    processes: int = 0
+    processes_snd_clean: int = 0  # processes without SND-* errors in the final report
     converged: bool = False  # the final report has no errors
     error: str = ""
 
@@ -80,6 +85,16 @@ async def run_scenario(
     row.errors_final = out["ci"].summary.errors if out["ci"] else 0
     row.warnings_final = out["ci"].summary.warnings if out["ci"] else 0
     row.converged = out["ci"] is not None and out["ci"].ok
+    errors = [f for f in out["ci"].findings if f.severity == "error"] if out["ci"] else []
+    left = Counter(f.check_id for f in errors)
+    row.errors_left = "; ".join(f"{c} x{n}" if n > 1 else c for c, n in sorted(left.items()))
+    row.sch_errors_final = sum(n for c, n in left.items() if c.startswith("SCH"))
+    processes = {n.id for n in out["graph"].nodes_of("PRC")}
+    unsound = {
+        f.node_ids[0].split(".")[0] for f in errors if f.check_id.startswith("SND") and f.node_ids
+    }
+    row.processes = len(processes)
+    row.processes_snd_clean = len(processes - unsound)
     return row
 
 
@@ -115,14 +130,19 @@ def summary_markdown(rows: Sequence[Row]) -> str:
         f"{human}; иначе (лимит кругов, бюджет, сбой): {other}. Критерий T-205 («сходится или "
         f"needs_human») выполнен: {verdict}.",
         "",
+        f"После ремонта (DoD S2): без ошибок SCH-* — {sum(r.sch_errors_final == 0 for r in rows)} "
+        f"из {len(rows)} прогонов; процессов без ошибок SND-* — "
+        f"{sum(r.processes_snd_clean for r in rows)} из {sum(r.processes for r in rows)}.",
+        "",
         "| Сценарий | Повтор | Reviewer | Кругов | Стоп | Ошибок в начале | Ошибок в конце "
-        "| Предупр. | Вызовов LLM | Токены | Время, с | Ошибка |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Осталось | Предупр. | Вызовов LLM | Токены | Время, с | Ошибка |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         lines.append(
             f"| {r.scenario} | {r.repeat} | {r.reviewer} | {r.iterations} | {r.stop or '—'} "
-            f"| {r.errors_first} | {r.errors_final} | {r.warnings_final} | {r.llm_calls} "
+            f"| {r.errors_first} | {r.errors_final} | {r.errors_left or '—'} | {r.warnings_final} "
+            f"| {r.llm_calls} "
             f"| {r.input_tokens + r.output_tokens} | {r.latency_ms / 1000:.1f} | {r.error} |"
         )
     return "\n".join(lines) + "\n"

@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="PRC-01.definitions" targetNamespace="urn:reqgraph:process:PRC-01" exporter="reqgraph">
+  <bpmn:collaboration id="PRC-01.collaboration">
+    <bpmn:participant id="PRC-01.pool" name="Просмотр каталога и сбор корзины" processRef="PRC-01"/>
+  </bpmn:collaboration>
+  <bpmn:process id="PRC-01" name="Просмотр каталога и сбор корзины" isExecutable="false">
+    <bpmn:laneSet id="PRC-01.lanes">
+      <bpmn:lane id="PRC-01.L1" name="Клиент">
+        <bpmn:flowNodeRef>PRC-01.S</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-01.G01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-01.E1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="PRC-01.L2" name="Система">
+        <bpmn:flowNodeRef>PRC-01.T01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-01.T02</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="PRC-01.S">
+      <bpmn:outgoing>PRC-01.F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="PRC-01.T01" name="Отобразить каталог товаров">
+      <bpmn:incoming>PRC-01.F01</bpmn:incoming>
+      <bpmn:incoming>PRC-01.F05</bpmn:incoming>
+      <bpmn:outgoing>PRC-01.F02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="PRC-01.G01" name="Выбрать действие">
+      <bpmn:incoming>PRC-01.F02</bpmn:incoming>
+      <bpmn:outgoing>PRC-01.F03</bpmn:outgoing>
+      <bpmn:outgoing>PRC-01.F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="PRC-01.T02" name="Добавить товар в корзину">
+      <bpmn:incoming>PRC-01.F03</bpmn:incoming>
+      <bpmn:outgoing>PRC-01.F05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="PRC-01.E1" name="Корзина собрана">
+      <bpmn:incoming>PRC-01.F04</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="PRC-01.F01" sourceRef="PRC-01.S" targetRef="PRC-01.T01"/>
+    <bpmn:sequenceFlow id="PRC-01.F02" sourceRef="PRC-01.T01" targetRef="PRC-01.G01"/>
+    <bpmn:sequenceFlow id="PRC-01.F03" name="добавить товар" sourceRef="PRC-01.G01" targetRef="PRC-01.T02"/>
+    <bpmn:sequenceFlow id="PRC-01.F04" name="завершить сборку" sourceRef="PRC-01.G01" targetRef="PRC-01.E1"/>
+    <bpmn:sequenceFlow id="PRC-01.F05" sourceRef="PRC-01.T02" targetRef="PRC-01.T01"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="PRC-01.diagram">
+    <bpmndi:BPMNPlane id="PRC-01.plane" bpmnElement="PRC-01.collaboration">
+      <bpmndi:BPMNShape id="PRC-01.pool.di" bpmnElement="PRC-01.pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="570" height="280"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-01.L1.di" bpmnElement="PRC-01.L1" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="540" height="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-01.L2.di" bpmnElement="PRC-01.L2" isHorizontal="true">
+        <dc:Bounds x="70" y="180" width="540" height="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-01.S.di" bpmnElement="PRC-01.S">
+        <dc:Bounds x="112" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-01.T01.di" bpmnElement="PRC-01.T01">
+        <dc:Bounds x="200" y="200" width="120" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-01.G01.di" bpmnElement="PRC-01.G01" isMarkerVisible="true">
+        <dc:Bounds x="365" y="85" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-01.T02.di" bpmnElement="PRC-01.T02">
+        <dc:Bounds x="460" y="200" width="120" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-01.E1.di" bpmnElement="PRC-01.E1">
+        <dc:Bounds x="502" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="PRC-01.F01.di" bpmnElement="PRC-01.F01">
+        <di:waypoint x="148" y="110"/>
+        <di:waypoint x="174" y="110"/>
+        <di:waypoint x="174" y="250"/>
+        <di:waypoint x="200" y="250"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-01.F02.di" bpmnElement="PRC-01.F02">
+        <di:waypoint x="320" y="250"/>
+        <di:waypoint x="342" y="250"/>
+        <di:waypoint x="342" y="110"/>
+        <di:waypoint x="365" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-01.F03.di" bpmnElement="PRC-01.F03">
+        <di:waypoint x="415" y="110"/>
+        <di:waypoint x="437" y="110"/>
+        <di:waypoint x="437" y="250"/>
+        <di:waypoint x="460" y="250"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="433" y="230" width="30" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-01.F04.di" bpmnElement="PRC-01.F04">
+        <di:waypoint x="415" y="110"/>
+        <di:waypoint x="502" y="110"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="443" y="90" width="30" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-01.F05.di" bpmnElement="PRC-01.F05">
+        <di:waypoint x="520" y="300"/>
+        <di:waypoint x="520" y="314"/>
+        <di:waypoint x="260" y="314"/>
+        <di:waypoint x="260" y="300"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

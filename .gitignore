@@ -32,7 +32,9 @@ examples/*/reports/*
 !examples/*/reports/.gitkeep
 examples/*/exports/*
 !examples/*/exports/.gitkeep
-evals/runs/
+# T-206 demo kept: reqgraph run on the 3 dev briefs (docs/demo/m2.md)
+evals/runs/*
+!evals/runs/2026-10-24/
 
 # os / editors
 .DS_Store

@@ -8,6 +8,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- `reqgraph init` and `reqgraph run` (T-206): `agents/run.py` — `init_project()` writes `reqgraph.yaml` and
+  `brief.md`; `run_project()` runs brief → Analyst → Modeler → Standards → checks → repair on a project folder,
+  prints a line per step, writes the project, `reports/ci-report.json|md`, `run-events.jsonl` and
+  `run-summary.json` (models, prompt hashes, temperature, seeds, tokens, $, time); exit code 0 / 1 (errors left) /
+  2 (cannot run); a reference project is refused. End-to-end test of `reqgraph run` on the dev-01 brief from a
+  cassette. `scripts/terminal_svg.py` (saved terminal output → SVG with rich), `docs/demo/m2.md` and the README
+  demo; the three dev runs of 24.10 are kept in `evals/runs/2026-10-24/`. `reqgraph-evals repair` also records the
+  checks left with errors, SCH-* errors and processes without SND-* errors after repair.
 - Reviewer and the repair loop (T-205): `agents/reviewer.py` — errors grouped by owner and node (at most 10 tasks),
   TPL-001 on a section listed from the graph goes to the owner of those nodes with an explanation of what is missing,
   the LLM words the instruction of each group (`ReviewerDraft`, a skipped group keeps the template text),

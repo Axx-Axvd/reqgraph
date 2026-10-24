@@ -137,5 +137,103 @@ def check(
     raise typer.Exit(0 if report.ok else 1)
 
 
+@app.command("init")
+def init(
+    path: Annotated[Path, typer.Argument(help="New project folder.")],
+    name: Annotated[str, typer.Option("--name", help="Project name, any language.")],
+    brief: Annotated[Path, typer.Option("--brief", help="Brief file (Markdown).")],
+    project_id: Annotated[
+        str | None, typer.Option("--id", help="Project id, latin (default: folder name).")
+    ] = None,
+    profile: Annotated[str, typer.Option("--profile", help="free, cheap or local.")] = "free",
+) -> None:
+    """Create a project folder: reqgraph.yaml and brief.md."""
+    from reqgraph.agents.run import RunFailed, init_project
+
+    if profile not in ("free", "cheap", "local"):
+        raise typer.BadParameter("профиль: free, cheap или local")
+    try:
+        text = brief.read_text(encoding="utf-8")
+        root = init_project(path, name=name, brief=text, project_id=project_id, profile=profile)  # type: ignore[arg-type]
+    except (RunFailed, OSError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
+    typer.echo(f"создан проект: {root}")
+
+
+@app.command("run")
+def run(
+    path: Annotated[Path, typer.Argument(help="Project folder (with reqgraph.yaml).")],
+    brief: Annotated[
+        Path | None, typer.Option("--brief", help="Brief file instead of the project's brief.md.")
+    ] = None,
+    profile: Annotated[
+        str | None, typer.Option("--profile", help="Model profile of llm/roles.yaml.")
+    ] = None,
+    budget_usd: Annotated[
+        float | None, typer.Option("--budget-usd", help="Budget of the run, $.")
+    ] = None,
+    max_iter: Annotated[int | None, typer.Option("--max-iter", help="Repair rounds.")] = None,
+    reviewer: Annotated[
+        str, typer.Option("--reviewer", help="llm, or template (the ablation without Reviewer).")
+    ] = "llm",
+    offline: Annotated[
+        bool, typer.Option("--offline", help="Skip the checks that need Kroki.")
+    ] = False,
+    no_write: Annotated[
+        bool, typer.Option("--no-write", help="Do not write the project and reports/.")
+    ] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="Print the summary as JSON.")] = False,
+) -> None:
+    """Brief -> requirements -> models -> SRS sections -> checks -> repair (brief mode).
+
+    Exit code 0: no errors left; 1: errors left (needs_human, budget, rounds); 2: cannot run.
+    """
+    import asyncio
+    import json
+
+    from reqgraph.agents.run import RunFailed, run_project
+
+    if reviewer not in ("llm", "template"):
+        raise typer.BadParameter("reviewer: llm или template")
+    try:
+        text = brief.read_text(encoding="utf-8") if brief is not None else None
+        summary, report = asyncio.run(
+            run_project(
+                path,
+                brief=text,
+                profile=profile,
+                budget_usd=budget_usd,
+                max_iter=max_iter,
+                reviewer="llm" if reviewer == "llm" else "template",
+                offline=offline,
+                write=not no_write,
+                on_line=None if as_json else typer.echo,
+            )
+        )
+    except (RunFailed, OSError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
+    if as_json:
+        typer.echo(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        s = summary
+        typer.echo("")
+        typer.echo(
+            f"Требований: {s.requirements}, ролей: {s.actors}, процессов: {s.processes}, "
+            f"сущностей: {s.entities}, разделов SRS: {s.sections}"
+        )
+        stop = {"needs_human": "нужен человек", "budget": "кончился бюджет"}.get(s.stop or "", "")
+        typer.echo(f"Проверки: {s.headline}")
+        typer.echo(f"Кругов ремонта: {s.iterations}" + (f" — {stop}" if stop else ""))
+        typer.echo(
+            f"Вызовов LLM: {s.llm_calls}, токенов: {s.input_tokens + s.output_tokens}, "
+            f"${s.cost_usd:.4f}, {s.seconds:.0f} с"
+        )
+        if not no_write:
+            typer.echo(f"Отчёт: {path / 'reports' / 'ci-report.md'}")
+    raise typer.Exit(0 if report.ok else 1)
+
+
 if __name__ == "__main__":
     app()

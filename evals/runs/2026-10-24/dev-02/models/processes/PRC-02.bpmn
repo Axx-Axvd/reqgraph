@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="PRC-02.definitions" targetNamespace="urn:reqgraph:process:PRC-02" exporter="reqgraph">
+  <bpmn:collaboration id="PRC-02.collaboration">
+    <bpmn:participant id="PRC-02.pool" name="Оформление заказа клиентом" processRef="PRC-02"/>
+  </bpmn:collaboration>
+  <bpmn:process id="PRC-02" name="Оформление заказа клиентом" isExecutable="false">
+    <bpmn:laneSet id="PRC-02.lanes">
+      <bpmn:lane id="PRC-02.L1" name="Клиент">
+        <bpmn:flowNodeRef>PRC-02.S</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-02.T01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-02.T02</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-02.T04</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="PRC-02.L2" name="Система">
+        <bpmn:flowNodeRef>PRC-02.G01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-02.E1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-02.T03</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-02.T05</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-02.E2</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="PRC-02.S">
+      <bpmn:outgoing>PRC-02.F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="PRC-02.T01" name="Выбрать интервал доставки">
+      <bpmn:incoming>PRC-02.F01</bpmn:incoming>
+      <bpmn:outgoing>PRC-02.F02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="PRC-02.T02" name="Выбрать способ оплаты">
+      <bpmn:incoming>PRC-02.F02</bpmn:incoming>
+      <bpmn:outgoing>PRC-02.F03</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="PRC-02.G01" name="Проверить сумму заказа">
+      <bpmn:incoming>PRC-02.F03</bpmn:incoming>
+      <bpmn:outgoing>PRC-02.F04</bpmn:outgoing>
+      <bpmn:outgoing>PRC-02.F05</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="PRC-02.E1" name="Заказ заблокирован">
+      <bpmn:incoming>PRC-02.F04</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="PRC-02.T03" name="Рассчитать стоимость доставки">
+      <bpmn:incoming>PRC-02.F05</bpmn:incoming>
+      <bpmn:outgoing>PRC-02.F06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="PRC-02.T04" name="Подтвердить заказ">
+      <bpmn:incoming>PRC-02.F06</bpmn:incoming>
+      <bpmn:outgoing>PRC-02.F07</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="PRC-02.T05" name="Сохранить заказ">
+      <bpmn:incoming>PRC-02.F07</bpmn:incoming>
+      <bpmn:outgoing>PRC-02.F08</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="PRC-02.E2" name="Заказ оформлен">
+      <bpmn:incoming>PRC-02.F08</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="PRC-02.F01" sourceRef="PRC-02.S" targetRef="PRC-02.T01"/>
+    <bpmn:sequenceFlow id="PRC-02.F02" sourceRef="PRC-02.T01" targetRef="PRC-02.T02"/>
+    <bpmn:sequenceFlow id="PRC-02.F03" sourceRef="PRC-02.T02" targetRef="PRC-02.G01"/>
+    <bpmn:sequenceFlow id="PRC-02.F04" name="сумма &lt; 700 руб." sourceRef="PRC-02.G01" targetRef="PRC-02.E1"/>
+    <bpmn:sequenceFlow id="PRC-02.F05" name="сумма &gt;= 700 руб." sourceRef="PRC-02.G01" targetRef="PRC-02.T03"/>
+    <bpmn:sequenceFlow id="PRC-02.F06" sourceRef="PRC-02.T03" targetRef="PRC-02.T04"/>
+    <bpmn:sequenceFlow id="PRC-02.F07" sourceRef="PRC-02.T04" targetRef="PRC-02.T05"/>
+    <bpmn:sequenceFlow id="PRC-02.F08" sourceRef="PRC-02.T05" targetRef="PRC-02.E2"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="PRC-02.diagram">
+    <bpmndi:BPMNPlane id="PRC-02.plane" bpmnElement="PRC-02.collaboration">
+      <bpmndi:BPMNShape id="PRC-02.pool.di" bpmnElement="PRC-02.pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1300" height="420"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.L1.di" bpmnElement="PRC-02.L1" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1270" height="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.L2.di" bpmnElement="PRC-02.L2" isHorizontal="true">
+        <dc:Bounds x="70" y="180" width="1270" height="280"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.S.di" bpmnElement="PRC-02.S">
+        <dc:Bounds x="112" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.T01.di" bpmnElement="PRC-02.T01">
+        <dc:Bounds x="200" y="60" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.T02.di" bpmnElement="PRC-02.T02">
+        <dc:Bounds x="390" y="60" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.G01.di" bpmnElement="PRC-02.G01" isMarkerVisible="true">
+        <dc:Bounds x="585" y="225" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.E1.di" bpmnElement="PRC-02.E1">
+        <dc:Bounds x="737" y="232" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.T03.di" bpmnElement="PRC-02.T03">
+        <dc:Bounds x="680" y="340" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.T04.di" bpmnElement="PRC-02.T04">
+        <dc:Bounds x="870" y="60" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.T05.di" bpmnElement="PRC-02.T05">
+        <dc:Bounds x="1060" y="200" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-02.E2.di" bpmnElement="PRC-02.E2">
+        <dc:Bounds x="1262" y="232" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="PRC-02.F01.di" bpmnElement="PRC-02.F01">
+        <di:waypoint x="148" y="110"/>
+        <di:waypoint x="200" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-02.F02.di" bpmnElement="PRC-02.F02">
+        <di:waypoint x="350" y="110"/>
+        <di:waypoint x="390" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-02.F03.di" bpmnElement="PRC-02.F03">
+        <di:waypoint x="540" y="110"/>
+        <di:waypoint x="562" y="110"/>
+        <di:waypoint x="562" y="250"/>
+        <di:waypoint x="585" y="250"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-02.F04.di" bpmnElement="PRC-02.F04">
+        <di:waypoint x="635" y="250"/>
+        <di:waypoint x="737" y="250"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="671" y="230" width="30" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-02.F05.di" bpmnElement="PRC-02.F05">
+        <di:waypoint x="635" y="250"/>
+        <di:waypoint x="657" y="250"/>
+        <di:waypoint x="657" y="390"/>
+        <di:waypoint x="680" y="390"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="653" y="370" width="30" height="14"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-02.F06.di" bpmnElement="PRC-02.F06">
+        <di:waypoint x="830" y="390"/>
+        <di:waypoint x="850" y="390"/>
+        <di:waypoint x="850" y="110"/>
+        <di:waypoint x="870" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-02.F07.di" bpmnElement="PRC-02.F07">
+        <di:waypoint x="1020" y="110"/>
+        <di:waypoint x="1040" y="110"/>
+        <di:waypoint x="1040" y="250"/>
+        <di:waypoint x="1060" y="250"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-02.F08.di" bpmnElement="PRC-02.F08">
+        <di:waypoint x="1210" y="250"/>
+        <di:waypoint x="1262" y="250"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

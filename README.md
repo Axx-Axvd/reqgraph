@@ -4,7 +4,7 @@
 
 **Verifiable primary documentation for software projects.** A multi-agent system that interviews a stakeholder, writes business, user, functional and non-functional requirements, builds process, data and architecture models as code, runs them through deterministic checks (CI for requirements) and exports an ISO/IEC/IEEE 29148 SRS and a GOST 34.602-2020 specification from one artifact graph.
 
-> Status: **sprint S0** (October 2026). The technical design, roadmap and a reference project are in place; the monorepo skeleton is ready (T-001). Target release v1.0: 21 February 2027.
+> Status: **sprint S2 done** (v0.1, CLI): `reqgraph run` turns a brief into requirements, process and data models and a checked report; the interview comes in S3. Target release v1.0: 21 February 2027.
 
 ---
 
@@ -38,6 +38,18 @@ pnpm db:start && pnpm db:reset   # локальная база Supabase: тол�
 pnpm db:test                     # тесты RLS; весь стек со Studio — pnpm supabase start
 uv run python scripts/doctor.py  # готовность окружения
 ```
+
+## Из брифа в отчёт (v0.1)
+
+```bash
+uv run reqgraph init projects/ulybka --name "Стоматология «Улыбка»" --brief brief.md
+uv run reqgraph run projects/ulybka          # Analyst → Modeler → Standards → проверки → ремонт
+uv run reqgraph check projects/ulybka        # проверки ещё раз, без LLM
+```
+
+Нужны ключи бесплатных провайдеров в `.env` ([docs/setup/accounts.md](docs/setup/accounts.md)); профиль free, бюджет прогона — `REQGRAPH_RUN_BUDGET_USD` или `--budget-usd`. Код выхода: 0 — ошибок нет, 1 — ошибки остались (они в `reports/ci-report.md`), 2 — прогон не начался. Как повторить демо M2 и что внутри проекта — [docs/demo/m2.md](docs/demo/m2.md).
+
+![reqgraph run на брифе пекарни: требования, процессы, проверки, круг ремонта](docs/demo/reqgraph-run.svg)
 
 Структура: `packages/core` — библиотека и CLI `reqgraph`, `apps/api` — FastAPI и воркер (с T-501), `apps/web` — Next.js (с S5).
 
