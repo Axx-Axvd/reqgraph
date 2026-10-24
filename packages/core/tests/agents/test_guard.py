@@ -124,3 +124,12 @@ def test_removal_by_a_repair_task_is_allowed(graph: ArtifactGraph) -> None:
     remove = {"op": "remove", "id": "FR-012", "reason": "задача ремонта"}
     result = guard(patch(remove), graph, allowed=ANALYST, tasks=[task])
     assert result.dropped == [] and len(result.patch.ops) == 1
+
+
+def test_links_may_name_the_ids_the_adds_will_get(graph: ArtifactGraph) -> None:
+    """The Modeler predicts the ids apply() issues (PRC-03 after PRC-02) and links to them."""
+    prc = {"op": "add", "kind": "PRC", "tmp_id": "p", "fields": {"name": "Новый"}}
+    link = {"op": "link", "from": "FR-001", "rel": "realized_by", "to": "PRC-03.T01"}
+    wrong = {"op": "link", "from": "FR-001", "rel": "realized_by", "to": "PRC-04.T01"}
+    result = guard(patch(prc, link, wrong), graph, allowed=ALLOWED["modeler"])
+    assert result.dropped == ["link FR-001 realized_by PRC-04.T01: нет узла PRC-04"]

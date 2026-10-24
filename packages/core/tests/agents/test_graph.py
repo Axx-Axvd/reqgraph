@@ -178,7 +178,7 @@ def test_route_tasks_starts_with_the_first_owner_of_the_pipeline() -> None:
 async def test_agent_patch_with_foreign_node_kinds_is_rejected(
     context: Callable[..., RunContext],
 ) -> None:
-    """The Modeler may not write requirements: FR belongs to the Analyst (ALLOWED)."""
+    """Standards may not write requirements: FR belongs to the Analyst (ALLOWED)."""
     foreign = {
         "ops": [
             {"op": "add", "kind": "FR", "tmp_id": "fr", "fields": {"title": "x", "statement": "y"}},
@@ -186,11 +186,11 @@ async def test_agent_patch_with_foreign_node_kinds_is_rejected(
             {"op": "update", "id": "FR-001", "fields": {"title": "Работа"}},
         ]
     }
-    ctx = context(models=stub_models(modeler=foreign))
+    ctx = context(models=stub_models(standards=foreign))
     out = await run(ctx, ctx.initial_state("brief"))
     assert out["graph"] == ctx.project.graph
     (dropped,) = events_of(ctx, "dropped")
-    assert dropped["agent"] == "modeler"
+    assert dropped["agent"] == "standards"
     assert dropped["reasons"] == [
         "add FR: чужой тип узла",
         "link fr refines UR-001: узел fr не создаётся в этом патче",
