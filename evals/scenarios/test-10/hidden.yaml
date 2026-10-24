@@ -1,0 +1,27 @@
+# Эталон test-10 (размер S): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Расхождения в остатках при ежемесячной инвентаризации — не больше 1% позиций.", reveal: "цели, точность остатков"}
+  - {id: H-002, kind: BR, area: goals, priority: should, statement: "В 95% случаев заказ собирается и отгружается в день оплаты.", reveal: "цели, скорость отгрузки"}
+  - {id: H-003, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Кладовщик собирает заказы по листу сборки.", reveal: "работа кладовщика"}
+  - {id: H-004, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Владелец видит остатки и заказывает товар у поставщиков.", reveal: "работа владельца"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: should, statement: "Курьер службы доставки забирает собранные посылки по списку.", reveal: "передача посылок"}
+  - {id: H-006, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Новый заказ с сайта появляется в списке на сборку.", reveal: "поступление заказов"}
+  - {id: H-007, kind: FR, area: scenarios, priority: must, statement: "При сборке кладовщик сканирует штрихкод каждого товара, и система сверяет его с заказом.", reveal: "проверка при сборке"}
+  - {id: H-008, kind: FR, area: scenarios, priority: must, statement: "При приёмке товара от поставщика кладовщик сканирует коробки, и остатки увеличиваются.", reveal: "приёмка товара"}
+  - {id: H-009, kind: FR, area: scenarios, priority: should, statement: "Для собранного заказа печатается этикетка службы доставки.", reveal: "этикетки"}
+  - {id: H-010, kind: FR, area: scenarios, priority: should, statement: "Раз в месяц кладовщик пересчитывает товары, а система показывает расхождения.", reveal: "инвентаризация"}
+  - {id: H-011, kind: FR, area: exceptions, priority: must, statement: "Если товара не хватило при сборке, заказ помечается, и владелец связывается с покупателем.", reveal: "товара не хватило"}
+  - {id: H-012, kind: FR, area: exceptions, priority: should, statement: "Возвращённый покупателем товар проверяется и возвращается в остатки или списывается.", reveal: "возвраты"}
+  - {id: H-013, kind: FR, area: exceptions, priority: should, statement: "Если в поставке недостача, кладовщик фиксирует расхождение с накладной.", reveal: "недостача в поставке"}
+  - {id: H-014, kind: FR, area: exceptions, priority: could, statement: "Если штрихкод не читается, кладовщик выбирает товар вручную из списка.", reveal: "не читается штрихкод"}
+  - {id: H-015, kind: FR, area: data, priority: must, statement: "У товара есть артикул, название, штрихкод, место на полке, остаток и вес.", reveal: "данные товара"}
+  - {id: H-016, kind: FR, area: data, priority: must, statement: "У заказа есть номер, состав, покупатель, служба доставки и статус сборки.", reveal: "данные заказа"}
+  - {id: H-017, kind: FR, area: data, priority: should, statement: "О поставке хранятся поставщик, накладная, позиции, количество и дата.", reveal: "данные поставки"}
+  - {id: H-018, kind: FR, area: rules, priority: should, statement: "Заказы собираются в порядке оплаты, срочные — первыми.", reveal: "порядок сборки"}
+  - {id: H-019, kind: FR, area: rules, priority: must, statement: "Товар резервируется под заказ сразу после оплаты.", reveal: "резервирование"}
+  - {id: H-020, kind: FR, area: rules, priority: should, statement: "Когда остаток товара падает ниже заданного минимума, владелец получает уведомление.", reveal: "минимальный остаток"}
+  - {id: H-021, kind: FR, area: integrations, priority: must, statement: "Заказы приходят с платформы интернет-магазина, а остатки каждые 10 минут уходят обратно на сайт.", reveal: "связь с сайтом"}
+  - {id: H-022, kind: NFR, area: nfr, priority: should, statement: "Сборка работает на телефоне кладовщика: камера вместо сканера.", reveal: "оборудование"}
+  - {id: H-023, kind: NFR, area: nfr, priority: should, statement: "Отметка товара при сборке занимает меньше секунды.", reveal: "скорость работы"}
+  - {id: H-024, kind: NFR, area: nfr, priority: must, statement: "Резервная копия данных делается каждый день.", reveal: "надёжность"}
+  - {id: H-025, kind: CON, area: constraints, priority: should, statement: "Программа стоит не больше 3000 рублей в месяц — облачный сервис по подписке.", reveal: "бюджет"}

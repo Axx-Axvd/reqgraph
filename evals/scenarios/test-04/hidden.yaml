@@ -1,0 +1,27 @@
+# Эталон test-04 (размер S): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Заполняемость занятий должна вырасти с 55% до 75% за полгода.", reveal: "цели, заполняемость"}
+  - {id: H-002, kind: BR, area: goals, priority: should, statement: "Администратор тратит на запись не больше часа в день вместо трёх.", reveal: "цели, работа администратора"}
+  - {id: H-003, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Клиент записывается на занятие по расписанию.", reveal: "что делает клиент"}
+  - {id: H-004, kind: UR, area: stakeholders, priority: should, statement: "Преподаватель видит список записанных и отмечает, кто пришёл.", reveal: "работа преподавателя"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: should, statement: "Владелица составляет расписание и задаёт цены абонементов.", reveal: "кто ведёт расписание и цены"}
+  - {id: H-006, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Клиент видит расписание на неделю и свободные места.", reveal: "расписание"}
+  - {id: H-007, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Клиент покупает абонемент онлайн.", reveal: "покупка абонемента"}
+  - {id: H-008, kind: FR, area: scenarios, priority: must, statement: "Клиент отменяет запись в личном кабинете.", reveal: "отмена записи"}
+  - {id: H-009, kind: FR, area: scenarios, priority: should, statement: "За 2 часа до занятия клиент получает напоминание в Telegram.", reveal: "напоминания"}
+  - {id: H-010, kind: FR, area: scenarios, priority: should, statement: "Новый клиент записывается на пробное занятие без абонемента.", reveal: "пробное занятие"}
+  - {id: H-011, kind: FR, area: exceptions, priority: should, statement: "Если мест нет, клиент встаёт в лист ожидания и записывается автоматически, когда место освободится.", reveal: "нет мест"}
+  - {id: H-012, kind: FR, area: exceptions, priority: must, statement: "Если преподаватель заболел, владелица ставит замену или отменяет занятие, а записанные получают уведомление.", reveal: "преподаватель заболел"}
+  - {id: H-013, kind: FR, area: exceptions, priority: must, statement: "Если клиент не пришёл и не отменил запись, занятие списывается с абонемента.", reveal: "клиент не пришёл"}
+  - {id: H-014, kind: FR, area: exceptions, priority: should, statement: "Когда абонемент закончился, записаться можно только после продления.", reveal: "абонемент закончился"}
+  - {id: H-015, kind: FR, area: data, priority: must, statement: "О клиенте хранятся имя, телефон, Telegram, абонемент и история посещений.", reveal: "данные о клиенте"}
+  - {id: H-016, kind: FR, area: data, priority: must, statement: "У абонемента есть тип на 4, 8 или 12 занятий, дата покупки, срок действия и остаток занятий.", reveal: "данные абонемента"}
+  - {id: H-017, kind: FR, area: data, priority: should, statement: "У занятия есть направление, преподаватель, дата, время и число мест.", reveal: "данные занятия"}
+  - {id: H-018, kind: FR, area: rules, priority: must, statement: "Отменить запись без списания можно не позднее чем за 4 часа до начала.", reveal: "правила отмены"}
+  - {id: H-019, kind: FR, area: rules, priority: should, statement: "Абонемент действует 30 дней с первого занятия, заморозить его можно один раз на 14 дней.", reveal: "срок и заморозка абонемента"}
+  - {id: H-020, kind: FR, area: rules, priority: could, statement: "Пробное занятие одно на клиента и стоит 300 рублей.", reveal: "цена пробного занятия"}
+  - {id: H-021, kind: FR, area: integrations, priority: should, statement: "Напоминания и уведомления приходят через Telegram-бота студии.", reveal: "Telegram-бот"}
+  - {id: H-022, kind: NFR, area: nfr, priority: should, statement: "Записаться с телефона можно за 3 нажатия.", reveal: "удобство записи"}
+  - {id: H-023, kind: NFR, area: nfr, priority: should, statement: "Сервис доступен 99% времени, особенно утром с 7 до 10.", reveal: "доступность"}
+  - {id: H-024, kind: NFR, area: nfr, priority: must, statement: "Оплата проходит на странице банка, данные карт не хранятся.", reveal: "безопасность оплаты"}
+  - {id: H-025, kind: CON, area: constraints, priority: should, statement: "Бюджет — до 150 тысяч рублей, лучше взять готовый сервис, чем писать всё с нуля.", reveal: "бюджет"}

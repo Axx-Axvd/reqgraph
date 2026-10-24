@@ -1,0 +1,27 @@
+# Эталон dev-01 (размер S): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Доля пропущенных звонков должна снизиться с 20% до 5% за 3 месяца после запуска.", reveal: "цели проекта, пропущенные звонки"}
+  - {id: H-002, kind: BR, area: goals, priority: must, statement: "Доля неявок должна снизиться с 10% до 5% записей за 6 месяцев после запуска.", reveal: "цели проекта, неявки"}
+  - {id: H-003, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Регистратор видит расписание всех врачей и переносит записи.", reveal: "роли, работа регистратора"}
+  - {id: H-004, kind: UR, area: stakeholders, priority: should, statement: "Врач видит только своё расписание на день и неделю и карточки записанных к нему пациентов.", reveal: "роли, что видит врач"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: should, statement: "Главный врач настраивает рабочие часы врачей и список услуг.", reveal: "кто настраивает расписание и услуги"}
+  - {id: H-006, kind: UR, area: scenarios, priority: must, in_brief: true, statement: "Пациент сам записывается на сайте к нужному врачу на свободное время.", reveal: "запись пациента"}
+  - {id: H-007, kind: FR, area: scenarios, priority: must, statement: "При записи пациент сначала выбирает услугу, и система показывает только врачей, которые её оказывают.", reveal: "шаги записи, выбор врача и услуги"}
+  - {id: H-008, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Накануне приёма пациент получает напоминание.", reveal: "напоминания пациенту"}
+  - {id: H-009, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Пациент может отменить запись.", reveal: "отмена записи пациентом"}
+  - {id: H-010, kind: FR, area: scenarios, priority: should, statement: "Новый пациент при первой записи указывает ФИО, телефон и дату рождения, телефон подтверждает кодом из SMS.", reveal: "первая запись нового пациента, регистрация"}
+  - {id: H-011, kind: FR, area: exceptions, priority: must, in_brief: true, statement: "Если врач заболел, регистратор переносит его записи к другому врачу или на другой день.", reveal: "врач заболел"}
+  - {id: H-012, kind: FR, area: exceptions, priority: should, statement: "Регистратор отмечает неявку; после двух неявок подряд пациент записывается только через регистратора.", reveal: "пациент не пришёл, неявки"}
+  - {id: H-013, kind: FR, area: exceptions, priority: should, statement: "Отменить запись онлайн можно не позднее чем за 3 часа до приёма, позже — только по телефону.", reveal: "сроки отмены"}
+  - {id: H-014, kind: FR, area: exceptions, priority: could, statement: "Если пациент опоздал больше чем на 15 минут, регистратор может перенести приём, опоздание отмечается в истории визитов.", reveal: "опоздание пациента"}
+  - {id: H-015, kind: FR, area: data, priority: must, statement: "О пациенте хранятся ФИО, телефон, дата рождения, согласие на обработку данных и история визитов.", reveal: "данные о пациенте"}
+  - {id: H-016, kind: FR, area: data, priority: must, statement: "По каждой записи хранятся врач, услуга, дата и время, кресло и статус: записан, пришёл, не пришёл, отменён.", reveal: "данные о записи и визите"}
+  - {id: H-017, kind: FR, area: data, priority: should, statement: "У каждой услуги есть название, длительность 30, 60 или 90 минут и список врачей, которые её оказывают.", reveal: "услуги и их длительность"}
+  - {id: H-018, kind: FR, area: rules, priority: must, statement: "Длительность приёма задаёт услуга; запись не может пересекаться с другой записью того же врача или того же кресла.", reveal: "правила расписания, кресла"}
+  - {id: H-019, kind: FR, area: rules, priority: should, statement: "У пациента может быть не больше двух будущих записей одновременно.", reveal: "ограничения на число записей"}
+  - {id: H-020, kind: FR, area: rules, priority: could, statement: "Онлайн-запись открыта не дальше чем на 30 дней вперёд.", reveal: "на сколько вперёд можно записаться"}
+  - {id: H-021, kind: FR, area: integrations, priority: must, statement: "SMS отправляются через SMS-шлюз, с которым у клиники уже есть договор.", reveal: "внешние сервисы, отправка SMS"}
+  - {id: H-022, kind: NFR, area: nfr, priority: should, statement: "Страница записи открывается на мобильном интернете не дольше 2 секунд.", reveal: "скорость работы сайта"}
+  - {id: H-023, kind: NFR, area: nfr, priority: should, statement: "Онлайн-запись доступна не меньше 99% времени в месяц.", reveal: "доступность, сбои сайта"}
+  - {id: H-024, kind: NFR, area: nfr, priority: should, statement: "Записаться с телефона можно не больше чем за 5 шагов и 2 минуты.", reveal: "удобство записи с телефона"}
+  - {id: H-025, kind: CON, area: constraints, priority: must, statement: "Персональные данные пациентов хранятся на серверах в России, согласие на обработку берётся при регистрации (152-ФЗ).", reveal: "персональные данные, законы"}
