@@ -1,0 +1,27 @@
+# Структура SRS reqgraph — свой минимальный список разделов по мотивам ISO/IEC/IEEE 29148
+# (только названия разделов своими словами, без текста стандарта — ADR-012).
+# fill: откуда берётся содержимое раздела
+#   llm:<поле>    — пишет Standards (связный текст: назначение, область, глоссарий);
+#   nodes:<виды>  — собирает код из узлов графа (список с id);
+#   acceptance    — критерии приёмки ФТ (как проверить требования);
+#   assumptions   — узлы с пометкой «допущение»;
+#   none          — раздел-заголовок без своего текста.
+# required: true — раздел обязан быть заполнен (проверка TPL-001).
+document: srs
+title: Спецификация требований к программному обеспечению
+sections:
+  - {id: SEC-SRS-1,   title: Введение,                               fill: none,           required: false}
+  - {id: SEC-SRS-1.1, title: Назначение документа и системы,         fill: llm:purpose,    required: true}
+  - {id: SEC-SRS-1.2, title: Область применения,                     fill: llm:scope,      required: true}
+  - {id: SEC-SRS-1.3, title: Пользователи и другие участники,        fill: nodes:ACT,      required: true}
+  - {id: SEC-SRS-1.4, title: Термины и определения,                  fill: llm:glossary,   required: true}
+  - {id: SEC-SRS-2,   title: Бизнес-цели,                            fill: nodes:BR,       required: true}
+  - {id: SEC-SRS-3,   title: Требования,                             fill: none,           required: false}
+  - {id: SEC-SRS-3.1, title: Пользовательские требования,            fill: nodes:UR,       required: true}
+  - {id: SEC-SRS-3.2, title: Функциональные требования,              fill: nodes:FR,       required: true}
+  - {id: SEC-SRS-3.3, title: Требования к качеству,                  fill: nodes:NFR,      required: true}
+  - {id: SEC-SRS-3.4, title: Ограничения,                            fill: nodes:CON,      required: false}
+  - {id: SEC-SRS-3.5, title: Логическая модель данных,               fill: nodes:ENT,      required: true}
+  - {id: SEC-SRS-3.6, title: Бизнес-процессы,                        fill: nodes:PRC,      required: false}
+  - {id: SEC-SRS-4,   title: Проверка требований,                    fill: acceptance,     required: true}
+  - {id: SEC-SRS-5,   title: Допущения и зависимости,                fill: assumptions,    required: false}
