@@ -124,9 +124,9 @@
             <circle cx="22" cy="0" r="7" fill="#febc2e"/>
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
-        
+
     <g transform="translate(9, 41)" clip-path="url(#terminal-598275978-clip-terminal)">
-    
+
     <g class="terminal-598275978-matrix">
     <text class="terminal-598275978-r1" x="0" y="20" textLength="1061.4" clip-path="url(#terminal-598275978-line-0)">$&#160;uv&#160;run&#160;reqgraph&#160;init&#160;evals/runs/2026-10-24/dev-02&#160;--name&#160;&quot;Пекарня&#160;«Колосок»&quot;&#160;--brief&#160;</text><text class="terminal-598275978-r2" x="1268.8" y="20" textLength="12.2" clip-path="url(#terminal-598275978-line-0)">
 </text><text class="terminal-598275978-r1" x="0" y="44.4" textLength="378.2" clip-path="url(#terminal-598275978-line-1)">evals/scenarios/dev-02/brief.md</text><text class="terminal-598275978-r2" x="1268.8" y="44.4" textLength="12.2" clip-path="url(#terminal-598275978-line-1)">

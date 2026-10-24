@@ -24,7 +24,9 @@ def main() -> None:
     for line in args.source.read_text(encoding="utf-8").splitlines():
         style = "bold cyan" if line.startswith("→") else "green" if line.startswith("$") else ""
         console.print(Text(line, style=style))
-    args.out.write_text(console.export_svg(title=args.title), encoding="utf-8")
+    svg = console.export_svg(title=args.title)
+    lines = (line.rstrip() for line in svg.splitlines())  # rich pads lines; pre-commit trims them
+    args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"записано: {args.out}")
 
 
