@@ -13,6 +13,7 @@ from reqgraph.agents.runtime import RunContext
 from reqgraph.agents.standards import StandardsDraft, build_sections
 from reqgraph.checks.base import CheckContext
 from reqgraph.checks.template import SrsSections
+from reqgraph.graph import GraphPatch
 from reqgraph.graph.nodes import SectionNode
 from reqgraph.standards import load_structure
 
@@ -91,3 +92,17 @@ async def test_prompt_carries_requirements_and_client_turns(
     await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
     assert '<turn id="TURN-0002">Нужна онлайн-запись' in seen[0]
     assert "- FR-001 Напоминание" in seen[0] and "glossary" in seen[0]
+
+
+def test_rebuild_without_a_draft_keeps_the_llm_texts_and_lists_new_nodes() -> None:
+    graph = requirements()
+    graph = graph.apply(
+        build_sections(graph, StandardsDraft.model_validate(SRS)), actor="agent"
+    ).graph
+    nfr = {"op": "update", "id": "NFR-001", "fields": {"title": "Доставка всех SMS"}}
+    graph = graph.apply(GraphPatch.model_validate({"ops": [nfr]}), actor="agent").graph
+    patch = build_sections(graph, None)
+    assert {op.id for op in patch.ops} == {"SEC-SRS-3.3"}  # type: ignore[union-attr]
+    rebuilt = graph.apply(patch, actor="agent").graph
+    assert "Доставка всех SMS" in section(rebuilt, "SEC-SRS-3.3").text
+    assert section(rebuilt, "SEC-SRS-1.4").text == section(graph, "SEC-SRS-1.4").text

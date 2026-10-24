@@ -23,7 +23,7 @@ async def test_live_analyst_answer_makes_a_valid_traceable_patch(
 ) -> None:
     models = {k: v for k, v in stub_models().items() if k != "*"}  # the Analyst is real
     models["modeler"] = models["standards"] = stub_models()["*"]
-    ctx = brief_context(models=models)
+    ctx = brief_context(models=models, max_iter=0)  # one pass: the cassette holds no repair
     out = await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
     (call,) = [e for e in events_of(ctx, "llm_call") if e["role"] == "analyst"][:1]
     assert call["provider"] == "gemini"

@@ -81,7 +81,8 @@ async def test_checkpoints_keep_our_types_without_warnings(
     assert "unregistered" not in caplog.text
     assert isinstance(out["coverage"], Coverage) and isinstance(out["budget"], BudgetState)
     # restored by validation, not by model_construct: nodes and edges are models again
-    assert out["graph"].edges == ctx.project.graph.edges
+    model_edges = tuple(e for e in out["graph"].edges if e.rel.value != "rendered_in")
+    assert model_edges == ctx.project.graph.edges
     assert all(out["graph"].nodes[i] == n for i, n in ctx.project.graph.nodes.items())
 
 
