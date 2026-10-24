@@ -134,7 +134,16 @@ interactions:
       \u0438\u043D\u0442\u0435\u0440\u0432\u044C\u044E: goals, stakeholders, scenarios,
       exceptions, data, rules, integrations, nfr, constraints.\\n7. \u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442
       priority: must (\u0431\u0435\u0437 \u044D\u0442\u043E\u0433\u043E \u0441\u0438\u0441\u0442\u0435\u043C\u044B
-      \u043D\u0435\u0442), should, could, wont.\\n\\n# \u0421\u0432\u044F\u0437\u0438
+      \u043D\u0435\u0442), should, could, wont.\\n8. \u0415\u0441\u043B\u0438 \u0432
+      \u043D\u043E\u0432\u043E\u0439 \u0440\u0435\u043F\u043B\u0438\u043A\u0435 \u0437\u0430\u043A\u0430\u0437\u0447\u0438\u043A
+      \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u043B \u0434\u043E\u043F\u0443\u0449\u0435\u043D\u0438\u0435
+      (\u0442\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u0435 \u0441 assumption:
+      true) \u0438\u043B\u0438 \u043D\u0430\u0437\u0432\u0430\u043B \u043D\u0435\u0434\u043E\u0441\u0442\u0430\u044E\u0449\u0435\u0435
+      \u0447\u0438\u0441\u043B\u043E \u2014 \u043E\u0431\u043D\u043E\u0432\u0438 \u044D\u0442\u043E
+      \u0442\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u0435 \u043F\u043E \u0435\u0433\u043E
+      id: \u0432\u043F\u0438\u0448\u0438 \u0441\u043B\u043E\u0432\u0430 \u0437\u0430\u043A\u0430\u0437\u0447\u0438\u043A\u0430,
+      \u043F\u043E\u0441\u0442\u0430\u0432\u044C assumption: false \u0438 \u0434\u043E\u0431\u0430\u0432\u044C
+      \u0440\u0435\u043F\u043B\u0438\u043A\u0443 \u0432 sources.\\n\\n# \u0421\u0432\u044F\u0437\u0438
       \u0438 id\\n\\n- \u041D\u043E\u0432\u043E\u0435 \u0442\u0440\u0435\u0431\u043E\u0432\u0430\u043D\u0438\u0435
       \u0438\u043B\u0438 \u0440\u043E\u043B\u044C: ref \u2014 \u043A\u043E\u0440\u043E\u0442\u043A\u0438\u0439
       \u043B\u0430\u0442\u0438\u043D\u0441\u043A\u0438\u0439 \u043A\u043B\u044E\u0447
@@ -250,7 +259,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '12518'
+      - '12893'
       content-type:
       - application/json
       host:
@@ -279,82 +288,71 @@ interactions:
     uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
   response:
     body:
-      string: "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"tool_calls\":[{\"extra_content\":{\"google\":{\"thought_signature\":\"EmAKXgFpFH0T3OfxST7S4YB448jCt+t4hpvrCNFjS7Eb3P7g8BTq+3Dfndwhy5mYBQx0kMoOlyPlU6ZQVZVMio6PIKa5Bpw79p0aiJPRQXCJ36hH1OimmvuPqyCVNE7jVWQ=\"}},\"function\":{\"arguments\":\"{\\\"requirements\\\":[{\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"ref\\\":\\\"br_remind\\\",\\\"priority\\\":\\\"must\\\",\\\"goal_metric\\\":{\\\"unit\\\":\\\"%\\\",\\\"horizon\\\":\\\"\u0447\u0435\u0440\u0435\u0437
-        6 \u043C\u0435\u0441\u044F\u0446\u0435\u0432 \u043F\u043E\u0441\u043B\u0435
-        \u0437\u0430\u043F\u0443\u0441\u043A\u0430\\\",\\\"name\\\":\\\"\u0434\u043E\u043B\u044F
-        \u043F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043D\u044B\u0445 \u043F\u0440\u0438\u0435\u043C\u043E\u0432\\\",\\\"target\\\":\\\"\\\\u003c=
-        5\\\",\\\"baseline\\\":null},\\\"area\\\":\\\"goals\\\",\\\"statement\\\":\\\"\u0421\u043D\u0438\u0437\u0438\u0442\u044C
-        \u0434\u043E\u043B\u044E \u043F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043D\u044B\u0445
-        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u0430\u043C\u0438 \u043F\u0440\u0438\u0435\u043C\u043E\u0432
-        \u0434\u043E 5% \u0441 \u043F\u043E\u043C\u043E\u0449\u044C\u044E \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u0438
-        \u0438 \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0439.\\\",\\\"kind\\\":\\\"BR\\\",\\\"assumption\\\":true,\\\"title\\\":\\\"\u0421\u043D\u0438\u0436\u0435\u043D\u0438\u0435
-        \u0434\u043E\u043B\u0438 \u043F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043D\u044B\u0445
-        \u043F\u0440\u0438\u0435\u043C\u043E\u0432\\\"},{\\\"ref\\\":\\\"ur_online_book\\\",\\\"refines\\\":[\\\"br_remind\\\"],\\\"priority\\\":\\\"must\\\",\\\"area\\\":\\\"scenarios\\\",\\\"kind\\\":\\\"UR\\\",\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"actor\\\":\\\"act_patient\\\",\\\"statement\\\":\\\"\u041F\u0430\u0446\u0438\u0435\u043D\u0442
-        \u0441\u043E\u0437\u0434\u0430\u0435\u0442 \u0437\u0430\u043F\u0438\u0441\u044C
-        \u043D\u0430 \u043F\u0440\u0438\u0435\u043C \u0441\u0430\u043C\u043E\u0441\u0442\u043E\u044F\u0442\u0435\u043B\u044C\u043D\u043E
-        \u0447\u0435\u0440\u0435\u0437 \u0438\u043D\u0442\u0435\u0440\u043D\u0435\u0442.\\\",\\\"scenario\\\":[\\\"\u0432\u044B\u0431\u0438\u0440\u0430\u0435\u0442
+      string: "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"tool_calls\":[{\"extra_content\":{\"google\":{\"thought_signature\":\"EmAKXgFpFH0TURWLwDBJoRWc8QpaBexb/JrF9tXs/Mk5iKTDgNy6y8uvE6MdGs0Cya9WLMUGW+78NYwS488gjWCFjDoSOiDa0vcdsnrZZjejujIEg0hIJw/afzv7uMvKD3g=\"}},\"function\":{\"arguments\":\"{\\\"requirements\\\":[{\\\"kind\\\":\\\"BR\\\",\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"goal_metric\\\":{\\\"horizon\\\":\\\"\u043F\u043E\u0441\u043B\u0435
+        \u0437\u0430\u043F\u0443\u0441\u043A\u0430 \u0441\u0438\u0441\u0442\u0435\u043C\u044B\\\",\\\"unit\\\":\\\"%\\\",\\\"baseline\\\":null,\\\"name\\\":\\\"\u0414\u043E\u043B\u044F
+        \u0437\u0430\u043F\u0438\u0441\u0430\u043D\u043D\u044B\u0445 \u043E\u043D\u043B\u0430\u0439\u043D
+        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u043E\u0432\\\",\\\"target\\\":\\\"\\\\u003e=
+        50\\\"},\\\"title\\\":\\\"\u041E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C
+        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u043E\u0432\\\",\\\"area\\\":\\\"goals\\\",\\\"priority\\\":\\\"must\\\",\\\"ref\\\":\\\"br_online_booking\\\",\\\"statement\\\":\\\"\u041E\u0431\u0435\u0441\u043F\u0435\u0447\u0438\u0442\u044C
+        \u0432\u043E\u0437\u043C\u043E\u0436\u043D\u043E\u0441\u0442\u044C \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u0438
+        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u043E\u0432 \u0434\u043B\u044F
+        \u0441\u0442\u043E\u043C\u0430\u0442\u043E\u043B\u043E\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439
+        \u043A\u043B\u0438\u043D\u0438\u043A\u0438 \u0441 3 \u043A\u0440\u0435\u0441\u043B\u0430\u043C\u0438.\\\"},{\\\"title\\\":\\\"\u0417\u0430\u043F\u0438\u0441\u044C
+        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u0430 \u043E\u043D\u043B\u0430\u0439\u043D\\\",\\\"kind\\\":\\\"UR\\\",\\\"ref\\\":\\\"ur_online_book\\\",\\\"refines\\\":[\\\"br_online_booking\\\"],\\\"metric\\\":null,\\\"area\\\":\\\"scenarios\\\",\\\"priority\\\":\\\"must\\\",\\\"iso25010\\\":null,\\\"statement\\\":\\\"\u041F\u0430\u0446\u0438\u0435\u043D\u0442
+        \u0437\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0435\u0442\u0441\u044F \u043D\u0430
+        \u043F\u0440\u0438\u0435\u043C \u0447\u0435\u0440\u0435\u0437 \u043E\u043D\u043B\u0430\u0439\u043D-\u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441.\\\",\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"scenario\\\":[\\\"\u0432\u044B\u0431\u0438\u0440\u0430\u0435\u0442
         \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F
-        \u0438\u0437 \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u044F
-        \u043A\u043B\u0438\u043D\u0438\u043A\u0438\\\",\\\"\u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u0442
-        \u0437\u0430\u043F\u0438\u0441\u044C \u043D\u0430 \u043F\u0440\u0438\u0435\u043C\\\"],\\\"title\\\":\\\"\u041E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u044C
-        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u0430\\\"},{\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"actor\\\":\\\"act_patient\\\",\\\"kind\\\":\\\"UR\\\",\\\"title\\\":\\\"\u041F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u0435
-        \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u043E
-        \u043F\u0440\u0438\u0435\u043C\u0435\\\",\\\"statement\\\":\\\"\u041F\u0430\u0446\u0438\u0435\u043D\u0442
+        \u0438 \u043A\u0440\u0435\u0441\u043B\u043E\\\",\\\"\u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u0442
+        \u0437\u0430\u043F\u0438\u0441\u044C \u043E\u043D\u043B\u0430\u0439\u043D\\\"],\\\"constraint_type\\\":null},{\\\"metric\\\":null,\\\"area\\\":\\\"scenarios\\\",\\\"ref\\\":\\\"ur_receive_reminder\\\",\\\"refines\\\":[\\\"br_online_booking\\\"],\\\"kind\\\":\\\"UR\\\",\\\"statement\\\":\\\"\u041F\u0430\u0446\u0438\u0435\u043D\u0442
         \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435
-        \u043E \u043F\u0440\u0435\u0434\u0441\u0442\u043E\u044F\u0449\u0435\u043C
-        \u043F\u0440\u0438\u0435\u043C\u0435 \u0437\u0430 \u0441\u0443\u0442\u043A\u0438
-        \u0434\u043E \u0432\u0438\u0437\u0438\u0442\u0430.\\\",\\\"ref\\\":\\\"ur_receive_reminder\\\",\\\"scenario\\\":[\\\"\u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442
-        \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435 \u0437\u0430
-        24 \u0447\u0430\u0441\u0430 \u0434\u043E \u0432\u0438\u0437\u0438\u0442\u0430\\\"],\\\"refines\\\":[\\\"br_remind\\\"],\\\"priority\\\":\\\"must\\\",\\\"area\\\":\\\"scenarios\\\"},{\\\"acceptance\\\":[\\\"\u0421\u0438\u0441\u0442\u0435\u043C\u0430
-        \u0441\u043E\u0437\u0434\u0430\u0435\u0442 \u0437\u0430\u043F\u0438\u0441\u044C
-        \u0432 \u043A\u0430\u043B\u0435\u043D\u0434\u0430\u0440\u0435 \u043A\u043B\u0438\u043D\u0438\u043A\u0438
-        \u043F\u0440\u0438 \u0432\u044B\u0431\u043E\u0440\u0435 \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u043E\u043C
-        \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u043E\u0433\u043E \u0432\u0440\u0435\u043C\u0435\u043D\u0438\\\",\\\"\u0421\u0438\u0441\u0442\u0435\u043C\u0430
-        \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u0435
-        \u0443\u0441\u043F\u0435\u0448\u043D\u043E\u0439 \u0437\u0430\u043F\u0438\u0441\u0438
-        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u0443\\\"],\\\"kind\\\":\\\"FR\\\",\\\"title\\\":\\\"\u0421\u043E\u0437\u0434\u0430\u043D\u0438\u0435
-        \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u0438\\\",\\\"statement\\\":\\\"\u041A\u043E\u0433\u0434\u0430
-        \u043F\u0430\u0446\u0438\u0435\u043D\u0442 \u0432\u044B\u0431\u0438\u0440\u0430\u0435\u0442
-        \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F
-        \u0438 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0435\u0442
-        \u0437\u0430\u043F\u0438\u0441\u044C, \u0441\u0438\u0441\u0442\u0435\u043C\u0430
-        \u0434\u043E\u043B\u0436\u043D\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C
-        \u0437\u0430\u043F\u0438\u0441\u044C \u0432 \u0440\u0430\u0441\u043F\u0438\u0441\u0430\u043D\u0438\u0438
-        \u043A\u043B\u0438\u043D\u0438\u043A\u0438.\\\",\\\"refines\\\":[\\\"ur_online_book\\\"],\\\"ref\\\":\\\"fr_online_book\\\",\\\"priority\\\":\\\"must\\\",\\\"area\\\":\\\"rules\\\",\\\"sources\\\":[\\\"TURN-0002\\\"]},{\\\"ref\\\":\\\"fr_send_reminder\\\",\\\"kind\\\":\\\"FR\\\",\\\"priority\\\":\\\"must\\\",\\\"refines\\\":[\\\"ur_receive_reminder\\\"],\\\"statement\\\":\\\"\u0417\u0430
+        \u043E \u043F\u0440\u0438\u0435\u043C\u0435 \u0437\u0430 \u0441\u0443\u0442\u043A\u0438.\\\",\\\"iso25010\\\":null,\\\"constraint_type\\\":null,\\\"priority\\\":\\\"must\\\",\\\"title\\\":\\\"\u041F\u043E\u043B\u0443\u0447\u0435\u043D\u0438\u0435
+        \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u043E
+        \u0432\u0438\u0437\u0438\u0442\u0435\\\",\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"scenario\\\":[\\\"\u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442
+        \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435 \u043E
+        \u043F\u0440\u0435\u0434\u0441\u0442\u043E\u044F\u0449\u0435\u043C \u0432\u0438\u0437\u0438\u0442\u0435
+        \u0437\u0430 24 \u0447\u0430\u0441\u0430 \u0434\u043E \u043F\u0440\u0438\u0451\u043C\u0430\\\"]},{\\\"constraint_type\\\":null,\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"statement\\\":\\\"\u0421\u0438\u0441\u0442\u0435\u043C\u0430
+        \u0434\u043E\u043B\u0436\u043D\u0430 \u043F\u0440\u0435\u0434\u043E\u0441\u0442\u0430\u0432\u0438\u0442\u044C
+        \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441 \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u0438
+        \u0434\u043B\u044F \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u043E\u0432.\\\",\\\"title\\\":\\\"\u041F\u0440\u0435\u0434\u043E\u0441\u0442\u0430\u0432\u043B\u0435\u043D\u0438\u0435
+        \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u0438\\\",\\\"area\\\":\\\"scenarios\\\",\\\"refines\\\":[\\\"ur_online_book\\\"],\\\"priority\\\":\\\"must\\\",\\\"metric\\\":null,\\\"iso25010\\\":null,\\\"kind\\\":\\\"FR\\\",\\\"ref\\\":\\\"fr_online_book\\\",\\\"acceptance\\\":[\\\"\u0421\u0438\u0441\u0442\u0435\u043C\u0430
+        \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442 \u0444\u043E\u0440\u043C\u0443
+        \u043E\u043D\u043B\u0430\u0439\u043D-\u0437\u0430\u043F\u0438\u0441\u0438
+        \u0441 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u043C\u0438 \u0441\u043B\u043E\u0442\u0430\u043C\u0438
+        \u0434\u043B\u044F 3 \u043A\u0440\u0435\u0441\u0435\u043B\\\",\\\"\u0421\u0438\u0441\u0442\u0435\u043C\u0430
+        \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u0435\u0442 \u0441\u043E\u0437\u0434\u0430\u043D\u043D\u0443\u044E
+        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u043E\u043C \u0437\u0430\u043F\u0438\u0441\u044C
+        \u0432 \u0431\u0430\u0437\u0435 \u0434\u0430\u043D\u043D\u044B\u0445\\\"]},{\\\"refines\\\":[\\\"ur_receive_reminder\\\"],\\\"statement\\\":\\\"\u0417\u0430
         24 \u0447\u0430\u0441\u0430 \u0434\u043E \u043F\u0440\u0438\u0451\u043C\u0430
         \u0441\u0438\u0441\u0442\u0435\u043C\u0430 \u0434\u043E\u043B\u0436\u043D\u0430
         \u043E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u0443
-        \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435 \u043E
-        \u0432\u0438\u0437\u0438\u0442\u0435.\\\",\\\"acceptance\\\":[\\\"\u0421\u0438\u0441\u0442\u0435\u043C\u0430
-        \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u0435
-        \u0440\u043E\u0432\u043D\u043E \u0437\u0430 24 \u0447\u0430\u0441\u0430 \u0434\u043E
-        \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u043D\u043E\u0433\u043E \u0432\u0440\u0435\u043C\u0435\u043D\u0438
-        \u043F\u0440\u0438\u0451\u043C\u0430 \u0441 \u043F\u043E\u0433\u0440\u0435\u0448\u043D\u043E\u0441\u0442\u044C\u044E
-        \u043D\u0435 \u0431\u043E\u043B\u0435\u0435 5 \u043C\u0438\u043D\u0443\u0442\\\",\\\"\u0422\u0435\u043A\u0441\u0442
-        \u0443\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442
-        \u0434\u0430\u0442\u0443 \u0438 \u0432\u0440\u0435\u043C\u044F \u043F\u0440\u0438\u0435\u043C\u0430\\\"],\\\"title\\\":\\\"\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430
+        \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435.\\\",\\\"title\\\":\\\"\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430
         \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u0437\u0430
-        \u0441\u0443\u0442\u043A\u0438\\\",\\\"area\\\":\\\"rules\\\",\\\"sources\\\":[\\\"TURN-0002\\\"]}],\\\"actors\\\":[{\\\"sources\\\":[\\\"TURN-0001\\\",\\\"TURN-0002\\\"],\\\"ref\\\":\\\"act_patient\\\",\\\"name\\\":\\\"\u041F\u0430\u0446\u0438\u0435\u043D\u0442\\\"},{\\\"name\\\":\\\"\u0410\u0434\u043C\u0438\u043D\u0438\u0441\u0442\u0440\u0430\u0442\u043E\u0440
-        \u043A\u043B\u0438\u043D\u0438\u043A\u0438\\\",\\\"ref\\\":\\\"act_admin\\\",\\\"sources\\\":[\\\"TURN-0001\\\"]}]}\",\"name\":\"final_result\"},\"id\":\"call_892481\",\"type\":\"function\"}]}}],\"created\":1792859393,\"id\":\"-dzcapy7MKypytMPudOhsAQ\",\"model\":\"gemini-3.5-flash-lite\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":695,\"prompt_tokens\":2636,\"total_tokens\":3331}}"
+        \u0441\u0443\u0442\u043A\u0438\\\",\\\"area\\\":\\\"scenarios\\\",\\\"priority\\\":\\\"must\\\",\\\"sources\\\":[\\\"TURN-0002\\\"],\\\"iso25010\\\":null,\\\"acceptance\\\":[\\\"\u0417\u0430
+        24 \u0447\u0430\u0441\u0430 \u0434\u043E \u043D\u0430\u0437\u043D\u0430\u0447\u0435\u043D\u043D\u043E\u0433\u043E
+        \u0432\u0440\u0435\u043C\u0435\u043D\u0438 \u043F\u0440\u0438\u0451\u043C\u0430
+        \u0441\u0438\u0441\u0442\u0435\u043C\u0430 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442
+        \u043F\u0430\u0446\u0438\u0435\u043D\u0442\u0443 \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435\\\",\\\"\u041D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435
+        \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u0434\u0430\u0442\u0443
+        \u0438 \u0432\u0440\u0435\u043C\u044F \u0432\u0438\u0437\u0438\u0442\u0430\\\"],\\\"constraint_type\\\":null,\\\"metric\\\":null,\\\"kind\\\":\\\"FR\\\",\\\"ref\\\":\\\"fr_send_reminder\\\"}],\\\"actors\\\":[{\\\"ref\\\":\\\"act_patient\\\",\\\"name\\\":\\\"\u041F\u0430\u0446\u0438\u0435\u043D\u0442\\\",\\\"sources\\\":[\\\"TURN-0001\\\",\\\"TURN-0002\\\"]}]}\",\"name\":\"final_result\"},\"id\":\"call_403272\",\"type\":\"function\"}]}}],\"created\":1792873477,\"id\":\"ABTdasSCB_HhytMP7Iil8AE\",\"model\":\"gemini-3.5-flash-lite\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":696,\"prompt_tokens\":2697,\"total_tokens\":3393}}"
     headers:
       cache-control:
       - private
       connection:
       - close
       content-length:
-      - '3830'
+      - '3686'
       content-type:
       - application/json
       date:
-      - Sat, 24 Oct 2026 16:29:53 GMT
+      - Sat, 24 Oct 2026 20:24:37 GMT
       expires:
-      - Sat, 24 Oct 2026 16:29:53 GMT
+      - Sat, 24 Oct 2026 20:24:37 GMT
       p3p:
       - CP="This is not a P3P policy! See g.co/p3phelp for more info."
       server:
       - scaffolding on HTTPServer2
       server-timing:
-      - gfet4t7; dur=8271
+      - gfet4t7; dur=5827
       transfer-encoding:
       - chunked
       vary:

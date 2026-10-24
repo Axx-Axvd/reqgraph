@@ -40,6 +40,7 @@ def test_graph_compiles_with_every_node_of_the_design() -> None:
     assert set(NODES) <= nodes
     assert set(NODES) == {
         "intake",
+        "coverage",
         "interviewer",
         "await_answer",
         "analyst",
@@ -76,11 +77,11 @@ async def test_interview_pauses_for_answers_and_survives_a_restart(
     saver = InMemorySaver(serde=checkpoint_serde())
     ctx = context(max_turns=2)
     out = await run(ctx, initial_state(ctx.project.graph, "interview"), saver=saver)
-    assert out["__interrupt__"][0].value == {"question": QUESTION}
+    assert out["__interrupt__"][0].value == {"question": QUESTION, "turn": 1}
 
     # a new graph object over the same checkpoints: the server was restarted between the answers
     out = await run(ctx, Command(resume="Звонят по телефону."), saver=saver)
-    assert out["__interrupt__"][0].value == {"question": QUESTION}
+    assert out["__interrupt__"][0].value == {"question": QUESTION, "turn": 2}
     out = await run(ctx, Command(resume="Хватит, остальное в брифе."), saver=saver)
 
     assert "__interrupt__" not in out
@@ -93,7 +94,10 @@ async def test_interview_pauses_for_answers_and_survives_a_restart(
         ("agent", QUESTION),
         ("client", "Хватит, остальное в брифе."),
     ]
-    assert visited(ctx)[-6:] == [*PIPELINE, "export", "persist"]
+    # every answer goes to the Analyst and the coverage is counted again; then the models
+    assert visited(ctx).count("analyst") == 2 and visited(ctx).count("coverage") == 3
+    assert visited(ctx)[-5:] == ["modeler", "standards", "ci_check", "export", "persist"]
+    assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["limit"]
 
 
 async def test_repair_without_progress_stops_with_needs_human(
@@ -237,4 +241,12 @@ async def test_budget_spent_before_the_first_question_skips_the_interview(
     out = await run(ctx, ctx.initial_state("interview", budget=BudgetState(usd=0.5, tokens=1)))
     assert "__interrupt__" not in out and out["stop"] == "budget"
     assert events_of(ctx, "stop")[0]["node"] == "interviewer"
-    assert visited(ctx) == ["intake", "interviewer", "await_answer", *PIPELINE, "export", "persist"]
+    assert visited(ctx) == [
+        "intake",
+        "coverage",
+        "interviewer",
+        "await_answer",
+        *PIPELINE,
+        "export",
+        "persist",
+    ]

@@ -233,13 +233,29 @@ def _turns(graph: ArtifactGraph) -> list[InterviewTurn]:
     return [n for n in graph.nodes_of("TURN") if isinstance(n, InterviewTurn)]
 
 
+def interviewing(state: RunState) -> bool:
+    """The Analyst reads the interview answer by answer: only the turns it has not read yet.
+    Repair rounds read every turn again."""
+    return state["mode"] == "interview" and state["iteration"] == 0
+
+
+def new_turns(state: RunState) -> list[InterviewTurn]:
+    turns = _turns(state["graph"])
+    if not interviewing(state) or state["extracted_upto"] is None:
+        return turns
+    upto = state["extracted_upto"]
+    return [t for t in turns if t.id > upto]  # TURN ids are issued in order, zero-padded
+
+
 def render(state: RunState, tasks: list[RepairTask]) -> str:
+    incremental = interviewing(state) and state["extracted_upto"] is not None
     return load_prompt("analyst/extract").render(
         vague_terms=_vague_terms(),
         iso25010=get_args(ISO25010),
         areas=get_args(Area),
         graph=_view(state["graph"]),
-        turns=_turns(state["graph"]),
+        turns=new_turns(state),
+        incremental=incremental,
         tasks=tasks,
     )
 
@@ -254,6 +270,13 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
         ctx.events.emit("skip", agent="analyst", reason="нет задач ремонта")
         return {}
     graph = state["graph"]
+    turns = new_turns(state)
+    read: dict[str, Any] = {}
+    if interviewing(state):
+        if not [t for t in turns if t.role == "client"]:
+            ctx.events.emit("skip", agent="analyst", reason="нет новых ответов")
+            return {}
+        read = {"extracted_upto": turns[-1].id}
     prompt = render(state, mine)
     budget: list[BudgetState] = [state["budget"]]
 
@@ -273,7 +296,7 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
         ctx.events.emit("stop", reason="budget", node="analyst")
         return {"stop": "budget", "tasks": rest, "budget": budget[0]}
     update: dict[str, Any] = {"budget": budget[0], "tasks": rest}
-    if result is None:
+    if result is None:  # the turns stay unread: the next pass gets them again
         return update
     ctx.events.emit("agent_end", agent="analyst", diff=diff_summary(result.diff))
-    return update | {"graph": result.graph}
+    return update | {"graph": result.graph, **read}
