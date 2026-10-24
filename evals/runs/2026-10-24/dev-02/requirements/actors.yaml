@@ -1,0 +1,16 @@
+# Акторы (ACT): роли людей, которые работают с системой.
+- id: ACT-01
+  name: "Клиент (покупатель)"
+  derived_from: [TURN-0002, TURN-0003]
+
+- id: ACT-02
+  name: "Менеджер пекарни"
+  derived_from: [TURN-0001, TURN-0003]
+
+- id: ACT-03
+  name: "Курьер"
+  derived_from: [TURN-0001, TURN-0003]
+
+- id: ACT-04
+  name: "Офисный клиент (юрлицо)"
+  derived_from: [TURN-0003]

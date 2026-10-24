@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="PRC-04.definitions" targetNamespace="urn:reqgraph:process:PRC-04" exporter="reqgraph">
+  <bpmn:collaboration id="PRC-04.collaboration">
+    <bpmn:participant id="PRC-04.pool" name="Контроль заказов менеджером" processRef="PRC-04"/>
+  </bpmn:collaboration>
+  <bpmn:process id="PRC-04" name="Контроль заказов менеджером" isExecutable="false">
+    <bpmn:laneSet id="PRC-04.lanes">
+      <bpmn:lane id="PRC-04.L1" name="Менеджер">
+        <bpmn:flowNodeRef>PRC-04.S</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-04.T01</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>PRC-04.E1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="PRC-04.L2" name="Система"/>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="PRC-04.S">
+      <bpmn:outgoing>PRC-04.F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="PRC-04.T01" name="Просмотреть все заказы и статусы">
+      <bpmn:incoming>PRC-04.F01</bpmn:incoming>
+      <bpmn:outgoing>PRC-04.F02</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="PRC-04.E1" name="Контроль завершен">
+      <bpmn:incoming>PRC-04.F02</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="PRC-04.F01" sourceRef="PRC-04.S" targetRef="PRC-04.T01"/>
+    <bpmn:sequenceFlow id="PRC-04.F02" sourceRef="PRC-04.T01" targetRef="PRC-04.E1"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="PRC-04.diagram">
+    <bpmndi:BPMNPlane id="PRC-04.plane" bpmnElement="PRC-04.collaboration">
+      <bpmndi:BPMNShape id="PRC-04.pool.di" bpmnElement="PRC-04.pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="440" height="280"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-04.L1.di" bpmnElement="PRC-04.L1" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="410" height="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-04.L2.di" bpmnElement="PRC-04.L2" isHorizontal="true">
+        <dc:Bounds x="70" y="180" width="410" height="140"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-04.S.di" bpmnElement="PRC-04.S">
+        <dc:Bounds x="112" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-04.T01.di" bpmnElement="PRC-04.T01">
+        <dc:Bounds x="200" y="60" width="150" height="100"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="PRC-04.E1.di" bpmnElement="PRC-04.E1">
+        <dc:Bounds x="402" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="PRC-04.F01.di" bpmnElement="PRC-04.F01">
+        <di:waypoint x="148" y="110"/>
+        <di:waypoint x="200" y="110"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="PRC-04.F02.di" bpmnElement="PRC-04.F02">
+        <di:waypoint x="350" y="110"/>
+        <di:waypoint x="402" y="110"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

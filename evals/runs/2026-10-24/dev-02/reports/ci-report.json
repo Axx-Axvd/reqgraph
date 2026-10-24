@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "project": "dev-02",
+  "checks": [
+    {
+      "id": "SCH-001",
+      "title": "BPMN валиден по XSD BPMN 2.0",
+      "group": "sch",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SCH-002",
+      "title": "DSL процесса валиден, ссылки realizes и refines существуют",
+      "group": "sch",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SCH-003",
+      "title": "DBML разбирается",
+      "group": "sch",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SCH-004",
+      "title": "PlantUML компилируется",
+      "group": "sch",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SCH-005",
+      "title": "Structurizr DSL компилируется",
+      "group": "sch",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SND-001",
+      "title": "все шаги достижимы от старта и ведут к концу",
+      "group": "snd",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SND-002",
+      "title": "процесс sound (сеть Петри: всегда завершается, ничего не зависает)",
+      "group": "snd",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SND-003",
+      "title": "шлюзы корректны",
+      "group": "snd",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "SND-004",
+      "title": "процесс помещается на одну страницу",
+      "group": "snd",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "ISO-001",
+      "title": "нет размытых слов",
+      "group": "iso",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "ISO-002",
+      "title": "одно требование — одно утверждение",
+      "group": "iso",
+      "status": "warning",
+      "errors": 0,
+      "warnings": 3,
+      "infos": 0
+    },
+    {
+      "id": "ISO-003",
+      "title": "проверяемость: критерии приёмки у ФТ, измеримый порог у НФТ",
+      "group": "iso",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "ISO-004",
+      "title": "нет TBD / TODO / ???",
+      "group": "iso",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "ISO-005",
+      "title": "форма EARS",
+      "group": "iso",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "TRC-001",
+      "title": "каждое БТ уточнено ПТ",
+      "group": "trc",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "TRC-002",
+      "title": "каждое ФТ реализовано в модели",
+      "group": "trc",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "TRC-003",
+      "title": "нет сирот в моделях",
+      "group": "trc",
+      "status": "warning",
+      "errors": 0,
+      "warnings": 3,
+      "infos": 0
+    },
+    {
+      "id": "TRC-004",
+      "title": "все ссылки разрешаются, нет циклов, realizes = realized_by",
+      "group": "trc",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "TRC-005",
+      "title": "сущности из ФТ есть в ERD",
+      "group": "trc",
+      "status": "warning",
+      "errors": 0,
+      "warnings": 3,
+      "infos": 0
+    },
+    {
+      "id": "TRC-006",
+      "title": "у требования есть источник",
+      "group": "trc",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    },
+    {
+      "id": "TPL-001",
+      "title": "разделы SRS заполнены",
+      "group": "tpl",
+      "status": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 0
+    }
+  ],
+  "findings": [
+    {
+      "check_id": "ISO-002",
+      "severity": "warning",
+      "node_ids": [
+        "FR-002"
+      ],
+      "message": "FR-002: в одном требовании действия «рассчитывать» и «отображать»",
+      "hint": "разделите на два требования, у каждого — свои критерии приёмки",
+      "owner": "analyst"
+    },
+    {
+      "check_id": "ISO-002",
+      "severity": "warning",
+      "node_ids": [
+        "FR-006"
+      ],
+      "message": "FR-006: в одном требовании действия «добавлять» и «быть»",
+      "hint": "разделите на два требования, у каждого — свои критерии приёмки",
+      "owner": "analyst"
+    },
+    {
+      "check_id": "ISO-002",
+      "severity": "warning",
+      "node_ids": [
+        "FR-007"
+      ],
+      "message": "FR-007: в одном требовании действия «предоставлять» и «проставить»",
+      "hint": "разделите на два требования, у каждого — свои критерии приёмки",
+      "owner": "analyst"
+    },
+    {
+      "check_id": "TRC-003",
+      "severity": "warning",
+      "node_ids": [
+        "PRC-02.T04"
+      ],
+      "message": "PRC-02.T04: элемент модели не реализует ни одного требования",
+      "hint": "свяжите его с ФТ (realized_by) или удалите из модели",
+      "owner": "modeler"
+    },
+    {
+      "check_id": "TRC-003",
+      "severity": "warning",
+      "node_ids": [
+        "PRC-05.T01"
+      ],
+      "message": "PRC-05.T01: элемент модели не реализует ни одного требования",
+      "hint": "свяжите его с ФТ (realized_by) или удалите из модели",
+      "owner": "modeler"
+    },
+    {
+      "check_id": "TRC-003",
+      "severity": "warning",
+      "node_ids": [
+        "PRC-05.T03"
+      ],
+      "message": "PRC-05.T03: элемент модели не реализует ни одного требования",
+      "hint": "свяжите его с ФТ (realized_by) или удалите из модели",
+      "owner": "modeler"
+    },
+    {
+      "check_id": "TRC-005",
+      "severity": "warning",
+      "node_ids": [
+        "FR-002",
+        "ENT-02"
+      ],
+      "message": "FR-002: реализуется сущностью ENT-02 «Элемент корзины», но в формулировке она не названа",
+      "hint": null,
+      "owner": "modeler"
+    },
+    {
+      "check_id": "TRC-005",
+      "severity": "warning",
+      "node_ids": [
+        "FR-009",
+        "ENT-04"
+      ],
+      "message": "FR-009: реализуется сущностью ENT-04 «Элемент заказа», но в формулировке она не названа",
+      "hint": null,
+      "owner": "modeler"
+    },
+    {
+      "check_id": "TRC-005",
+      "severity": "warning",
+      "node_ids": [
+        "FR-010",
+        "ENT-03"
+      ],
+      "message": "FR-010: реализуется сущностью ENT-03 «Заказ», но в формулировке она не названа",
+      "hint": null,
+      "owner": "modeler"
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warnings": 9,
+    "infos": 0,
+    "passed": 18,
+    "warned": 3,
+    "failed": 0,
+    "skipped": 0
+  }
+}

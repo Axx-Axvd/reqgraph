@@ -1,0 +1,32 @@
+{
+  "project": "dev-03",
+  "profile": "free",
+  "reviewer": "llm",
+  "package_version": "0.1.0",
+  "budget_usd": 0.5,
+  "models": {
+    "analyst": "gemini/gemini-3.5-flash-lite",
+    "modeler": "gemini/gemini-3.5-flash-lite",
+    "standards": "groq/openai/gpt-oss-120b"
+  },
+  "prompt_hashes": {
+    "analyst/extract": "5cf909f1733c",
+    "modeler/model": "87f1cac3ef8e",
+    "standards/srs": "85d428c41ab0"
+  },
+  "iterations": 0,
+  "stop": null,
+  "errors": 0,
+  "warnings": 10,
+  "requirements": 20,
+  "actors": 4,
+  "processes": 4,
+  "entities": 5,
+  "sections": 15,
+  "llm_calls": 5,
+  "input_tokens": 21948,
+  "output_tokens": 12945,
+  "cost_usd": 0.0,
+  "seconds": 49.0,
+  "headline": "0 ошибок, 10 предупреждений — проверок: пройдено 19, с ошибками 0, с предупреждениями 2, пропущено 0"
+}

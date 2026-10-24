@@ -1,0 +1,60 @@
+// Модель данных проекта. СОБРАНО reqgraph из ответа Modeler (T-203).
+// Id и русское название сущности графа — в Note таблицы (ENT-xx · Название).
+
+Table product {
+  id int [pk]
+  title varchar [not null]
+  price numeric [not null]
+  photo_url varchar
+  Note: 'ENT-01 · Товар'
+}
+
+Table cart_item {
+  id int [pk]
+  client_id int [not null]
+  product_id int [not null]
+  quantity int [not null]
+  Note: 'ENT-02 · Элемент корзины'
+}
+
+Table order {
+  id int [pk]
+  client_id int [not null]
+  status varchar [not null]
+  delivery_time_slot varchar
+  payment_method varchar [not null]
+  delivery_cost numeric [not null]
+  total_amount numeric [not null]
+  courier_id int
+  created_at timestamp [not null]
+  Note: 'ENT-03 · Заказ'
+}
+
+Table order_item {
+  id int [pk]
+  order_id int [not null]
+  product_id int [not null]
+  quantity int [not null]
+  price numeric [not null]
+  Note: 'ENT-04 · Элемент заказа'
+}
+
+Table client {
+  id int [pk]
+  name varchar [not null]
+  is_corporate boolean [not null]
+  Note: 'ENT-05 · Клиент'
+}
+
+Table courier {
+  id int [pk]
+  name varchar [not null]
+  Note: 'ENT-06 · Курьер'
+}
+
+Ref: cart_item.client_id > client.id
+Ref: cart_item.product_id > product.id
+Ref: order.client_id > client.id
+Ref: order.courier_id > courier.id
+Ref: order_item.order_id > order.id
+Ref: order_item.product_id > product.id

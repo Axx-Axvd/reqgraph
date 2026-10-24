@@ -1,0 +1,8 @@
+# Акторы (ACT): роли людей, которые работают с системой.
+- id: ACT-01
+  name: "Пациент"
+  derived_from: [TURN-0001, TURN-0002]
+
+- id: ACT-02
+  name: "Регистратор"
+  derived_from: [TURN-0001, TURN-0002]

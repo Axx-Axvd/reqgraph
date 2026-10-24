@@ -1,0 +1,53 @@
+// Модель данных проекта. СОБРАНО reqgraph из ответа Modeler (T-203).
+// Id и русское название сущности графа — в Note таблицы (ENT-xx · Название).
+
+Table reader {
+  id int [pk]
+  full_name varchar
+  pass_number varchar
+  role varchar
+  is_blocked boolean
+  fine_amount numeric
+  Note: 'ENT-01 · Читатель'
+}
+
+Table book {
+  id int [pk]
+  title varchar
+  author varchar
+  topic varchar
+  barcode varchar
+  total_copies int
+  available_copies int
+  Note: 'ENT-02 · Издание'
+}
+
+Table loan {
+  id int [pk]
+  book_id int
+  reader_id int
+  status varchar
+  reserved_until timestamp
+  due_date timestamp
+  renewal_count int
+  has_queue boolean
+  Note: 'ENT-03 · Бронирование и выдача'
+}
+
+Table subscription {
+  id int [pk]
+  name varchar
+  url varchar
+  Note: 'ENT-04 · Электронная подписка'
+}
+
+Table report {
+  id int [pk]
+  period_start date
+  period_end date
+  generated_at timestamp
+  Note: 'ENT-05 · Отчет о книговыдаче'
+}
+
+Ref: loan.book_id > book.id
+Ref: loan.reader_id > reader.id
