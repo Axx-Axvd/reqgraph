@@ -1,4 +1,4 @@
-"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler``."""
+"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards``."""
 
 import asyncio
 from datetime import date
@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from reqgraph_evals import analyst, modeler, probe
+from reqgraph_evals import analyst, modeler, probe, standards
 
 app = typer.Typer(name="reqgraph-evals", no_args_is_help=True, add_completion=False)
 REPORTS = Path(__file__).resolve().parent.parent / "reports"
@@ -94,6 +94,28 @@ def modeler_cmd(
     stem = f"modeler-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
     modeler.write_csv(rows, out / f"{stem}.csv")
     summary = modeler.summary_markdown(rows)
+    (out / f"{stem}.md").write_text(summary, encoding="utf-8")
+    typer.echo(summary)
+    typer.echo(f"-> {out / stem}.csv, {stem}.md")
+
+
+@app.command("standards")
+def standards_cmd(
+    scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
+    repeat: Annotated[int, typer.Option(min=1, help="сколько раз прогнать каждый")] = 1,
+    profile: Annotated[str, typer.Option(help="профиль llm/roles.yaml")] = "free",
+    out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
+    tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+) -> None:
+    """Прогнать Analyst → Modeler → Standards на dev-брифах (T-204): заполненность разделов SRS."""
+    rows: list[standards.Row] = []
+    for scenario in [s.strip() for s in scenarios.split(",") if s.strip()]:
+        for index in range(1, repeat + 1):
+            typer.echo(f"standards: {scenario} #{index}")
+            rows.append(asyncio.run(standards.run_scenario(scenario, index, profile=profile)))
+    stem = f"standards-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
+    standards.write_csv(rows, out / f"{stem}.csv")
+    summary = standards.summary_markdown(rows)
     (out / f"{stem}.md").write_text(summary, encoding="utf-8")
     typer.echo(summary)
     typer.echo(f"-> {out / stem}.csv, {stem}.md")
