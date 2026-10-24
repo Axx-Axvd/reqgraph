@@ -24,6 +24,7 @@ from reqgraph.dsl.readers import model_readers
 from reqgraph.graph.store import FileStore, StoreError
 from reqgraph.graph.store.config import ModelsConfig, ProjectConfig, ProjectInfo
 from reqgraph.graph.store.formats import BRIEF_FILE, CONFIG_FILE, render_config
+from reqgraph.graph.store.project import Project
 from reqgraph.llm.config import load_roles
 
 _ID = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
@@ -56,6 +57,7 @@ class RunSummary:
     temperature: float = 0.0
     seeds: dict[str, int | None] = field(default_factory=dict)  # role -> seed sent (None: ignored)
     iterations: int = 0
+    turns: int = 0  # answered questions (interview)
     stop: str | None = None  # budget | needs_human | None
     errors: int = 0
     warnings: int = 0
@@ -76,24 +78,48 @@ class RunSummary:
 
 
 @dataclass
-class _Tee:
-    """Events to the JSONL file (when written) and a short line per step to the console."""
+class ConsoleEvents:
+    """Events to the JSONL file (when written) and a short line per step to the console.
+    During an interview the steps of every answer are not printed, only the coverage."""
 
     file: JsonlEvents | None
     on_line: Callable[[str], None] | None
     calls: list[dict[str, Any]] = field(default_factory=list)
+    interviewing: bool = False
 
     def emit(self, type: str, **payload: Any) -> None:
         if self.file is not None:
             self.file.emit(type, **payload)
         if type == "llm_call":
             self.calls.append(payload)
+        if type == "interview_end":
+            self.interviewing = False
+        if self.interviewing and type == "node_start":
+            return
         line = _line(type, payload)
         if line and self.on_line is not None:
             self.on_line(line)
 
 
+_END = {
+    "coverage": "покрытие набрано",
+    "limit": "кончились вопросы",
+    "client": "заказчик закончил",
+    "interviewer": "интервьюер закончил",
+    "stop": "агенты остановлены",
+}
+
+
 def _line(type: str, payload: dict[str, Any]) -> str | None:
+    if type == "coverage" and not payload["done"]:
+        got, need = payload["got"], payload["need"]
+        told = sum(min(got[a], n) for a, n in need.items())
+        short = sorted((a for a, n in need.items() if got[a] < n), key=lambda a: got[a] / need[a])
+        return f"  покрытие {told} из {sum(need.values())}" + (
+            f"; меньше всего известно: {', '.join(short[:3])}" if short else ""
+        )
+    if type == "interview_end":
+        return f"→ Интервью окончено: {_END.get(payload['reason'], payload['reason'])}"
     if type == "node_start" and payload["node"] in _STEPS:
         return f"→ {_STEPS[payload['node']]}"
     if type == "self_check" and payload["problems"]:
@@ -149,14 +175,7 @@ async def run_project(
     on_line: Callable[[str], None] | None = None,
 ) -> tuple[RunSummary, CIReport]:
     """Brief -> Analyst -> Modeler -> Standards -> checks -> repair; the report in any case."""
-    store = FileStore(root, readers=model_readers())
-    try:
-        project = store.load()
-    except StoreError as exc:
-        raise RunFailed(f"проект не прочитан: {exc}") from None
-    info = project.config.project
-    if info.reference:
-        raise RunFailed(f"{info.id}: эталонный проект — агенты не запускаются, только проверки")
+    store, project = load_project(root)
     text = brief if brief is not None else project.files.get(BRIEF_FILE)
     if not text or not text.strip():
         raise RunFailed(f"{root}: нет брифа — положите {BRIEF_FILE} или задайте --brief")
@@ -164,7 +183,7 @@ async def run_project(
     events_file = reports / "run-events.jsonl"
     if write:
         events_file.unlink(missing_ok=True)
-    tee = _Tee(JsonlEvents(events_file) if write else None, on_line)
+    tee = ConsoleEvents(JsonlEvents(events_file) if write else None, on_line)
     options: dict[str, Any] = {"store": store if write else None, "events": tee, "offline": offline}
     options |= {"models": models or {}, "reviewer": reviewer}
     if profile is not None:
@@ -185,17 +204,35 @@ async def run_project(
         raise RunFailed(str(exc)) from None
     report = out["ci"]
     assert report is not None  # ci_check always runs
-    summary = _summary(ctx, out, report, tee.calls, time.perf_counter() - started, budget.usd)
+    summary = summarize(ctx, out, report, tee.calls, time.perf_counter() - started, budget.usd)
     if write:
-        reports.mkdir(parents=True, exist_ok=True)
-        (reports / "ci-report.json").write_bytes(report.to_json().encode("utf-8"))
-        (reports / "ci-report.md").write_bytes(report.to_markdown().encode("utf-8"))
-        data = json.dumps(summary.to_dict(), ensure_ascii=False, indent=2) + "\n"
-        (reports / "run-summary.json").write_bytes(data.encode("utf-8"))
+        write_reports(root, summary, report)
     return summary, report
 
 
-def _summary(
+def load_project(root: Path) -> tuple[FileStore, Project]:
+    """The project folder with model readers; a reference project is refused."""
+    store = FileStore(root, readers=model_readers())
+    try:
+        project = store.load()
+    except StoreError as exc:
+        raise RunFailed(f"проект не прочитан: {exc}") from None
+    info = project.config.project
+    if info.reference:
+        raise RunFailed(f"{info.id}: эталонный проект — агенты не запускаются, только проверки")
+    return store, project
+
+
+def write_reports(root: Path, summary: "RunSummary", report: CIReport) -> None:
+    reports = root / "reports"
+    reports.mkdir(parents=True, exist_ok=True)
+    (reports / "ci-report.json").write_bytes(report.to_json().encode("utf-8"))
+    (reports / "ci-report.md").write_bytes(report.to_markdown().encode("utf-8"))
+    data = json.dumps(summary.to_dict(), ensure_ascii=False, indent=2) + "\n"
+    (reports / "run-summary.json").write_bytes(data.encode("utf-8"))
+
+
+def summarize(
     ctx: RunContext,
     out: RunState,
     report: CIReport,
@@ -223,6 +260,7 @@ def _summary(
         temperature=cfg.defaults.temperature,
         seeds=seeds,
         iterations=out["iteration"],
+        turns=out["turns"],
         stop=out["stop"],
         errors=report.summary.errors,
         warnings=report.summary.warnings,
