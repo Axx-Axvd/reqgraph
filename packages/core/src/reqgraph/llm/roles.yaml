@@ -32,6 +32,8 @@ profiles:
     "*": [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b, openrouter/nvidia/nemotron-3.5-super-vl:free, gemini/gemini-3.5-flash-lite]
     # The analyst reads the whole interview: start where the context is large and the daily limit high.
     analyst: [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
+    # The Modeler reads every UR and FR too (T-203): the same long-context ladder.
+    modeler: [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
     # Simulator and judge: another model family than every agent (CLAUDE.md, checked by a test).
     stakeholder: [groq/qwen/qwen3.8-27b]
     judge: [groq/qwen/qwen3.8-27b]

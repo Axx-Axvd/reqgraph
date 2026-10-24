@@ -1,0 +1,10 @@
+scenario,repeat,model,provider,temperature,seed,prompt_hash,package_version,llm_calls,input_tokens,output_tokens,cost_usd,latency_ms,attempts,applied,functional,processes,tasks,entities,sch001,sch002,sch003,snd001_processes,reachable_share,snd002,snd003,snd004,trc002,trc003,trc004,error
+dev-01,1,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,4,13121,5042,0.0,32518,3,True,5,3,9,3,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-01,2,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,2,5126,2623,0.0,15561,1,True,5,3,8,3,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-01,3,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,2,5156,2669,0.0,12678,1,True,4,3,10,4,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-02,1,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,2,5546,4166,0.0,16634,1,True,7,4,14,4,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-02,2,nvidia/nemotron-3.5-super-vl:free,openrouter,0.2,42,87f1cac3ef8e,0.1.0,4,14042,13568,0.0,87909,2,True,6,5,14,5,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-02,3,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,5,18218,10529,0.0,65844,3,True,8,4,10,4,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-03,1,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,4,14485,9479,0.0,61010,3,True,6,1,1,7,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-03,2,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,4,17733,11075,0.0,44258,3,True,9,7,21,6,0,0,0,0,1.0,0,0,0,0,0,0,
+dev-03,3,gemini-3.5-flash-lite,gemini,0.2,,87f1cac3ef8e,0.1.0,2,6184,6346,0.0,49962,1,True,8,8,20,7,0,0,0,0,1.0,0,0,0,0,0,0,

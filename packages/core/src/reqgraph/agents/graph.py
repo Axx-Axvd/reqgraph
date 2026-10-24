@@ -7,6 +7,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
 from reqgraph.agents.analyst import analyst
+from reqgraph.agents.modeler import modeler
 from reqgraph.agents.nodes import (
     await_answer,
     ci_check,
@@ -16,7 +17,6 @@ from reqgraph.agents.nodes import (
     intake,
     interviewer,
     mode_gate,
-    modeler,
     persist,
     reviewer,
     route_tasks,
