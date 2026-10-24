@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Scenarios of the experiment (T-303): `evals/scenarios/` — 3 dev and 12 test scenarios (brief, persona, hidden
+  requirements: 25 / 40 / 60 per size, all 9 coverage areas, `in_brief` marks what the brief already says);
+  `reqgraph_evals/scenario.py` (schemas, loader that refuses test scenarios without `final=True`, protocol checks,
+  the SHA-256 seal of test files); `reqgraph-evals scenarios [--seal]`. Drafts by Claude, to be checked by the author.
+
 - `reqgraph init` and `reqgraph run` (T-206): `agents/run.py` — `init_project()` writes `reqgraph.yaml` and
   `brief.md`; `run_project()` runs brief → Analyst → Modeler → Standards → checks → repair on a project folder,
   prints a line per step, writes the project, `reports/ci-report.json|md`, `run-events.jsonl` and
