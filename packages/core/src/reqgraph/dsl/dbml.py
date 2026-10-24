@@ -138,3 +138,49 @@ def attribute_refs(model: DataModel) -> set[str]:
 def read_entities(text: str, path: str) -> list[EntityNode]:
     """Reader for FileStore: the entity nodes of a .dbml file."""
     return entities(parse_dbml(text, path), path)
+
+
+def _quote(text: str) -> str:
+    return "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
+def render_dbml(model: DataModel, *, header: str = "") -> str:
+    """DBML text of a data model: the Modeler's ERD is written by code, not by the LLM (T-203).
+
+    Relations go to `Ref:` lines; parse_dbml(render_dbml(m)) == m.
+    """
+    lines = [f"// {line}" for line in header.splitlines()]
+    if lines:
+        lines.append("")
+    for name, items in model.enums.items():
+        lines.append(f"Enum {name} {{")
+        lines += [f"  {item}" for item in items]
+        lines += ["}", ""]
+    for table in model.tables:
+        lines.append(f"Table {table.name} {{")
+        for column in table.columns:
+            settings = [
+                flag
+                for flag, on in (
+                    ("pk", column.pk),
+                    ("not null", column.not_null),
+                    ("unique", column.unique),
+                )
+                if on
+            ]
+            if column.note:
+                settings.append(f"note: {_quote(column.note)}")
+            tail = f" [{', '.join(settings)}]" if settings else ""
+            lines.append(f"  {column.name} {column.type}{tail}")
+        if table.note:
+            lines.append(f"  Note: {_quote(table.note)}")
+        lines += ["}", ""]
+    for rel in model.relations:
+        src = f"{rel.src_table}.{_columns(rel.src_columns)}"
+        dst = f"{rel.dst_table}.{_columns(rel.dst_columns)}"
+        lines.append(f"Ref: {src} {rel.kind} {dst}")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _columns(names: tuple[str, ...]) -> str:
+    return names[0] if len(names) == 1 else f"({', '.join(names)})"

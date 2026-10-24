@@ -13,14 +13,13 @@ from reqgraph.agents.graph import build_graph
 from reqgraph.agents.runtime import RunContext
 from reqgraph.checks.runner import run_checks
 
-from .conftest import events_of, stub_models
-from .test_analyst import BRIEF, brief_context, empty_project  # noqa: F401 - fixtures
+from .conftest import BRIEF, events_of, stub_models
 
 pytestmark = [pytest.mark.anyio, pytest.mark.vcr]
 
 
 async def test_live_analyst_answer_makes_a_valid_traceable_patch(
-    brief_context: Callable[..., RunContext],  # noqa: F811
+    brief_context: Callable[..., RunContext],
 ) -> None:
     models = {k: v for k, v in stub_models().items() if k != "*"}  # the Analyst is real
     models["modeler"] = models["standards"] = stub_models()["*"]

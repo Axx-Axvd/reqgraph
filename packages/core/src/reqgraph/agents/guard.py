@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from reqgraph.agents.state import RepairTask
 from reqgraph.graph.edges import REFINES_PAIRS, RULES, Rel, kind_of, split_ref
 from reqgraph.graph.graph import ArtifactGraph
+from reqgraph.graph.ids import IdAllocator
 from reqgraph.graph.nodes import NodeKind
 from reqgraph.graph.patch import AddOp, GraphPatch, LinkOp, Op, RemoveOp, UnlinkOp, UpdateOp
 
@@ -38,6 +39,8 @@ def guard(
     kept: list[Op] = []
     dropped: list[str] = []
     new: dict[str, NodeKind] = {}  # tmp_id of a kept add -> its kind
+    issued: dict[str, NodeKind] = {}  # ids apply() will issue to the kept adds, in their order
+    allocator = IdAllocator.from_graph(graph)
 
     def check_add(op: AddOp) -> None:
         if NodeKind(op.kind) not in allowed:
@@ -66,7 +69,7 @@ def guard(
             node_kind = kind_of(parent)
         except ValueError:
             raise _Drop(f"узел {ref} не создаётся в этом патче") from None
-        if graph.get(parent) is None:
+        if graph.get(parent) is None and parent not in issued:
             raise _Drop(f"нет узла {parent}")
         return node_kind
 
@@ -88,6 +91,9 @@ def guard(
         try:  # adds first: links may name tmp_ids declared later in the patch
             check_add(add)
             new[add.tmp_id] = NodeKind(add.kind)
+            if add.kind is not NodeKind.SEC:  # the Modeler links to the ids it predicted
+                c4_kind = add.fields.get("c4_kind") if add.kind is NodeKind.C4 else None
+                issued[allocator.allocate(add.kind, c4_kind=c4_kind)] = NodeKind(add.kind)
         except _Drop as reason:
             dropped.append(f"add {add.kind}: {reason}")
     for op in patch.ops:

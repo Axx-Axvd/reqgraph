@@ -1,7 +1,16 @@
 """ERD in DBML through pydbml: entities, attributes, relations, enums (T-104, base of SCH-003)."""
 
 import pytest
-from reqgraph.dsl.dbml import attribute_refs, entities, parse_dbml
+from reqgraph.dsl.dbml import (
+    Column,
+    DataModel,
+    Relation,
+    Table,
+    attribute_refs,
+    entities,
+    parse_dbml,
+    render_dbml,
+)
 from reqgraph.dsl.process import DslError
 
 from .conftest import GARAGE61
@@ -72,3 +81,34 @@ def test_duplicate_entity_id() -> None:
     text = "Table a {\n  id int\n  Note: 'ENT-01'\n}\nTable b {\n  id int\n  Note: 'ENT-01'\n}\n"
     with pytest.raises(DslError, match="ENT-01"):
         entities(parse_dbml(text, "erd.dbml"), "erd.dbml")
+
+
+def test_render_round_trips_the_reference_model() -> None:
+    """The Modeler's ERD is written by code: parse(render(model)) gives the same model (T-203)."""
+    model = parse_dbml(ERD.read_text(encoding="utf-8"), "erd.dbml")
+    text = render_dbml(model)
+    assert parse_dbml(text, "erd.dbml") == model
+    assert entities(parse_dbml(text, "erd.dbml"), "erd.dbml") == entities(model, "erd.dbml")
+
+
+def test_render_quotes_notes_and_names() -> None:
+    model = DataModel(
+        tables=(
+            Table(
+                name="client",
+                note="ENT-01 · Клиент",
+                columns=(
+                    Column("id", "int", pk=True),
+                    Column(
+                        "phone", "varchar", not_null=True, unique=True, note="код из SMS, 'кавычки'"
+                    ),
+                ),
+            ),
+            Table(name="visit", note="ENT-02 · Визит", columns=(Column("client_id", "int"),)),
+        ),
+        relations=(Relation("visit", ("client_id",), ">", "client", ("id",)),),
+        enums={"visit_status": ("planned", "done")},
+    )
+    text = render_dbml(model)
+    assert "Note: 'ENT-01 · Клиент'" in text and "\\'кавычки\\'" in text
+    assert parse_dbml(text, "erd.dbml") == model

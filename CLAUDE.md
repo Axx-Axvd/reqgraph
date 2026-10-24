@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`), S2: T-201 (граф прогона агентов на LangGraph) и T-202 (Analyst, guard, промпты Jinja2, 3 dev-брифа) сделаны, дальше T-203 (Modeler).
+- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`), S2: T-201 (граф прогона агентов на LangGraph), T-202 (Analyst, guard, промпты Jinja2, 3 dev-брифа) и T-203 (Modeler: процессы и ERD с самопроверкой) сделаны, дальше T-204 (Standards).
 
 ## Команды
 Работают сейчас:
@@ -31,7 +31,8 @@
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
 - uv run reqgraph-evals probe --models <провайдер/модель,...> --repeat 3   # мини-экзамен моделей (evals/README.md)
 - uv run reqgraph-evals analyst --repeat 3   # Analyst на 3 dev-брифах: валидность патча, доля нарушений ISO-001/003 (нужна сеть)
-- uv run pytest packages/core/tests/agents/test_analyst_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету Analyst после правки промпта
+- uv run reqgraph-evals modeler --repeat 3  # Analyst → Modeler на 3 dev-брифах: SCH-002 за ≤ 3 ответа, доля без SND-001 (нужна сеть)
+- uv run pytest packages/core/tests/agents/test_analyst_live.py packages/core/tests/agents/test_modeler_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты агентов после правки промпта
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
 
 Появятся с задачами (до этого не запускать):

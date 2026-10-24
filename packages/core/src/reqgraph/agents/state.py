@@ -85,6 +85,7 @@ class RunState(TypedDict):
     mode: Mode
     brief: str | None  # brief mode: the text intake turns into client turns
     graph: ArtifactGraph
+    files: dict[str, str]  # model texts written in this run (the ERD of the Modeler)
     coverage: Coverage
     question: str | None  # the interviewer's question waiting for an answer
     turns: int  # answered questions
@@ -108,6 +109,7 @@ def initial_state(
         mode=mode,
         brief=brief,
         graph=graph,
+        files={},
         coverage=coverage,
         question=None,
         turns=0,

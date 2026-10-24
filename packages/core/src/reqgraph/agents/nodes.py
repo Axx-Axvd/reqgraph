@@ -1,11 +1,13 @@
 """Nodes of the run graph (03_agents): intake, interview, the pipeline, CI, repair, export.
 
-The Analyst is real (agents/analyst.py, T-202). Modeler and Standards are still stubs around one
-structured() call (T-203, T-204): their prompt is data only — the graph view and the tasks in
-tags, no instructions in code. Every agent patch goes through guard() and apply(actor="agent").
+The Analyst (agents/analyst.py, T-202) and the Modeler (agents/modeler.py, T-203) are real.
+Standards is still a stub around one structured() call (T-204): its prompt is data only — the
+graph view and the tasks in tags, no instructions in code. Every agent patch goes through
+guard() and apply(actor="agent").
 """
 
 import json
+from dataclasses import replace
 from typing import Any
 
 from langgraph.runtime import Runtime
@@ -20,6 +22,7 @@ from reqgraph.checks.runner import run_checks
 from reqgraph.graph.errors import GraphError
 from reqgraph.graph.nodes import NodeKind
 from reqgraph.graph.patch import AddOp, GraphPatch
+from reqgraph.graph.store.project import Project
 from reqgraph.llm.router import BudgetExceeded
 
 MAX_TASKS = 10  # repair tasks per round (03_agents, Reviewer)
@@ -35,6 +38,12 @@ class Question(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     text: str = Field(min_length=1)
+
+
+def run_project(ctx: RunContext, state: RunState) -> Project:
+    """The project as it is in this run: its graph and the model files agents have written."""
+    files = ctx.project.files | state["files"]
+    return replace(ctx.project, graph=state["graph"], files=files, warnings=[])
 
 
 def brief_turns(brief: str) -> list[str]:
@@ -121,7 +130,7 @@ def coverage_gate(state: RunState, runtime: Runtime[RunContext]) -> str:
 
 
 async def _stub(owner: Owner, state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
-    """Modeler and Standards until T-203/T-204: one GraphPatch call, guarded and applied."""
+    """Standards until T-204: one GraphPatch call, guarded and applied."""
     ctx = start(runtime, owner)
     if state["stop"] is not None:
         return {}
@@ -155,10 +164,6 @@ async def _stub(owner: Owner, state: RunState, runtime: Runtime[RunContext]) -> 
     return update | {"graph": result.graph}
 
 
-async def modeler(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
-    return await _stub("modeler", state, runtime)
-
-
 async def standards(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     return await _stub("standards", state, runtime)
 
@@ -166,7 +171,7 @@ async def standards(state: RunState, runtime: Runtime[RunContext]) -> dict[str, 
 async def ci_check(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     """The same checks as `reqgraph check`: deterministic, no LLM (ADR-006)."""
     ctx = start(runtime, "ci_check")
-    report = await run_checks(ctx.project.with_graph(state["graph"]), offline=ctx.offline)
+    report = await run_checks(run_project(ctx, state), offline=ctx.offline)
     ctx.events.emit("ci_report", iteration=state["iteration"], **report.summary.model_dump())
     return {"ci": report}
 
@@ -228,7 +233,7 @@ async def export(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any
 async def persist(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     ctx = start(runtime, "persist")
     if ctx.store is not None:
-        ctx.store.save(ctx.project.with_graph(state["graph"]))
+        ctx.store.save(run_project(ctx, state))
     report = state["ci"]
     ctx.events.emit(
         "run_end",

@@ -141,6 +141,10 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict:
 | **Данные** | DBML: сущности и атрибуты из ФТ; Enum для статусов |
 | **Структура** | PlantUML use case и sequence для ключевых сценариев; Structurizr DSL: system context + containers |
 | **Ремонт** | получает текст ошибки компилятора / soundness с id узла и исправляет только этот фрагмент |
+| **Выход (T-203)** | `ModelerDraft`: processes — почти DSL (стрелки объектами `{src, dst, label}`, без id процесса), entities — таблицы с колонками (name по-русски, table латиницей, ref на «таблица.id», realizes), remove — только по задаче. `to_models` собирает патч и текст ERD: id PRC и ENT предсказываются тем же счётчиком, что выдаёт `apply()`, DBML с `Note: 'ENT-xx · Название'` пишет код (`render_dbml`), связи realized_by — по realizes |
+| **Самопроверка** | до 3 ответов: после каждого — SCH-001…003, SND-001, SND-003, SND-004 и TRC-002 на кандидате проекта; при проблемах — повтор с их текстом и прошлым ответом (`prompts/modeler/retry.md`); применяется лучшая попытка (меньше ошибок). SND-002 (pm4py) — в общем шаге проверок |
+
+<sub>В T-203 Modeler строит процессы и модель данных; сценарии использования (PlantUML) и C4 — отдельной задачей позже. Тексты моделей, написанные за прогон, лежат в `RunState.files`; проверки и сохранение видят `project.files | state.files`.</sub>
 
 ### Standards
 
