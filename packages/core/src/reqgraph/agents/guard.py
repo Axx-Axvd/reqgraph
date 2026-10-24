@@ -91,7 +91,10 @@ def guard(
         try:  # adds first: links may name tmp_ids declared later in the patch
             check_add(add)
             new[add.tmp_id] = NodeKind(add.kind)
-            if add.kind is not NodeKind.SEC:  # the Modeler links to the ids it predicted
+            if add.kind is NodeKind.SEC:  # a section's id comes from the document template
+                if isinstance(add.fields.get("id"), str):
+                    issued[add.fields["id"]] = NodeKind.SEC
+            else:  # the Modeler links to the ids it predicted
                 c4_kind = add.fields.get("c4_kind") if add.kind is NodeKind.C4 else None
                 issued[allocator.allocate(add.kind, c4_kind=c4_kind)] = NodeKind(add.kind)
         except _Drop as reason:

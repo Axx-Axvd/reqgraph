@@ -90,6 +90,7 @@ class RunState(TypedDict):
     question: str | None  # the interviewer's question waiting for an answer
     turns: int  # answered questions
     ci: CIReport | None
+    history: list[list[str]]  # error fingerprints of every CI report of the run (repeat detector)
     tasks: list[RepairTask]
     iteration: int  # repair rounds done, 0..max_iter
     budget: BudgetState
@@ -114,6 +115,7 @@ def initial_state(
         question=None,
         turns=0,
         ci=None,
+        history=[],
         tasks=[],
         iteration=0,
         budget=budget or BudgetState.default(),

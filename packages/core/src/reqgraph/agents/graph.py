@@ -18,9 +18,9 @@ from reqgraph.agents.nodes import (
     interviewer,
     mode_gate,
     persist,
-    reviewer,
     route_tasks,
 )
+from reqgraph.agents.reviewer import reviewer
 from reqgraph.agents.runtime import RunContext
 from reqgraph.agents.standards import standards
 from reqgraph.agents.state import RunState
@@ -60,7 +60,7 @@ def build_graph(
     g.add_edge("modeler", "standards")
     g.add_edge("standards", "ci_check")
     g.add_conditional_edges("ci_check", ci_gate, {"repair": "reviewer", "done": "export"})
-    g.add_conditional_edges("reviewer", route_tasks, ["analyst", "modeler", "standards"])
+    g.add_conditional_edges("reviewer", route_tasks, ["analyst", "modeler", "standards", "export"])
     g.add_edge("export", "persist")
     g.add_edge("persist", END)
     return g.compile(checkpointer=checkpointer)
