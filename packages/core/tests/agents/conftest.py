@@ -15,6 +15,11 @@ from reqgraph.graph.store import FileStore
 
 GARAGE61 = Path(__file__).resolve().parents[4] / "examples" / "garage61"
 QUESTION = "Как клиенты записываются на обслуживание сейчас?"
+SRS = {
+    "purpose": "Система онлайн-записи для клиентов и сотрудников.",
+    "scope": "Запись, напоминания и отмена; оплата — вне системы.",
+    "glossary": [{"term": "Запись", "definition": "забронированное время у мастера"}],
+}
 
 
 def stub_models(**patches: dict[str, Any]) -> dict[str, Model]:
@@ -22,6 +27,7 @@ def stub_models(**patches: dict[str, Any]) -> dict[str, Model]:
     models: dict[str, Model] = {
         "*": TestModel(custom_output_args={"ops": []}),
         "interviewer": TestModel(custom_output_args={"text": QUESTION}),
+        "standards": TestModel(custom_output_args=SRS),
     }
     for role, patch in patches.items():
         models[role] = TestModel(custom_output_args=patch)

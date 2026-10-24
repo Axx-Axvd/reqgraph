@@ -20,9 +20,9 @@ from reqgraph.agents.nodes import (
     persist,
     reviewer,
     route_tasks,
-    standards,
 )
 from reqgraph.agents.runtime import RunContext
+from reqgraph.agents.standards import standards
 from reqgraph.agents.state import RunState
 
 NODES = {
