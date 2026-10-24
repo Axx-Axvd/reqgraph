@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Modeler agent (T-203): `agents/modeler.py` — the model fills `ModelerDraft` (processes almost in the DSL, entities
+  as tables), `to_models()` builds the patch and the ERD text (process and entity ids predicted with the allocator
+  `apply()` uses, DBML written by code with `Note: 'ENT-xx · Название'`, realized_by from `realizes`); the Modeler
+  checks its own models (SCH-001…003, SND-001, SND-003, SND-004, TRC-002) and answers again with the problems, at
+  most 3 answers. `dsl.dbml.render_dbml()`; `RunState.files` keeps model texts written during a run; `guard()`
+  accepts links to the ids the patch's adds will get. `reqgraph-evals modeler`. `llm/roles.yaml` (free): `modeler`
+  uses the long-context ladder of `analyst`.
 - Analyst agent (T-202): `agents/analyst.py` — the model fills a flat `AnalystDraft` (actors, requirements,
   removals), `to_patch()` builds the GraphPatch (ids and links by code, new nodes validated first, existing ones
   updated only where changed); `agents/guard.py` — `guard()` drops other agents' node kinds, approved nodes,
