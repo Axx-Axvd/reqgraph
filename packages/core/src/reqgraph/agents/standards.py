@@ -75,14 +75,17 @@ def _content(
 
 
 def build_sections(
-    graph: ArtifactGraph, draft: StandardsDraft, structure: DocumentStructure | None = None
+    graph: ArtifactGraph, draft: StandardsDraft | None, structure: DocumentStructure | None = None
 ) -> GraphPatch:
-    """Add or update every section of the structure; link the nodes it lists (rendered_in)."""
+    """Add or update every section of the structure; link the nodes it lists (rendered_in).
+    Without a draft the LLM sections keep their text: a rebuild after other agents' repairs."""
     structure = structure or load_structure(TEMPLATE)
     ops: list[Op] = []
     edges = {(e.src, e.dst) for e in graph.edges if e.rel is Rel.RENDERED_IN}
     for index, section in enumerate(structure.sections):
-        text, refs = _content(section, graph, draft)
+        if draft is None and section.llm_field is not None and graph.get(section.id) is not None:
+            continue
+        text, refs = _content(section, graph, draft or StandardsDraft())
         fields: dict[str, Any] = {"template": structure.document, "text": text, "refs": refs}
         existing = graph.get(section.id)
         if existing is None:
@@ -142,10 +145,20 @@ async def standards(state: RunState, runtime: Runtime[RunContext]) -> dict[str, 
         return {}
     mine = [t for t in state["tasks"] if t.owner == "standards"]
     rest = [t for t in state["tasks"] if t.owner != "standards"]
-    if state["iteration"] > 0 and not mine:
-        ctx.events.emit("skip", agent="standards", reason="нет задач ремонта")
-        return {}
     graph = state["graph"]
+    if state["iteration"] > 0 and not mine:
+        # other agents repaired the graph: rebuild the listed sections by code, no LLM call
+        rebuilt = guarded(build_sections(graph, None), graph, "standards", [])
+        if not rebuilt.patch.ops:
+            ctx.events.emit("skip", agent="standards", reason="нет задач ремонта")
+            return {}
+        try:
+            result = graph.apply(rebuilt.patch, actor="agent")
+        except GraphError as exc:
+            ctx.events.emit("patch_rejected", agent="standards", error=str(exc))
+            return {}
+        ctx.events.emit("rebuild", agent="standards", diff=diff_summary(result.diff))
+        return {"graph": result.graph}
     prompt = render(state, mine)
     template = load_prompt("standards/srs")
     budget = state["budget"]

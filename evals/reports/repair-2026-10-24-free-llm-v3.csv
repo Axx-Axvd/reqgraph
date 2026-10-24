@@ -1,0 +1,10 @@
+scenario,repeat,reviewer,models,temperature,package_version,llm_calls,input_tokens,output_tokens,cost_usd,latency_ms,iterations,stop,errors_first,errors_final,warnings_final,converged,error
+dev-01,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,5,10634,3931,0.0,21746,1,,1,0,2,True,
+dev-01,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,7,15069,4853,0.0,31761,2,,1,0,5,True,
+dev-01,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,7,18443,8266,0.0,57296,1,,2,0,3,True,
+dev-02,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,10,30974,15378,0.0,99495,2,,12,0,3,True,
+dev-02,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,8,24441,13151,0.0,81984,1,,11,0,6,True,
+dev-02,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,5,14168,9120,0.0,42934,0,,0,0,6,True,
+dev-03,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,9,31508,10679,0.0,66383,1,,2,0,8,True,
+dev-03,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,21,92548,15899,0.0,118764,4,needs_human,2,1,4,False,
+dev-03,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,5,14586,8427,0.0,21754,1,,1,0,9,True,

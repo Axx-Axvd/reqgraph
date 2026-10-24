@@ -12,16 +12,15 @@ from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, Field
 
 from reqgraph.agents.common import start, tag
+from reqgraph.agents.reviewer import fingerprints
 from reqgraph.agents.runtime import RunContext
-from reqgraph.agents.state import RepairTask, RunState
+from reqgraph.agents.state import RunState
 from reqgraph.checks.base import Owner
 from reqgraph.checks.runner import run_checks
 from reqgraph.graph.nodes import NodeKind
 from reqgraph.graph.patch import AddOp, GraphPatch
 from reqgraph.graph.store.project import Project
 from reqgraph.llm.router import BudgetExceeded
-
-MAX_TASKS = 10  # repair tasks per round (03_agents, Reviewer)
 
 
 class ReferenceProject(RuntimeError):
@@ -130,54 +129,26 @@ async def ci_check(state: RunState, runtime: Runtime[RunContext]) -> dict[str, A
     ctx = start(runtime, "ci_check")
     report = await run_checks(run_project(ctx, state), offline=ctx.offline)
     ctx.events.emit("ci_report", iteration=state["iteration"], **report.summary.model_dump())
-    return {"ci": report}
+    return {"ci": report, "history": [*state["history"], fingerprints(report)]}
 
 
-def template_tasks(state: RunState) -> list[RepairTask]:
-    """Tasks straight from the errors of the report: owner, nodes, message and hint.
-
-    The stand-in for the LLM Reviewer (T-205) and the «without Reviewer» ablation (09_eval).
-    """
+def ci_gate(state: RunState) -> str:
+    """Errors go to the Reviewer; it repairs or stops the run with needs_human (no progress, no
+    rounds left). A report is exported in any case (05_ci)."""
     report = state["ci"]
-    errors = [] if report is None else [f for f in report.findings if f.severity == "error"]
-    return [
-        RepairTask(
-            owner=f.owner,
-            node_ids=f.node_ids,
-            instruction=f.message + (f" — {f.hint}" if f.hint else ""),
-            check_ids=[f.check_id],
-        )
-        for f in errors[:MAX_TASKS]
-    ]
-
-
-def ci_gate(state: RunState, runtime: Runtime[RunContext]) -> str:
-    """Repair while there are errors and rounds left; a report is exported in any case (05_ci)."""
-    report = state["ci"]
-    if (
-        state["mode"] == "check"
-        or state["stop"] is not None
-        or report is None
-        or report.ok
-        or state["iteration"] >= runtime.context.max_iter
-    ):
+    if state["mode"] == "check" or state["stop"] is not None or report is None or report.ok:
         return "done"
     return "repair"
-
-
-async def reviewer(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
-    ctx = start(runtime, "reviewer")
-    tasks = template_tasks(state)
-    iteration = state["iteration"] + 1
-    ctx.events.emit("repair", iteration=iteration, tasks=[t.model_dump() for t in tasks])
-    return {"tasks": tasks, "iteration": iteration}
 
 
 PIPELINE: tuple[Owner, ...] = ("analyst", "modeler", "standards")
 
 
-def route_tasks(state: RunState) -> Owner:
-    """Repair goes down the pipeline from the first owner with tasks; the others skip theirs."""
+def route_tasks(state: RunState) -> str:
+    """Repair goes down the pipeline from the first owner with tasks; the others skip theirs.
+    A stopped run (needs_human, budget) goes straight to export with the last report."""
+    if state["stop"] is not None:
+        return "export"
     owners = {t.owner for t in state["tasks"]}
     return next((o for o in PIPELINE if o in owners), "analyst")
 

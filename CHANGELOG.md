@@ -8,6 +8,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Reviewer and the repair loop (T-205): `agents/reviewer.py` — errors grouped by owner and node (at most 10 tasks),
+  TPL-001 on a section listed from the graph goes to the owner of those nodes with an explanation of what is missing,
+  the LLM words the instruction of each group (`ReviewerDraft`, a skipped group keeps the template text),
+  `RunContext.reviewer="template"` for the «without Reviewer» ablation; repeat detector — the same error fingerprints
+  in three reports in a row stop the run with `needs_human`; `RunState.history`; a stopped run goes straight to
+  export. `reqgraph-evals repair [--reviewer template]`.
+
+### Fixed
+
+- Analyst: an edit of an existing requirement no longer wipes fields the model did not send (acceptance criteria).
+- guard(): links to a document section added in the same patch were dropped.
 - Standards agent and TPL-001 (T-204): own SRS structure `standards/iso29148_srs.yaml` (section names only, ADR-012;
   `fill` says where the content comes from, `required` feeds TPL-001); `agents/standards.py` builds sections from the
   graph by code (actors, BR, UR, FR, NFR, CON, entities, processes, acceptance criteria, assumptions) with

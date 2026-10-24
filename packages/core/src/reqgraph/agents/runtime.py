@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from pydantic_ai.models import Model
@@ -68,6 +68,7 @@ class RunContext:
     offline: bool = False  # checks without Kroki
     max_iter: int = 5  # repair rounds (05_ci)
     max_turns: int = 40  # interview questions (03_agents)
+    reviewer: Literal["llm", "template"] = "llm"  # template: the «without Reviewer» ablation
 
     @classmethod
     def for_project(cls, project: Project, **options: Any) -> "RunContext":

@@ -133,3 +133,15 @@ def test_links_may_name_the_ids_the_adds_will_get(graph: ArtifactGraph) -> None:
     wrong = {"op": "link", "from": "FR-001", "rel": "realized_by", "to": "PRC-04.T01"}
     result = guard(patch(prc, link, wrong), graph, allowed=ALLOWED["modeler"])
     assert result.dropped == ["link FR-001 realized_by PRC-04.T01: нет узла PRC-04"]
+
+
+def test_links_may_name_a_section_added_in_the_same_patch(graph: ArtifactGraph) -> None:
+    section = {
+        "op": "add",
+        "kind": "SEC",
+        "tmp_id": "s",
+        "fields": {"id": "SEC-SRS-3.2", "template": "srs", "text": "x"},
+    }
+    link = {"op": "link", "from": "FR-001", "rel": "rendered_in", "to": "SEC-SRS-3.2"}
+    result = guard(patch(section, link), graph, allowed=ALLOWED["standards"])
+    assert result.dropped == []

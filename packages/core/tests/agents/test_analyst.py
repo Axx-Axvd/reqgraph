@@ -21,13 +21,15 @@ pytestmark = pytest.mark.anyio
 
 
 def scripted(*answers: dict[str, Any]) -> FunctionModel:
-    """Answers in turn: the first call gets the first draft, a retry gets the next one."""
+    """Answers in turn: the first call gets the first draft, a retry the next; then the last one."""
     calls: list[int] = []
 
     def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
         calls.append(1)
         return ModelResponse(
-            parts=[TextPart(json.dumps(answers[len(calls) - 1], ensure_ascii=False))]
+            parts=[
+                TextPart(json.dumps(answers[min(len(calls), len(answers)) - 1], ensure_ascii=False))
+            ]
         )
 
     return FunctionModel(fn, model_name="scripted")
@@ -117,7 +119,7 @@ async def test_still_dropped_after_the_retry_is_logged_and_the_rest_applied(
 ) -> None:
     broken = json.loads(json.dumps(DRAFT))
     del broken["requirements"][3]["metric"]
-    ctx = brief_context(models=stub_models() | {"analyst": scripted(broken, broken)})
+    ctx = brief_context(models=stub_models() | {"analyst": scripted(broken, broken)}, max_iter=0)
     out = await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
     (dropped,) = [e for e in events_of(ctx, "dropped") if e["agent"] == "analyst"]
     assert dropped["reasons"][0].startswith("nfr_sms: ")
@@ -159,8 +161,9 @@ async def test_repair_round_shows_only_the_analysts_tasks(
     state = ctx.initial_state("brief")
     state["graph"] = state["graph"].apply(patch, actor="user").graph
     await build_graph().ainvoke(state, context=ctx)
-    assert len(seen) == 1 + 5 and "ISO-001" not in seen[0] and "ISO-001" in seen[1]
-    assert visited(ctx).count("analyst") == 6
+    # the stub never fixes FR-001: two rounds without progress, then needs_human (T-205)
+    assert len(seen) == 1 + 2 and "ISO-001" not in seen[0] and "ISO-001" in seen[1]
+    assert visited(ctx).count("analyst") == 3
 
 
 async def test_reference_checks_still_pass_on_the_brief_result(
@@ -171,3 +174,13 @@ async def test_reference_checks_still_pass_on_the_brief_result(
     report = await run_checks(ctx.project.with_graph(out["graph"]), offline=True)
     iso = [f for f in report.findings if f.check_id in ("ISO-001", "ISO-003", "TRC-006")]
     assert iso == []
+
+
+def test_an_edit_keeps_the_fields_the_model_did_not_send() -> None:
+    graph = turns_graph()
+    first = to_patch(AnalystDraft.model_validate(DRAFT), graph)
+    result = graph.apply(first.patch, actor="agent")
+    fr_id = result.id_map[first.refs["fr_remind"]]
+    edit = {"requirements": [{"ref": fr_id, "kind": "FR", "title": "SMS", "statement": "x"}]}
+    (op,) = to_patch(AnalystDraft.model_validate(edit), result.graph).patch.ops
+    assert op.fields == {"title": "SMS", "statement": "x"}  # type: ignore[union-attr]

@@ -106,8 +106,12 @@ class Conversion:
     dropped: list[str] = field(default_factory=list)
 
 
-def _requirement_fields(item: DraftRequirement) -> dict[str, Any]:
-    data = item.model_dump(exclude_none=True, exclude={"ref", "kind", "refines", "sources"})
+def _requirement_fields(item: DraftRequirement, *, edit: bool = False) -> dict[str, Any]:
+    """Fields of a node. An edit of an existing node takes only the fields the model sent: an
+    omitted acceptance list must not wipe the criteria (T-205)."""
+    data = item.model_dump(
+        exclude_none=True, exclude_unset=edit, exclude={"ref", "kind", "refines", "sources"}
+    )
     if "constraint_type" in data:
         data["type"] = data.pop("constraint_type")
     return {k: v for k, v in data.items() if k in _FIELDS[item.kind]}
@@ -139,7 +143,7 @@ def to_patch(draft: AnalystDraft, graph: ArtifactGraph) -> Conversion:
 
     kept: list[tuple[DraftRequirement, str]] = []
     for item in draft.requirements:
-        fields = _requirement_fields(item)
+        fields = _requirement_fields(item, edit=graph.get(item.ref) is not None)
         if fields.get("actor") is not None:
             actor_ref = refs.get(fields["actor"], fields["actor"])
             known = {tmp for _, tmp in actors} | {n.id for n in graph.nodes_of("ACT")}

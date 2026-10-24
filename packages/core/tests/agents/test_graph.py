@@ -1,17 +1,21 @@
 """The run graph of 03_agents on stub models: brief, interview with pauses, repair (T-201)."""
 
+import json
 from collections.abc import Callable
 from typing import Any
 
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
+from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart
+from pydantic_ai.models.function import AgentInfo, FunctionModel
 from reqgraph.agents.graph import NODES, build_graph, route_tasks
 from reqgraph.agents.runtime import RunContext, checkpoint_serde
 from reqgraph.agents.state import BudgetState, RepairTask, RunState, initial_state
 from reqgraph.graph import ArtifactGraph, GraphPatch
+from reqgraph.graph.store import FileStore
 
-from .conftest import QUESTION, events_of, stub_models, visited
+from .conftest import GARAGE61, QUESTION, events_of, stub_models, visited
 
 pytestmark = pytest.mark.anyio
 
@@ -92,14 +96,19 @@ async def test_interview_pauses_for_answers_and_survives_a_restart(
     assert visited(ctx)[-6:] == [*PIPELINE, "export", "persist"]
 
 
-async def test_repair_loop_stops_after_max_iterations(context: Callable[..., RunContext]) -> None:
+async def test_repair_without_progress_stops_with_needs_human(
+    context: Callable[..., RunContext],
+) -> None:
+    """The stub agents never fix FR-001: the same errors after two rounds -> needs_human (T-205)."""
     ctx = context()
     out = await run(ctx, initial_state(with_vague_fr001(ctx.project.graph), "brief"))
-    assert out["iteration"] == ctx.max_iter == 5
-    assert visited(ctx).count("reviewer") == 5 and visited(ctx).count("ci_check") == 6
-    assert visited(ctx)[-2:] == ["export", "persist"]
+    assert out["stop"] == "needs_human" and out["iteration"] == 2
+    assert visited(ctx).count("reviewer") == 3 and visited(ctx).count("ci_check") == 3
+    assert visited(ctx)[-2:] == ["export", "persist"]  # the report is exported anyway
+    (human,) = events_of(ctx, "needs_human")
+    assert human["reason"] == "stuck" and human["errors"] == out["history"][-1]
+    assert len(out["history"]) == 3
     # repair tasks go to their owner only: modeler and standards have none and skip the LLM
-    assert len(events_of(ctx, "llm_call")) == 3 + 5
     assert {e["agent"] for e in events_of(ctx, "skip")} == {"modeler", "standards"}
     (task,) = events_of(ctx, "repair")[0]["tasks"]
     assert (task["owner"], task["node_ids"], task["check_ids"]) == (
@@ -107,6 +116,50 @@ async def test_repair_loop_stops_after_max_iterations(context: Callable[..., Run
         ["FR-001"],
         ["ISO-001"],
     )
+
+
+async def test_repair_with_progress_each_round_runs_to_max_iterations(
+    context: Callable[..., RunContext],
+) -> None:
+    """Every round the Analyst fixes one FR and breaks the next: new errors, no needs_human."""
+    rounds: list[int] = []
+
+    def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        rounds.append(1)
+        n = len(rounds)
+        fix = [] if n == 1 else [_vague(f"FR-{n - 1:03d}", vague=False)]
+        return ModelResponse(
+            parts=[TextPart(json.dumps({"requirements": [*fix, _vague(f"FR-{n:03d}")]}))]
+        )
+
+    ctx = context(models=stub_models() | {"analyst": FunctionModel(fn)})
+    out = await run(ctx, initial_state(with_vague_fr001(ctx.project.graph), "brief"))
+    assert out["iteration"] == ctx.max_iter == 5  # never stuck: every round has new errors
+    assert out["stop"] == "needs_human"  # but errors are left after the last round
+    (human,) = events_of(ctx, "needs_human")
+    assert human["reason"] == "limit"
+
+
+async def test_repair_that_fixes_the_error_converges(context: Callable[..., RunContext]) -> None:
+    calls: list[int] = []
+
+    def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        calls.append(1)
+        fix = [] if len(calls) == 1 else [_vague("FR-001", vague=False)]
+        return ModelResponse(parts=[TextPart(json.dumps({"requirements": fix}))])
+
+    ctx = context(models=stub_models() | {"analyst": FunctionModel(fn)})
+    out = await run(ctx, initial_state(with_vague_fr001(ctx.project.graph), "brief"))
+    assert out["ci"].ok and out["stop"] is None and out["iteration"] == 1
+
+
+def _vague(fr: str, vague: bool = True) -> dict[str, Any]:
+    """An Analyst edit of an existing FR of garage61: its statement with or without «быстро»."""
+    garage = FileStore(GARAGE61).load().graph.nodes[fr]
+    statement = garage.statement  # type: ignore[union-attr]
+    if vague:
+        statement = statement.replace("истема должна", "истема должна быстро", 1)  # С or с
+    return {"ref": fr, "kind": "FR", "title": garage.title, "statement": statement}  # type: ignore[union-attr]
 
 
 async def test_exhausted_budget_stops_the_agents_but_not_the_report(

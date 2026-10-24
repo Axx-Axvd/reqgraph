@@ -1,0 +1,10 @@
+scenario,repeat,reviewer,models,temperature,package_version,llm_calls,input_tokens,output_tokens,cost_usd,latency_ms,iterations,stop,errors_first,errors_final,warnings_final,converged,error
+dev-01,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,7,14606,4868,0.0,50270,2,needs_human,1,1,1,False,
+dev-01,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,7,14662,4894,0.0,41203,2,needs_human,1,1,0,False,
+dev-01,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,7,14687,4558,0.0,46419,2,needs_human,1,1,1,False,
+dev-02,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,9,23746,8809,0.0,41010,3,needs_human,11,1,7,False,
+dev-02,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,12,32539,12711,0.0,73783,3,needs_human,5,1,3,False,
+dev-02,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,11,29514,10366,0.0,68289,4,needs_human,13,1,2,False,
+dev-03,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,3,8427,8084,0.0,31097,0,,0,0,8,True,
+dev-03,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,8,29506,18145,0.0,84937,1,,1,0,5,True,
+dev-03,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,3,8337,7245,0.0,29142,0,,0,0,4,True,

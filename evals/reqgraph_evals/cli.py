@@ -1,13 +1,13 @@
-"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards``."""
+"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards | repair``."""
 
 import asyncio
 from datetime import date
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import typer
 
-from reqgraph_evals import analyst, modeler, probe, standards
+from reqgraph_evals import analyst, modeler, probe, repair, standards
 
 app = typer.Typer(name="reqgraph-evals", no_args_is_help=True, add_completion=False)
 REPORTS = Path(__file__).resolve().parent.parent / "reports"
@@ -116,6 +116,36 @@ def standards_cmd(
     stem = f"standards-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
     standards.write_csv(rows, out / f"{stem}.csv")
     summary = standards.summary_markdown(rows)
+    (out / f"{stem}.md").write_text(summary, encoding="utf-8")
+    typer.echo(summary)
+    typer.echo(f"-> {out / stem}.csv, {stem}.md")
+
+
+@app.command("repair")
+def repair_cmd(
+    scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
+    repeat: Annotated[int, typer.Option(min=1, help="сколько раз прогнать каждый")] = 1,
+    profile: Annotated[str, typer.Option(help="профиль llm/roles.yaml")] = "free",
+    reviewer: Annotated[
+        str, typer.Option(help="llm или template (абляция «без Reviewer»)")
+    ] = "llm",
+    out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
+    tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+) -> None:
+    """Весь конвейер с циклом ремонта на dev-брифах (T-205): сходится или needs_human."""
+    if reviewer not in ("llm", "template"):
+        raise typer.BadParameter("reviewer: llm или template")
+    rows: list[repair.Row] = []
+    for scenario in [s.strip() for s in scenarios.split(",") if s.strip()]:
+        for index in range(1, repeat + 1):
+            typer.echo(f"repair: {scenario} #{index}")
+            mode: Literal["llm", "template"] = "llm" if reviewer == "llm" else "template"
+            rows.append(
+                asyncio.run(repair.run_scenario(scenario, index, profile=profile, reviewer=mode))
+            )
+    stem = f"repair-{date.today().isoformat()}-{profile}-{reviewer}{'-' + tag if tag else ''}"
+    repair.write_csv(rows, out / f"{stem}.csv")
+    summary = repair.summary_markdown(rows)
     (out / f"{stem}.md").write_text(summary, encoding="utf-8")
     typer.echo(summary)
     typer.echo(f"-> {out / stem}.csv, {stem}.md")
