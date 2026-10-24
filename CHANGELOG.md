@@ -8,6 +8,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Analyst agent (T-202): `agents/analyst.py` — the model fills a flat `AnalystDraft` (actors, requirements,
+  removals), `to_patch()` builds the GraphPatch (ids and links by code, new nodes validated first, existing ones
+  updated only where changed); `agents/guard.py` — `guard()` drops other agents' node kinds, approved nodes,
+  unknown ids and forbidden links with a reason; one retry with the reasons; prompts in
+  `agents/prompts/analyst/*.md` (Jinja2, prompt hash in `llm_call` events); brief paragraphs become client turns.
+  `reqgraph-evals analyst` runs the Analyst on the dev briefs `evals/scenarios/dev-01…03` (drafts) and writes
+  `evals/reports/analyst-*.csv|md`. New dependency of `packages/core`: `jinja2==3.1.6` (BSD-3-Clause, already in the
+  lock through evals).
 - Agent run graph on LangGraph (T-201): `agents/state.py` (`RunState`, `Coverage`, `RepairTask`, `BudgetState`),
   `agents/runtime.py` (`RunContext` as LangGraph context: project, store, stub models, events in memory or JSONL,
   limits and profile from `reqgraph.yaml`; checkpoint serializer with an allow list of our types),
