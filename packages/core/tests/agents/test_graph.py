@@ -128,27 +128,29 @@ async def test_agents_cannot_change_approved_nodes(context: Callable[..., RunCon
         {"ops": [{"op": "update", "id": "BR-001", "fields": {"status": "approved"}}]}
     )
     graph = ctx.project.graph.apply(approve, actor="user").graph
-    sneaky = {"ops": [{"op": "update", "id": "BR-001", "fields": {"title": "Другое"}}]}
+    br = graph.nodes["BR-001"]
+    sneaky = {
+        "requirements": [
+            {"ref": "BR-001", "kind": "BR", "title": "Другое", "statement": br.statement}  # type: ignore[union-attr]
+        ]
+    }
     ctx = context(models=stub_models(analyst=sneaky))
     out = await run(ctx, initial_state(graph, "brief"))
-    assert out["graph"].nodes["BR-001"] == graph.nodes["BR-001"]
-    (rejected,) = events_of(ctx, "patch_rejected")
-    assert rejected["agent"] == "analyst" and "BR-001" in rejected["error"]
+    assert out["graph"].nodes["BR-001"] == br
+    (dropped,) = events_of(ctx, "dropped")  # after one retry with the reason
+    assert dropped["reasons"] == ["update BR-001: узел утверждён человеком"]
 
 
 async def test_agent_patch_gets_ids_from_code(context: Callable[..., RunContext]) -> None:
     add = {
-        "ops": [
+        "requirements": [
             {
-                "op": "add",
+                "ref": "con_law",
                 "kind": "CON",
-                "tmp_id": "law",
-                "fields": {
-                    "title": "152-ФЗ",
-                    "type": "legal",
-                    "statement": "Данные клиентов хранятся в РФ.",
-                    "assumption": True,
-                },
+                "constraint_type": "legal",
+                "title": "152-ФЗ",
+                "statement": "Данные клиентов хранятся в РФ.",
+                "assumption": True,
             }
         ]
     }
@@ -176,20 +178,24 @@ def test_route_tasks_starts_with_the_first_owner_of_the_pipeline() -> None:
 async def test_agent_patch_with_foreign_node_kinds_is_rejected(
     context: Callable[..., RunContext],
 ) -> None:
-    """The Analyst may not draw entities: ENT belongs to the Modeler (ALLOWED)."""
+    """The Modeler may not write requirements: FR belongs to the Analyst (ALLOWED)."""
     foreign = {
         "ops": [
-            {"op": "add", "kind": "ENT", "tmp_id": "car", "fields": {"name": "Машина"}},
-            {"op": "link", "from": "FR-001", "rel": "realized_by", "to": "car"},
-            {"op": "update", "id": "ENT-02", "fields": {"name": "Работа"}},
-            {"op": "update", "id": "FR-099", "fields": {"title": "нет такого"}},
+            {"op": "add", "kind": "FR", "tmp_id": "fr", "fields": {"title": "x", "statement": "y"}},
+            {"op": "link", "from": "fr", "rel": "refines", "to": "UR-001"},
+            {"op": "update", "id": "FR-001", "fields": {"title": "Работа"}},
         ]
     }
-    ctx = context(models=stub_models(analyst=foreign))
+    ctx = context(models=stub_models(modeler=foreign))
     out = await run(ctx, ctx.initial_state("brief"))
     assert out["graph"] == ctx.project.graph
-    (rejected,) = events_of(ctx, "patch_rejected")
-    assert rejected["error"] == "чужие типы узлов: add ENT, update ENT"
+    (dropped,) = events_of(ctx, "dropped")
+    assert dropped["agent"] == "modeler"
+    assert dropped["reasons"] == [
+        "add FR: чужой тип узла",
+        "link fr refines UR-001: узел fr не создаётся в этом патче",
+        "update FR-001: чужой тип узла",
+    ]
 
 
 async def test_budget_spent_before_the_first_question_skips_the_interview(
