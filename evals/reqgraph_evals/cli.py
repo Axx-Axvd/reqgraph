@@ -1,4 +1,4 @@
-"""Command line: ``reqgraph-evals probe``."""
+"""Command line: ``reqgraph-evals probe | rescore | analyst``."""
 
 import asyncio
 from datetime import date
@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from reqgraph_evals import probe
+from reqgraph_evals import analyst, probe
 
 app = typer.Typer(name="reqgraph-evals", no_args_is_help=True, add_completion=False)
 REPORTS = Path(__file__).resolve().parent.parent / "reports"
@@ -53,3 +53,25 @@ def rescore_cmd(
     summary = probe.summary_markdown(rows)
     report.with_suffix(".md").write_text(summary, encoding="utf-8")
     typer.echo(summary)
+
+
+@app.command("analyst")
+def analyst_cmd(
+    scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
+    repeat: Annotated[int, typer.Option(min=1, help="сколько раз прогнать каждый")] = 1,
+    profile: Annotated[str, typer.Option(help="профиль llm/roles.yaml")] = "free",
+    out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
+    tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+) -> None:
+    """Прогнать Analyst на dev-брифах (T-202): валидность патча и доля нарушений ISO-001/003."""
+    rows: list[analyst.Row] = []
+    for scenario in [s.strip() for s in scenarios.split(",") if s.strip()]:
+        for index in range(1, repeat + 1):
+            typer.echo(f"analyst: {scenario} #{index}")
+            rows.append(asyncio.run(analyst.run_scenario(scenario, index, profile=profile)))
+    stem = f"analyst-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
+    analyst.write_csv(rows, out / f"{stem}.csv")
+    summary = analyst.summary_markdown(rows)
+    (out / f"{stem}.md").write_text(summary, encoding="utf-8")
+    typer.echo(summary)
+    typer.echo(f"-> {out / stem}.csv, {stem}.md")

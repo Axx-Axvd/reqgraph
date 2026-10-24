@@ -15,6 +15,7 @@ from typing import Any, Protocol
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from pydantic_ai.models import Model
 
+from reqgraph.agents.prompts import Prompt
 from reqgraph.agents.state import (
     BudgetState,
     Coverage,
@@ -79,15 +80,26 @@ class RunContext:
         }
         return cls(project=project, **(settings | options))
 
-    def initial_state(self, mode: Mode, *, budget: BudgetState | None = None) -> RunState:
+    def initial_state(
+        self, mode: Mode, *, budget: BudgetState | None = None, brief: str | None = None
+    ) -> RunState:
         """The project graph and the coverage thresholds of reqgraph.yaml."""
         need = {str(area): n for area, n in self.project.config.interview.coverage_need.items()}
-        return initial_state(self.project.graph, mode, budget=budget, need=need or None)
+        return initial_state(
+            self.project.graph, mode, budget=budget, need=need or None, brief=brief
+        )
 
     async def ask[T](
-        self, role: str, prompt: str, output_type: type[T], budget: BudgetState
+        self,
+        role: str,
+        prompt: str,
+        output_type: type[T],
+        budget: BudgetState,
+        *,
+        template: Prompt | None = None,
     ) -> tuple[T, BudgetState]:
-        """One LLM call through llm/ (ADR-013): budget checked and counted, an llm_call event."""
+        """One LLM call through llm/ (ADR-013): budget checked and counted, an llm_call event
+        with the template name and hash (experiment records, CLAUDE.md)."""
         run_budget = budget.to_run_budget()
         output, stats = await structured(
             role,
@@ -97,7 +109,10 @@ class RunContext:
             budget=run_budget,
             model=self.models.get(role) or self.models.get("*"),
         )
-        self.events.emit("llm_call", **asdict(stats))
+        prompt_info = (
+            {} if template is None else {"prompt": template.name, "prompt_hash": template.hash}
+        )
+        self.events.emit("llm_call", **asdict(stats), **prompt_info)
         return output, BudgetState.of(run_budget)
 
 

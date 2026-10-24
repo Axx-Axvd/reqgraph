@@ -127,6 +127,11 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict:
 | **Правила** | одно требование — одно «должна»; ФТ с критериями приёмки; НФТ с характеристикой ISO 25010, метрикой, единицей и порогом |
 | **Связи** | UR refines BR; FR/NFR refines UR; derived_from -> TURN-xxxx или флаг assumption=true |
 | **Нельзя** | менять approved; удалять узлы без задачи Reviewer; придумывать id |
+| **Вход** | реплики `TURN-xxxx` (в режиме brief — абзацы брифа как реплики заказчика), вид графа (только свои виды узлов), задачи ремонта |
+| **Выход** | `AnalystDraft` — плоская «анкета»: actors, requirements (ref, kind, title, statement, acceptance / scenario / goal_metric / iso25010 + metric / constraint_type, refines, sources, assumption), remove (только по задаче ремонта). Патч из неё собирает код (`to_patch`): ref → tmp_id, связи refines и derived_from, правки существующих узлов — только изменённые поля |
+| **Защита** | `to_patch` проверяет каждый новый узел по схеме, `guard()` отсеивает чужие виды, approved, неизвестные id и недопустимые связи — каждый отсев с причиной; при отсеве или отказе `apply()` — один повтор с причинами (`prompts/analyst/retry.md`), со второго ответа применяется то, что прошло |
+
+<sub>Почему анкета, а не GraphPatch: бесплатные модели плохо держат дискриминированный союз операций с полями-словарями; плоская схема с подсказками в описании полей держится стабильно, а id и связи всё равно выдаёт код (T-202, `evals/reports/analyst-*.md`).</sub>
 
 ### Modeler
 

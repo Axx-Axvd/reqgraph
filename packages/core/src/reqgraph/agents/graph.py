@@ -6,8 +6,8 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
+from reqgraph.agents.analyst import analyst
 from reqgraph.agents.nodes import (
-    analyst,
     await_answer,
     ci_check,
     ci_gate,
