@@ -1,12 +1,9 @@
 """Nodes of the run graph (03_agents): intake, interview, the pipeline, CI, repair, export.
 
-The Analyst (agents/analyst.py, T-202) and the Modeler (agents/modeler.py, T-203) are real.
-Standards is still a stub around one structured() call (T-204): its prompt is data only — the
-graph view and the tasks in tags, no instructions in code. Every agent patch goes through
-guard() and apply(actor="agent").
+The agents themselves live in agents/analyst.py, modeler.py and standards.py (T-202…T-204);
+every agent patch goes through guard() and apply(actor="agent").
 """
 
-import json
 from dataclasses import replace
 from typing import Any
 
@@ -14,12 +11,11 @@ from langgraph.runtime import Runtime
 from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, Field
 
-from reqgraph.agents.common import ALLOWED, diff_summary, guarded, start, tag
+from reqgraph.agents.common import start, tag
 from reqgraph.agents.runtime import RunContext
 from reqgraph.agents.state import RepairTask, RunState
 from reqgraph.checks.base import Owner
 from reqgraph.checks.runner import run_checks
-from reqgraph.graph.errors import GraphError
 from reqgraph.graph.nodes import NodeKind
 from reqgraph.graph.patch import AddOp, GraphPatch
 from reqgraph.graph.store.project import Project
@@ -127,45 +123,6 @@ def coverage_gate(state: RunState, runtime: Runtime[RunContext]) -> str:
     ):
         return "done"
     return "ask"
-
-
-async def _stub(owner: Owner, state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
-    """Standards until T-204: one GraphPatch call, guarded and applied."""
-    ctx = start(runtime, owner)
-    if state["stop"] is not None:
-        return {}
-    mine = [t for t in state["tasks"] if t.owner == owner]
-    rest = [t for t in state["tasks"] if t.owner != owner]
-    if state["iteration"] > 0 and not mine:
-        ctx.events.emit("skip", agent=owner, reason="нет задач ремонта")
-        return {}
-    allowed = ALLOWED[owner]
-    prompt = "\n".join(
-        [
-            tag("graph", state["graph"].view(allowed).to_json()),
-            tag("tasks", json.dumps([t.model_dump() for t in mine], ensure_ascii=False)),
-        ]
-    )
-    try:
-        patch, budget = await ctx.ask(owner, prompt, GraphPatch, state["budget"])
-    except BudgetExceeded:
-        ctx.events.emit("stop", reason="budget", node=owner)
-        return {"stop": "budget", "tasks": rest}
-    update: dict[str, Any] = {"budget": budget, "tasks": rest}
-    attempt = guarded(patch, state["graph"], owner, mine)
-    if attempt.dropped:
-        ctx.events.emit("dropped", agent=owner, reasons=attempt.dropped)
-    try:
-        result = state["graph"].apply(attempt.patch, actor="agent")
-    except GraphError as exc:
-        ctx.events.emit("patch_rejected", agent=owner, error=str(exc))
-        return update
-    ctx.events.emit("agent_end", agent=owner, diff=diff_summary(result.diff))
-    return update | {"graph": result.graph}
-
-
-async def standards(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
-    return await _stub("standards", state, runtime)
 
 
 async def ci_check(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
