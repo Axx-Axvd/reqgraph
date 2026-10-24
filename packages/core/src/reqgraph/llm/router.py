@@ -155,24 +155,30 @@ async def structured[T](
     budget: RunBudget | None = None,
     on_call: Callable[[CallStats], None] | None = None,
     model_id: str | None = None,
+    model: Model | None = None,
 ) -> tuple[T, CallStats]:
     """Ask the role's models for an ``output_type`` object; return it with call statistics.
 
     ``model_id`` ("provider/model") pins one model without fallback: used by probe (T-006) to
-    compare models on the same tasks.
+    compare models on the same tasks. ``model`` replaces the ladder with a ready model (stub
+    models of the agents' tests, T-201): its provider is the model's system, the cost is zero.
     """
     cfg = _config()
     if budget is not None:
         budget.check()
-    if model_id is not None:
+    given = model is not None
+    if model is not None:
+        steps: tuple[Step, ...] = (Step(provider=model.system, model=model.model_name),)
+    elif model_id is not None:
         step = Step.parse(model_id)
         if step.provider not in cfg.providers:
             raise ValueError(f"неизвестный провайдер «{step.provider}» в «{model_id}»")
-        steps: tuple[Step, ...] = (step,)
+        steps = (step,)
     else:
         steps = _fitting_steps(role, profile, len(prompt) + len(instructions or ""))
-    models = [_build_model(s) for s in steps]
-    model = models[0] if len(models) == 1 else FallbackModel(*models)
+    if model is None:
+        models = [_build_model(s) for s in steps]
+        model = models[0] if len(models) == 1 else FallbackModel(*models)
     # seed is set per model in _build_model: not every provider accepts it.
     settings = ModelSettings(temperature=cfg.defaults.temperature, timeout=cfg.defaults.timeout_s)
     token_cap = cfg.budget.run_tokens if budget is None else budget.tokens - budget.spent_tokens
@@ -197,7 +203,7 @@ async def structured[T](
 
     step = _answered_by(steps, result.response.model_name)
     usage = result.usage
-    list_price = _list_price(result.response)
+    list_price = None if given else _list_price(result.response)
     stats = CallStats(
         role=role,
         model=step.model,
@@ -205,7 +211,7 @@ async def structured[T](
         input_tokens=usage.input_tokens,
         output_tokens=usage.output_tokens,
         requests=usage.requests,
-        cost_usd=0.0 if cfg.is_free(step) else (list_price or 0.0),
+        cost_usd=0.0 if given or cfg.is_free(step) else (list_price or 0.0),
         list_cost_usd=list_price,
         latency_ms=latency_ms,
         outcome="ok",
