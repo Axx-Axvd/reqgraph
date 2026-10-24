@@ -46,5 +46,7 @@ async def test_stub_agents_that_never_fix_stop_with_needs_human(reviewer: str) -
     row = await run_scenario("dev-01", 1, models=models, reviewer=reviewer)  # type: ignore[arg-type]
     assert row.error == "" and row.stop == "needs_human" and not row.converged
     assert row.errors_final > 0 and row.iterations <= 5
+    assert "SND-001" in row.errors_left and row.processes_snd_clean < row.processes
     assert ("reviewer=" in row.models) is (reviewer == "llm")
     assert "остановились с needs_human: 1" in summary_markdown([row])
+    assert f"процессов без ошибок SND-* — {row.processes_snd_clean} из" in summary_markdown([row])
