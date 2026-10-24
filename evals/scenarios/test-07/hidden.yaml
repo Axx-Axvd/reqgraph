@@ -1,0 +1,27 @@
+# Эталон test-07 (размер S): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Загрузка домиков в будни должна вырасти с 30% до 50% за сезон.", reveal: "цели, загрузка"}
+  - {id: H-002, kind: BR, area: goals, priority: should, statement: "Через год не меньше 60% броней идёт через свой сайт, а не через агрегаторы.", reveal: "цели, прямые брони"}
+  - {id: H-003, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Гость бронирует домик на сайте.", reveal: "что делает гость"}
+  - {id: H-004, kind: UR, area: stakeholders, priority: must, statement: "Администратор заселяет гостей и отмечает выезд.", reveal: "работа администратора"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: should, statement: "Владелец меняет цены по сезонам и смотрит загрузку.", reveal: "управление ценами"}
+  - {id: H-006, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Гость выбирает даты и видит свободные домики с ценой.", reveal: "поиск домика"}
+  - {id: H-007, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Гость вносит предоплату онлайн.", reveal: "предоплата"}
+  - {id: H-008, kind: FR, area: scenarios, priority: should, statement: "Гость добавляет к брони баню, прокат лодки или завтрак.", reveal: "дополнительные услуги"}
+  - {id: H-009, kind: FR, area: scenarios, priority: should, statement: "За 2 дня до заезда гость получает письмо со схемой проезда и временем заселения.", reveal: "письмо перед заездом"}
+  - {id: H-010, kind: FR, area: scenarios, priority: could, statement: "После выезда гость получает просьбу оставить отзыв.", reveal: "отзывы"}
+  - {id: H-011, kind: FR, area: exceptions, priority: must, statement: "При отмене больше чем за 7 дней предоплата возвращается полностью, позже — не возвращается.", reveal: "отмена брони"}
+  - {id: H-012, kind: FR, area: exceptions, priority: should, statement: "Если гость не приехал до 23:00 в день заезда и не предупредил, бронь снимается.", reveal: "гость не приехал"}
+  - {id: H-013, kind: FR, area: exceptions, priority: should, statement: "Если в домике поломка — нет воды или отопления, — администратор переселяет гостей и закрывает домик для броней.", reveal: "поломка в домике"}
+  - {id: H-014, kind: FR, area: exceptions, priority: must, statement: "Если бронь пересеклась с бронью с агрегатора, администратор получает срочное уведомление.", reveal: "двойная бронь"}
+  - {id: H-015, kind: FR, area: data, priority: must, statement: "У домика есть название, вместимость, удобства, фото и цены по сезонам.", reveal: "данные о домиках"}
+  - {id: H-016, kind: FR, area: data, priority: must, statement: "Бронь хранит гостя, домик, даты, число гостей, услуги, сумму, предоплату и статус.", reveal: "данные брони"}
+  - {id: H-017, kind: FR, area: data, priority: should, statement: "О госте хранятся ФИО, телефон, почта и паспортные данные для заселения.", reveal: "данные о госте"}
+  - {id: H-018, kind: FR, area: rules, priority: should, statement: "В выходные домик бронируется минимум на 2 ночи.", reveal: "минимальный срок"}
+  - {id: H-019, kind: FR, area: rules, priority: must, statement: "Предоплата — 30% стоимости брони.", reveal: "размер предоплаты"}
+  - {id: H-020, kind: FR, area: rules, priority: should, statement: "Заезд с 14:00, выезд до 12:00, ранний заезд — за 1000 рублей, если домик свободен.", reveal: "время заезда и выезда"}
+  - {id: H-021, kind: FR, area: integrations, priority: must, statement: "Свободные даты каждые 15 минут синхронизируются с агрегаторами бронирования.", reveal: "агрегаторы"}
+  - {id: H-022, kind: NFR, area: nfr, priority: should, statement: "Забронировать домик с телефона можно за 3 минуты.", reveal: "удобство бронирования"}
+  - {id: H-023, kind: NFR, area: nfr, priority: should, statement: "Календарь свободных дат загружается быстрее 2 секунд.", reveal: "скорость сайта"}
+  - {id: H-024, kind: NFR, area: nfr, priority: must, statement: "Паспортные данные гостей видит только администратор.", reveal: "защита данных"}
+  - {id: H-025, kind: CON, area: constraints, priority: should, statement: "Бюджет — до 200 тысяч рублей, запуск — к началу летнего сезона.", reveal: "бюджет и сроки"}

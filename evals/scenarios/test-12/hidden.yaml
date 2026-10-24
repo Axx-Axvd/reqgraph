@@ -1,0 +1,62 @@
+# Эталон test-12 (размер L): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Наличие товаров на полках магазинов — не ниже 97%.", reveal: "цели, наличие товара"}
+  - {id: H-002, kind: BR, area: goals, priority: must, statement: "Через год затраты на логистику — не больше 4% выручки.", reveal: "цели, затраты"}
+  - {id: H-003, kind: BR, area: goals, priority: should, statement: "Товар доезжает со склада в магазин не дольше чем за 48 часов.", reveal: "цели, сроки доставки"}
+  - {id: H-004, kind: BR, area: goals, priority: should, statement: "Потери товара на складах — не больше 0,1% оборота.", reveal: "цели, потери"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Магазин заказывает пополнение товаров со склада.", reveal: "что делает магазин"}
+  - {id: H-006, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Кладовщики принимают товар от поставщиков и собирают заказы магазинов.", reveal: "работа склада"}
+  - {id: H-007, kind: UR, area: stakeholders, priority: must, statement: "Диспетчер транспорта планирует рейсы машин.", reveal: "планирование транспорта"}
+  - {id: H-008, kind: UR, area: stakeholders, priority: should, statement: "Водитель видит маршрут и отмечает доставку в магазине.", reveal: "работа водителя"}
+  - {id: H-009, kind: UR, area: stakeholders, priority: should, statement: "Категорийный менеджер управляет минимальными остатками и ассортиментом магазинов.", reveal: "управление ассортиментом"}
+  - {id: H-010, kind: UR, area: stakeholders, priority: should, statement: "Служба безопасности расследует расхождения и пропажи.", reveal: "безопасность"}
+  - {id: H-011, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Система рассчитывает автозаказ пополнения для каждого магазина по продажам.", reveal: "автозаказ"}
+  - {id: H-012, kind: FR, area: scenarios, priority: should, statement: "Директор магазина может поправить автозаказ до 18:00.", reveal: "корректировка автозаказа"}
+  - {id: H-013, kind: FR, area: scenarios, priority: should, statement: "Поставщик бронирует время разгрузки на складе.", reveal: "запись на разгрузку"}
+  - {id: H-014, kind: FR, area: scenarios, priority: must, statement: "При приёмке кладовщик сканирует серийные номера дорогих товаров.", reveal: "приёмка дорогих товаров"}
+  - {id: H-015, kind: FR, area: scenarios, priority: should, statement: "Товары перемещаются между тремя складами по заявке.", reveal: "перемещения между складами"}
+  - {id: H-016, kind: FR, area: scenarios, priority: must, statement: "Заказ магазина собирается на паллеты, на каждую печатается лист с составом.", reveal: "сборка заказов магазинов"}
+  - {id: H-017, kind: FR, area: scenarios, priority: must, statement: "Диспетчер формирует рейсы с учётом объёма машин и окон приёмки магазинов.", reveal: "формирование рейсов"}
+  - {id: H-018, kind: FR, area: scenarios, priority: must, statement: "Водитель отмечает прибытие в приложении, а магазин подписывает приёмку электронно.", reveal: "доставка в магазин"}
+  - {id: H-019, kind: FR, area: scenarios, priority: should, statement: "Брак и возвраты покупателей магазин отправляет на склад обратным рейсом.", reveal: "обратная логистика"}
+  - {id: H-020, kind: FR, area: scenarios, priority: should, statement: "Ежеквартальная инвентаризация идёт по зонам без остановки склада.", reveal: "инвентаризация"}
+  - {id: H-021, kind: FR, area: scenarios, priority: should, statement: "Отчёт о движении товара по серийному номеру строится за секунды.", reveal: "история серийного номера"}
+  - {id: H-022, kind: FR, area: scenarios, priority: could, statement: "Категорийный менеджер видит прогноз продаж и предложенный заказ поставщику.", reveal: "закупки"}
+  - {id: H-023, kind: FR, area: exceptions, priority: must, statement: "Если машина опаздывает больше чем на час, магазин получает уведомление с новым временем.", reveal: "опоздание машины"}
+  - {id: H-024, kind: FR, area: exceptions, priority: must, statement: "Если магазин нашёл недостачу при приёмке, создаётся акт расхождения и начинается расследование.", reveal: "недостача в магазине"}
+  - {id: H-025, kind: FR, area: exceptions, priority: should, statement: "Поставщика без брони разгружают только в свободное окно.", reveal: "поставщик без записи"}
+  - {id: H-026, kind: FR, area: exceptions, priority: must, statement: "Если серийный номер уже числится проданным, товар блокируется до проверки службой безопасности.", reveal: "дубли серийных номеров"}
+  - {id: H-027, kind: FR, area: exceptions, priority: should, statement: "При поломке машины рейс передаётся резервной машине.", reveal: "поломка машины"}
+  - {id: H-028, kind: FR, area: exceptions, priority: should, statement: "Если автозаказ не помещается на склад магазина, система уменьшает его и предупреждает.", reveal: "нет места в магазине"}
+  - {id: H-029, kind: FR, area: exceptions, priority: should, statement: "Если пропала связь, водитель оформляет приёмку офлайн.", reveal: "нет связи"}
+  - {id: H-030, kind: FR, area: exceptions, priority: could, statement: "Товар с истекающей гарантией поставщика возвращается поставщику за 30 дней до конца срока.", reveal: "гарантия поставщика"}
+  - {id: H-031, kind: FR, area: exceptions, priority: could, statement: "При пожарной тревоге система печатает список людей на складе по данным пропусков.", reveal: "пожарная тревога"}
+  - {id: H-032, kind: FR, area: data, priority: must, statement: "О товаре хранятся артикул, бренд, категория, габариты, вес, признак серийного учёта, гарантия и поставщик.", reveal: "данные товара"}
+  - {id: H-033, kind: FR, area: data, priority: must, statement: "О складе хранятся зоны, ячейки и доки разгрузки и погрузки.", reveal: "данные склада"}
+  - {id: H-034, kind: FR, area: data, priority: must, statement: "О магазине хранятся адрес, площадь склада, окна приёмки и директор.", reveal: "данные магазина"}
+  - {id: H-035, kind: FR, area: data, priority: must, statement: "У рейса есть машина, водитель, магазины, паллеты, время и статус.", reveal: "данные рейса"}
+  - {id: H-036, kind: FR, area: data, priority: should, statement: "О машине хранятся номер, грузоподъёмность, объём и состояние.", reveal: "данные машин"}
+  - {id: H-037, kind: FR, area: data, priority: must, statement: "По серийному номеру хранятся товар, где он находится и история перемещений.", reveal: "данные серийных номеров"}
+  - {id: H-038, kind: FR, area: data, priority: should, statement: "Акт расхождения хранит рейс, позиции, суммы, виновника и решение.", reveal: "данные актов"}
+  - {id: H-039, kind: FR, area: data, priority: should, statement: "О поставщике хранятся реквизиты, договоры и условия возврата.", reveal: "данные поставщиков"}
+  - {id: H-040, kind: FR, area: rules, priority: must, statement: "Автозаказ — это прогноз продаж на 7 дней плюс страховой запас минус остаток и товар в пути.", reveal: "формула автозаказа"}
+  - {id: H-041, kind: FR, area: rules, priority: should, statement: "Окно приёмки магазина — 2 часа, опоздание больше 30 минут считается нарушением.", reveal: "окна приёмки"}
+  - {id: H-042, kind: FR, area: rules, priority: should, statement: "Машина загружается не больше чем на 90% объёма.", reveal: "загрузка машин"}
+  - {id: H-043, kind: FR, area: rules, priority: must, statement: "Товары дороже 50 тысяч рублей перевозятся только на опломбированных паллетах.", reveal: "дорогие товары"}
+  - {id: H-044, kind: FR, area: rules, priority: should, statement: "Возвраты покупателей обрабатываются на складе за 3 дня.", reveal: "сроки возвратов"}
+  - {id: H-045, kind: FR, area: rules, priority: should, statement: "Кладовщик не может принимать перемещение, которое сам заказал.", reveal: "разделение обязанностей"}
+  - {id: H-046, kind: FR, area: rules, priority: should, statement: "Дорогие товары хранятся в зоне с видеонаблюдением.", reveal: "хранение дорогих товаров"}
+  - {id: H-047, kind: FR, area: rules, priority: should, statement: "Расхождение до 0,05% рейса списывается автоматически, больше — расследуется.", reveal: "порог расхождений"}
+  - {id: H-048, kind: FR, area: integrations, priority: must, statement: "Продажи и остатки магазинов каждые 15 минут приходят из кассовой системы.", reveal: "кассовая система"}
+  - {id: H-049, kind: FR, area: integrations, priority: must, statement: "Заказы поставщикам и накладные передаются через электронный документооборот.", reveal: "документооборот с поставщиками"}
+  - {id: H-050, kind: FR, area: integrations, priority: should, statement: "Местоположение машин приходит из системы GPS-мониторинга.", reveal: "GPS"}
+  - {id: H-051, kind: NFR, area: nfr, priority: must, statement: "Ночной расчёт автозаказа для 60 магазинов занимает меньше 15 минут.", reveal: "скорость расчёта"}
+  - {id: H-052, kind: NFR, area: nfr, priority: must, statement: "Склады работают круглосуточно, доступность системы — 99,95%.", reveal: "доступность"}
+  - {id: H-053, kind: NFR, area: nfr, priority: must, statement: "Все изменения остатков и серийных номеров пишутся в журнал, который нельзя удалить.", reveal: "журнал изменений"}
+  - {id: H-054, kind: NFR, area: nfr, priority: should, statement: "На терминале кладовщика одно сканирование — одно действие, без ввода с клавиатуры.", reveal: "удобство терминала"}
+  - {id: H-055, kind: NFR, area: nfr, priority: should, statement: "Формулу автозаказа и страховые запасы аналитик меняет без программиста.", reveal: "настройка формул"}
+  - {id: H-056, kind: NFR, area: nfr, priority: should, statement: "Приложение водителя работает на служебных смартфонах Android.", reveal: "устройства водителей"}
+  - {id: H-057, kind: NFR, area: nfr, priority: should, statement: "Терминал на складе отвечает быстрее 0,5 секунды.", reveal: "отклик терминалов"}
+  - {id: H-058, kind: CON, area: constraints, priority: must, in_brief: true, statement: "Кассовую систему магазинов менять нельзя, нужна интеграция с ней.", reveal: "ограничения по кассам"}
+  - {id: H-059, kind: CON, area: constraints, priority: should, statement: "Первичные документы оформляются электронно с квалифицированной подписью.", reveal: "электронные документы"}
+  - {id: H-060, kind: CON, area: constraints, priority: must, in_brief: true, statement: "Запуск на первом складе — через 8 месяцев, бюджет — 25 млн рублей.", reveal: "бюджет и сроки"}

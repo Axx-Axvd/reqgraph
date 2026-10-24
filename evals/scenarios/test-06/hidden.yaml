@@ -1,0 +1,62 @@
+# Эталон test-06 (размер L): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Отток клиентов должен снизиться с 40% до 30% в год.", reveal: "цели, отток"}
+  - {id: H-002, kind: BR, area: goals, priority: should, statement: "Через год половина абонементов продаётся онлайн.", reveal: "цели, онлайн-продажи"}
+  - {id: H-003, kind: BR, area: goals, priority: should, statement: "Корпоративные клиенты через два года дают 25% выручки.", reveal: "цели, корпоративные продажи"}
+  - {id: H-004, kind: BR, area: goals, priority: could, statement: "Расписание всех клубов на месяц составляется за 2 часа вместо 2 дней.", reveal: "цели, расписание"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Клиент с сетевым абонементом посещает любой клуб сети.", reveal: "сетевой абонемент"}
+  - {id: H-006, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Компания оплачивает абонементы сотрудников по договору.", reveal: "корпоративные клиенты"}
+  - {id: H-007, kind: UR, area: stakeholders, priority: must, statement: "Кадровик компании-клиента ведёт список сотрудников с корпоративными абонементами.", reveal: "кто ведёт корпоративный список"}
+  - {id: H-008, kind: UR, area: stakeholders, priority: should, statement: "Управляющий клубом видит загрузку, продажи и расписание своего клуба.", reveal: "работа управляющего"}
+  - {id: H-009, kind: UR, area: stakeholders, priority: should, statement: "Маркетолог запускает акции и рассылки по группам клиентов.", reveal: "маркетинг"}
+  - {id: H-010, kind: UR, area: stakeholders, priority: should, statement: "Родитель записывает ребёнка в детский клуб и видит отметки посещений.", reveal: "детский клуб"}
+  - {id: H-011, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Клиент записывается на занятия в мобильном приложении.", reveal: "запись в приложении"}
+  - {id: H-012, kind: FR, area: scenarios, priority: must, statement: "Клиент покупает абонемент онлайн и проходит в клуб по QR-коду из приложения.", reveal: "покупка и проход"}
+  - {id: H-013, kind: FR, area: scenarios, priority: could, statement: "Клиент передаёт абонемент другому человеку за 1000 рублей.", reveal: "передача абонемента"}
+  - {id: H-014, kind: FR, area: scenarios, priority: must, statement: "Кадровик добавляет и удаляет сотрудников, их абонементы включаются и выключаются автоматически.", reveal: "корпоративный список"}
+  - {id: H-015, kind: FR, area: scenarios, priority: must, statement: "Компании раз в месяц выставляется счёт по числу активных абонементов.", reveal: "счета компаниям"}
+  - {id: H-016, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Клиент копит и тратит баллы лояльности.", reveal: "программа лояльности"}
+  - {id: H-017, kind: FR, area: scenarios, priority: should, statement: "Баллы начисляются за посещения и покупки, ими можно оплатить до 30% абонемента.", reveal: "как работают баллы"}
+  - {id: H-018, kind: FR, area: scenarios, priority: should, statement: "Клиент приглашает друга по ссылке, и оба получают по 500 баллов после первой покупки друга.", reveal: "приведи друга"}
+  - {id: H-019, kind: FR, area: scenarios, priority: should, statement: "Родитель записывает ребёнка в секцию и получает уведомление, когда ребёнка забрали.", reveal: "секции для детей"}
+  - {id: H-020, kind: FR, area: scenarios, priority: should, statement: "Тренер ведёт в приложении программу тренировок клиента и отмечает выполнение.", reveal: "программы тренировок"}
+  - {id: H-021, kind: FR, area: scenarios, priority: should, statement: "Управляющий составляет расписание на месяц по шаблону прошлого месяца.", reveal: "составление расписания"}
+  - {id: H-022, kind: FR, area: scenarios, priority: could, statement: "Клиент оценивает групповое занятие и тренера.", reveal: "оценки занятий"}
+  - {id: H-023, kind: FR, area: exceptions, priority: must, statement: "Если клуб закрыт на ремонт, клиенты получают уведомление, а абонементы продлеваются на дни закрытия.", reveal: "клуб закрыт"}
+  - {id: H-024, kind: FR, area: exceptions, priority: must, statement: "Если компания не оплатила счёт за 10 дней, абонементы её сотрудников приостанавливаются.", reveal: "компания не платит"}
+  - {id: H-025, kind: FR, area: exceptions, priority: should, statement: "Когда сотрудник уволился, кадровик отключает его, остаток оплаченного периода не возвращается.", reveal: "увольнение сотрудника"}
+  - {id: H-026, kind: FR, area: exceptions, priority: must, statement: "Если ребёнка пришёл забрать человек не из списка родителей, тренер видит предупреждение и звонит родителю.", reveal: "ребёнка забирает чужой"}
+  - {id: H-027, kind: FR, area: exceptions, priority: should, statement: "Когда в зоне, например в бассейне, больше людей, чем она вмещает, вход в неё временно закрывается.", reveal: "переполнение зоны"}
+  - {id: H-028, kind: FR, area: exceptions, priority: could, statement: "Если клиент оспаривает списание баллов, маркетолог может их вернуть.", reveal: "спор о баллах"}
+  - {id: H-029, kind: FR, area: exceptions, priority: must, statement: "При сбое оплаты в приложении покупка не завершается и деньги дважды не списываются.", reveal: "сбой оплаты"}
+  - {id: H-030, kind: FR, area: exceptions, priority: must, statement: "Если тренер заболел, занятию ставят замену или отменяют его, а записанные получают уведомление.", reveal: "тренер заболел"}
+  - {id: H-031, kind: FR, area: exceptions, priority: should, statement: "Если QR-код не читается, администратор находит клиента по телефону.", reveal: "не читается QR-код"}
+  - {id: H-032, kind: FR, area: data, priority: must, statement: "О клиенте хранятся ФИО, телефон, почта, дата рождения, фото, клуб регистрации, баллы и согласия на рассылки.", reveal: "данные о клиенте"}
+  - {id: H-033, kind: FR, area: data, priority: must, statement: "У абонемента есть тип, клубы, зоны, срок, заморозки, цена и канал продажи.", reveal: "данные абонемента"}
+  - {id: H-034, kind: FR, area: data, priority: must, statement: "О компании хранятся реквизиты, договор, тариф, список сотрудников и счета.", reveal: "данные о компании"}
+  - {id: H-035, kind: FR, area: data, priority: must, statement: "О ребёнке хранятся имя, возраст, секция, родители и доверенные лица, которые могут его забирать.", reveal: "данные о детях"}
+  - {id: H-036, kind: FR, area: data, priority: should, statement: "О клубе хранятся адрес, зоны с вместимостью, часы работы и управляющий.", reveal: "данные о клубах"}
+  - {id: H-037, kind: FR, area: data, priority: should, statement: "По баллам хранятся все начисления и списания с причиной и датой.", reveal: "история баллов"}
+  - {id: H-038, kind: FR, area: data, priority: should, statement: "У занятия есть клуб, зал, тренер, направление, время, вместимость, записанные и пришедшие.", reveal: "данные занятий"}
+  - {id: H-039, kind: FR, area: data, priority: could, statement: "Программа тренировок хранит упражнения, подходы, вес и отметки выполнения.", reveal: "данные программ"}
+  - {id: H-040, kind: FR, area: rules, priority: must, statement: "Сетевой абонемент дороже клубного на 25% и действует во всех 7 клубах.", reveal: "цена сетевого абонемента"}
+  - {id: H-041, kind: FR, area: rules, priority: should, statement: "Баллы сгорают через 12 месяцев после начисления.", reveal: "срок баллов"}
+  - {id: H-042, kind: FR, area: rules, priority: must, statement: "Корпоративная скидка — 15% при 10–49 сотрудниках и 25% от 50 сотрудников.", reveal: "корпоративные скидки"}
+  - {id: H-043, kind: FR, area: rules, priority: must, statement: "Детей до 14 лет забирают только родители или доверенные лица из списка.", reveal: "кто забирает детей"}
+  - {id: H-044, kind: FR, area: rules, priority: should, statement: "Записаться на групповое занятие можно не раньше чем за 7 дней.", reveal: "когда открывается запись"}
+  - {id: H-045, kind: FR, area: rules, priority: should, statement: "В часы пик с 18 до 21 в бассейн проходят только по записи.", reveal: "бассейн в пик"}
+  - {id: H-046, kind: FR, area: rules, priority: could, statement: "Передать абонемент можно не чаще раза в год.", reveal: "ограничения передачи"}
+  - {id: H-047, kind: FR, area: rules, priority: should, statement: "Корпоративный абонемент заморозить нельзя.", reveal: "заморозка корпоративных"}
+  - {id: H-048, kind: FR, area: integrations, priority: must, statement: "Система работает с турникетами всех клубов через единый сервер контроля доступа.", reveal: "турникеты"}
+  - {id: H-049, kind: FR, area: integrations, priority: must, statement: "Продажи и счета компаниям передаются в 1С:Бухгалтерию, онлайн-оплаты — через банк-эквайер.", reveal: "бухгалтерия и оплаты"}
+  - {id: H-050, kind: FR, area: integrations, priority: should, statement: "Рассылки уходят через сервис почтовых и push-рассылок.", reveal: "рассылки"}
+  - {id: H-051, kind: NFR, area: nfr, priority: must, statement: "Приложение выдерживает 5000 пользователей одновременно в вечерний пик.", reveal: "нагрузка"}
+  - {id: H-052, kind: NFR, area: nfr, priority: must, statement: "При сбое центрального сервера клуб пропускает клиентов автономно до 24 часов.", reveal: "надёжность"}
+  - {id: H-053, kind: NFR, area: nfr, priority: must, statement: "Данные детей видят только родители, тренеры секции и администраторы клуба.", reveal: "защита данных детей"}
+  - {id: H-054, kind: NFR, area: nfr, priority: should, statement: "Покупка абонемента в приложении занимает не больше 5 экранов.", reveal: "удобство покупки"}
+  - {id: H-055, kind: NFR, area: nfr, priority: should, statement: "Новый клуб подключается к системе за неделю без программирования.", reveal: "подключение клубов"}
+  - {id: H-056, kind: NFR, area: nfr, priority: should, statement: "Приложение есть для iOS и Android, кабинет кадровика работает в браузере.", reveal: "платформы"}
+  - {id: H-057, kind: NFR, area: nfr, priority: should, statement: "Расписание всех клубов на месяц загружается быстрее 2 секунд.", reveal: "скорость расписания"}
+  - {id: H-058, kind: CON, area: constraints, priority: must, in_brief: true, statement: "Персональные данные клиентов хранятся в России.", reveal: "где хранить данные"}
+  - {id: H-059, kind: CON, area: constraints, priority: must, statement: "Рекламные рассылки получают только клиенты, которые дали на них согласие.", reveal: "законы о рекламе"}
+  - {id: H-060, kind: CON, area: constraints, priority: should, statement: "Через 6 месяцев система работает в двух клубах, через год — во всех; бюджет — 8 млн рублей.", reveal: "бюджет и сроки"}
