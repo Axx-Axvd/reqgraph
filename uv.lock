@@ -1308,6 +1308,7 @@ name = "reqgraph"
 version = "0.1.0"
 source = { editable = "packages/core" }
 dependencies = [
+    { name = "jinja2" },
     { name = "langgraph" },
     { name = "lxml" },
     { name = "networkx" },
@@ -1323,6 +1324,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "jinja2", specifier = "==3.1.6" },
     { name = "langgraph", specifier = "==1.2.16" },
     { name = "lxml", specifier = "==6.1.3" },
     { name = "networkx", specifier = "==3.7" },
