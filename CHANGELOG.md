@@ -8,6 +8,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Agent run graph on LangGraph (T-201): `agents/state.py` (`RunState`, `Coverage`, `RepairTask`, `BudgetState`),
+  `agents/runtime.py` (`RunContext` as LangGraph context: project, store, stub models, events in memory or JSONL,
+  limits and profile from `reqgraph.yaml`; checkpoint serializer with an allow list of our types),
+  `agents/nodes.py` and `agents/graph.py` (10 nodes of 03_agents, modes interview / brief / check, `interrupt()` for
+  answers, repair loop up to `checks.max_iterations`, budget stop with a report). Agents are stubs around one
+  `structured()` call; the Reviewer builds repair tasks from the report by template. Agents refuse to run on a
+  reference project. `llm.router.structured(model=...)` takes a ready model (stub models in tests). New dependency
+  of `packages/core`: `langgraph==1.2.16` (MIT, loaded only with `reqgraph.agents`).
 - Checks ISO-001…005 and TRC-001…006 (T-107): vague words (own dictionary `checks/vague_words.yaml`, Russian by
   pymorphy3 lemmas), one statement per FR, verifiability, placeholders, EARS form; BR refined, FR realized, no orphan
   model elements, references to steps and attributes, refines / depends_on cycles, DSL `realizes` mirrors

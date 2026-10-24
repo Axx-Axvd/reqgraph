@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`), дальше S2: T-201 (агенты).
+- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`), S2: T-201 (граф прогона агентов на LangGraph, заглушки моделей) сделан, дальше T-202 (Analyst).
 
 ## Команды
 Работают сейчас:

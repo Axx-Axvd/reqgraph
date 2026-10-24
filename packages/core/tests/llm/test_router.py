@@ -192,3 +192,16 @@ def test_output_mode_from_provider() -> None:
     gemini = router._build_model(cfg.ladder("analyst", "free")[0])
     assert groq.profile.get("default_structured_output_mode") == "native"
     assert gemini.profile.get("default_structured_output_mode") == "tool"
+
+
+async def test_given_model_replaces_the_ladder() -> None:
+    """Agents' tests and dry runs pass a stub model: no ladder, no provider, no cost."""
+    model = ok_model("stub")
+    output, stats = await structured("analyst", "бриф", Requirement, model=model)
+    assert output.priority == 1
+    assert (stats.provider, stats.model, stats.cost_usd, stats.list_cost_usd) == (
+        "function",
+        "stub",
+        0.0,
+        None,
+    )
