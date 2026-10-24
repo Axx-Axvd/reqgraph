@@ -41,3 +41,12 @@ uv run reqgraph-evals standards --repeat 3
 ```
 
 intake → Analyst → Modeler → Standards и все проверки. Отчёт `reports/standards-YYYY-MM-DD-<профиль>[-tag].csv|md`: модель Standards, хэш промпта, был ли повтор, число разделов, пустых обязательных (TPL-001) и доля заполненных, терминов в глоссарии, длина назначения и области, токены, $ и время всех вызовов. Порог T-204 — не меньше 80% обязательных разделов.
+
+## Цикл ремонта на dev-брифах (T-205)
+
+```bash
+uv run reqgraph-evals repair --repeat 3                     # Reviewer на LLM
+uv run reqgraph-evals repair --repeat 3 --reviewer template # абляция «без Reviewer»
+```
+
+Весь граф прогона в режиме brief: агенты, проверки, Reviewer и ремонт до сходимости, `needs_human` или лимита кругов. Отчёт `reports/repair-YYYY-MM-DD-<профиль>-<reviewer>[-tag].csv|md`: модели всех ролей, кругов ремонта, причина остановки, ошибок в первом и последнем отчёте, предупреждений, вызовов LLM, токены, $ и время. Критерий T-205 — каждый прогон сходится или останавливается с needs_human.

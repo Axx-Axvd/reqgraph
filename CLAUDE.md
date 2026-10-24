@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`; TPL-001 — в T-204), S2: T-201 (граф прогона агентов на LangGraph), T-202 (Analyst, guard, промпты Jinja2, 3 dev-брифа) T-203 (Modeler: процессы и ERD с самопроверкой) и T-204 (Standards: разделы SRS, глоссарий, TPL-001) сделаны, дальше T-205 (Reviewer и цикл ремонта).
+- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`; TPL-001 — в T-204), S2: T-201 (граф прогона агентов на LangGraph), T-202 (Analyst, guard, промпты Jinja2, 3 dev-брифа) T-203 (Modeler: процессы и ERD с самопроверкой) T-204 (Standards: разделы SRS, глоссарий, TPL-001) и T-205 (Reviewer, цикл ремонта с детектором повторов) сделаны, дальше T-206 (`reqgraph run --brief`).
 
 ## Команды
 Работают сейчас:
@@ -33,6 +33,7 @@
 - uv run reqgraph-evals analyst --repeat 3   # Analyst на 3 dev-брифах: валидность патча, доля нарушений ISO-001/003 (нужна сеть)
 - uv run reqgraph-evals modeler --repeat 3  # Analyst → Modeler на 3 dev-брифах: SCH-002 за ≤ 3 ответа, доля без SND-001 (нужна сеть)
 - uv run reqgraph-evals standards --repeat 3  # Analyst → Modeler → Standards: доля заполненных разделов SRS (нужна сеть)
+- uv run reqgraph-evals repair --repeat 3 [--reviewer template]  # весь конвейер с ремонтом: сходится или needs_human (нужна сеть)
 - uv run pytest packages/core/tests/agents/test_analyst_live.py packages/core/tests/agents/test_modeler_live.py packages/core/tests/agents/test_standards_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты агентов после правки промпта
 - python scripts/github_bootstrap.py --dry-run   # метки, вехи, задачи GitHub из docs/backlog.md
 
