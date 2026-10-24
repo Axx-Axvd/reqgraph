@@ -1,0 +1,10 @@
+scenario,repeat,reviewer,models,temperature,package_version,llm_calls,input_tokens,output_tokens,cost_usd,latency_ms,iterations,stop,errors_first,errors_final,warnings_final,errors_left,sch_errors_final,processes,processes_snd_clean,converged,error
+dev-01,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,7,15388,5243,0.0,22869,2,,1,0,2,,0,3,3,True,
+dev-01,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,5,10777,4484,0.0,13924,1,,1,0,2,,0,3,3,True,
+dev-01,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,5,10666,4382,0.0,13244,1,,2,0,2,,0,1,1,True,
+dev-02,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,4,10348,9121,0.0,26762,0,,0,0,9,,0,5,5,True,
+dev-02,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; standards=groq/openai/gpt-oss-120b,0.2,0.1.0,3,7087,5369,0.0,18671,0,,0,0,2,,0,4,4,True,
+dev-02,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-120b; standards=groq/openai/gpt-oss-20b,0.2,0.1.0,8,24863,14947,0.0,108980,1,,10,0,6,,0,4,4,True,
+dev-03,1,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-20b; standards=groq/openai/gpt-oss-20b,0.2,0.1.0,13,53762,20054,0.0,85752,2,,2,0,9,,0,5,5,True,
+dev-03,2,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-20b; standards=groq/openai/gpt-oss-20b,0.2,0.1.0,5,13887,7334,0.0,20930,1,,1,0,4,,0,7,7,True,
+dev-03,3,llm,analyst=gemini/gemini-3.5-flash-lite; modeler=gemini/gemini-3.5-flash-lite; reviewer=groq/openai/gpt-oss-20b; standards=groq/openai/gpt-oss-20b,0.2,0.1.0,6,18066,12566,0.0,27843,1,,1,0,8,,0,9,9,True,
