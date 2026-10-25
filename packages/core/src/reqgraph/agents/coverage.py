@@ -1,8 +1,9 @@
 """Interview coverage (03_agents, T-301): how much of each of the 9 areas the client has told.
 
-Counted by code from the graph, not judged by a model: a requirement counts in its area only when
-it is derived from a client turn and is not an assumption of the Analyst. Actors count as
-stakeholders; the nfr area counts distinct ISO 25010 characteristics (03_agents: «at least 4»).
+Counted by code from the graph, not judged by a model: a requirement counts only when it is derived
+from a client turn and is not an assumption of the Analyst. The kind of a node gives its area where
+it can: a BR is a goal, a CON a constraint, an actor a stakeholder, and the nfr area counts distinct
+ISO 25010 characteristics (03_agents: «at least 4»). UR and FR count in the area the Analyst tagged.
 """
 
 from collections import Counter
@@ -14,6 +15,7 @@ from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.nodes import InterviewTurn, NonFunctionalReq
 
 REQUIREMENT_KINDS = ("BR", "UR", "FR", "NFR", "CON")
+KIND_AREA = {"BR": "goals", "CON": "constraints"}
 
 
 def told_by_client(graph: ArtifactGraph) -> set[str]:
@@ -35,8 +37,10 @@ def coverage_of(graph: ArtifactGraph, need: Mapping[str, int] | None = None) -> 
                 continue
             if isinstance(node, NonFunctionalReq):
                 characteristics.add(node.iso25010)
-            elif node.area is not None and node.area in need and node.area != "nfr":
-                got[node.area] += 1
+                continue
+            area = KIND_AREA.get(node.kind, node.area)  # live runs: BR came without an area
+            if area is not None and area in need and area != "nfr":
+                got[area] += 1
     got["stakeholders"] += sum(1 for n in graph.nodes_of("ACT") if n.id in told)
     got["nfr"] = len(characteristics)
     return Coverage(got={area: got.get(area, 0) for area in need}, need=need)
