@@ -45,6 +45,7 @@ uv run python scripts/doctor.py  # готовность окружения
 uv run reqgraph init projects/ulybka --name "Стоматология «Улыбка»" --brief brief.md
 uv run reqgraph run projects/ulybka          # Analyst → Modeler → Standards → проверки → ремонт
 uv run reqgraph check projects/ulybka        # проверки ещё раз, без LLM
+uv run reqgraph interview projects/ulybka    # интервью: вопросы по покрытию, /готово, /пауза
 ```
 
 Нужны ключи бесплатных провайдеров в `.env` ([docs/setup/accounts.md](docs/setup/accounts.md)); профиль free, бюджет прогона — `REQGRAPH_RUN_BUDGET_USD` или `--budget-usd`. Код выхода: 0 — ошибок нет, 1 — ошибки остались (они в `reports/ci-report.md`), 2 — прогон не начался. Как повторить демо M2 и что внутри проекта — [docs/demo/m2.md](docs/demo/m2.md).

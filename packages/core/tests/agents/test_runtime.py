@@ -78,7 +78,7 @@ async def test_checkpoints_keep_our_types_without_warnings(
     )
     with caplog.at_level(logging.WARNING):
         out = await build_graph(saver).ainvoke(Command(resume="Да."), config, context=ctx)
-    assert "unregistered" not in caplog.text
+    assert "unregistered" not in caplog.text and "Blocked" not in caplog.text
     assert isinstance(out["coverage"], Coverage) and isinstance(out["budget"], BudgetState)
     # restored by validation, not by model_construct: nodes and edges are models again
     model_edges = tuple(e for e in out["graph"].edges if e.rel.value != "rendered_in")

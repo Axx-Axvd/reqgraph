@@ -89,6 +89,9 @@ class RunState(TypedDict):
     coverage: Coverage
     question: str | None  # the interviewer's question waiting for an answer
     turns: int  # answered questions
+    interview_done: bool  # no more questions: coverage reached, turn limit, «/готово» (T-301)
+    extracted_upto: str | None  # the last turn the Analyst has read in the interview
+    asked_areas: list[str | None]  # the area of every question asked, in order
     ci: CIReport | None
     history: list[list[str]]  # error fingerprints of every CI report of the run (repeat detector)
     tasks: list[RepairTask]
@@ -105,7 +108,8 @@ def initial_state(
     need: dict[str, int] | None = None,
     brief: str | None = None,
 ) -> RunState:
-    coverage = Coverage() if need is None else Coverage(got=dict.fromkeys(need, 0), need=need)
+    need = {**AREAS, **(need or {})}  # reqgraph.yaml overrides the defaults of 03_agents
+    coverage = Coverage(got=dict.fromkeys(need, 0), need=need)
     return RunState(
         mode=mode,
         brief=brief,
@@ -114,6 +118,9 @@ def initial_state(
         coverage=coverage,
         question=None,
         turns=0,
+        interview_done=mode != "interview",
+        extracted_upto=None,
+        asked_areas=[],
         ci=None,
         history=[],
         tasks=[],

@@ -11,16 +11,24 @@ from langgraph.runtime import Runtime
 from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, Field
 
-from reqgraph.agents.common import start, tag
+from reqgraph.agents.common import start
+from reqgraph.agents.coverage import coverage_of, gaps
+from reqgraph.agents.prompts import load_prompt
 from reqgraph.agents.reviewer import fingerprints
 from reqgraph.agents.runtime import RunContext
 from reqgraph.agents.state import RunState
 from reqgraph.checks.base import Owner
 from reqgraph.checks.runner import run_checks
-from reqgraph.graph.nodes import NodeKind
+from reqgraph.graph.graph import ArtifactGraph
+from reqgraph.graph.nodes import InterviewTurn, NodeKind
 from reqgraph.graph.patch import AddOp, GraphPatch
+from reqgraph.graph.store.config import Area
 from reqgraph.graph.store.project import Project
 from reqgraph.llm.router import BudgetExceeded
+
+DONE = {"done": True}  # the answer that ends the interview early («/готово» in the CLI)
+RECENT_TURNS = 8  # turns the interviewer sees verbatim
+SAME_AREA = 2  # questions in a row about one area; then the next gap goes first
 
 
 class ReferenceProject(RuntimeError):
@@ -28,11 +36,14 @@ class ReferenceProject(RuntimeError):
 
 
 class Question(BaseModel):
-    """The interviewer's output in T-201; T-301 adds the coverage delta."""
+    """The interviewer's output. Coverage itself is counted by code (coverage.py), the area only
+    says what the question aims at (events, the efficiency metric of 09_eval)."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="ignore")
 
-    text: str = Field(min_length=1)
+    text: str = Field(min_length=1, description="один вопрос заказчику")
+    area: Area | None = Field(default=None, description="область покрытия, о которой вопрос")
+    done: bool = Field(default=False, description="только без трекера: вопросов больше нет")
 
 
 def run_project(ctx: RunContext, state: RunState) -> Project:
@@ -61,7 +72,7 @@ async def intake(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any
         project=info.id,
         nodes=len(state["graph"].nodes),
     )
-    if state["mode"] != "brief" or not state["brief"]:
+    if state["mode"] == "check" or not state["brief"]:
         return {}
     texts = brief_turns(state["brief"])
     patch = GraphPatch(
@@ -77,25 +88,74 @@ async def intake(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any
     return {"graph": result.graph}
 
 
+def _turns(graph: ArtifactGraph) -> list[InterviewTurn]:
+    return [n for n in graph.nodes_of("TURN") if isinstance(n, InterviewTurn)]
+
+
+def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
+    """The prompt and the template name: with the coverage tracker (M2) or without it (M1)."""
+    turns = _turns(state["graph"])
+    asked = [t.text for t in turns if t.role == "agent"]
+    assumptions = [
+        f"{n.id}: {getattr(n, 'statement', '')}"
+        for kind in ("BR", "UR", "FR", "NFR", "CON")
+        for n in state["graph"].nodes_of(kind)
+        if n.assumption
+    ]
+    name = "interviewer/ask" if ctx.interviewer == "coverage" else "interviewer/ask_free"
+    prompt = load_prompt(name).render(
+        gaps=next_gaps(state),
+        coverage=state["coverage"],
+        recent=turns[-RECENT_TURNS:],
+        asked=asked,
+        assumptions=assumptions[:10],
+        turn=state["turns"] + 1,
+        max_turns=ctx.max_turns,
+    )
+    return prompt, name
+
+
+def next_gaps(state: RunState) -> list[tuple[str, int, int]]:
+    """The emptiest areas first; an area asked SAME_AREA times in a row goes last: the client
+    has not told more about it, so the interview moves on and may come back later."""
+    found = gaps(state["coverage"])
+    recent = state["asked_areas"][-SAME_AREA:]
+    if len(recent) == SAME_AREA and len(set(recent)) == 1 and len(found) > 1:
+        found.sort(key=lambda g: g[0] == recent[0])  # stable: the rest keep their order
+    return found
+
+
 async def interviewer(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     ctx = start(runtime, "interviewer")
     if state["stop"] is not None:
         return {}
-    prompt = tag("graph", state["graph"].to_json())
+    prompt, name = render_question(state, ctx)
+    template = load_prompt(name)
     try:
-        question, budget = await ctx.ask("interviewer", prompt, Question, state["budget"])
+        question, budget = await ctx.ask(
+            "interviewer", prompt, Question, state["budget"], template=template
+        )
     except BudgetExceeded:
         ctx.events.emit("stop", reason="budget", node="interviewer")
         return {"stop": "budget"}
-    return {"question": question.text, "budget": budget}
+    if question.done and ctx.interviewer == "free":
+        ctx.events.emit("interview_end", reason="interviewer", turns=state["turns"])
+        return {"budget": budget, "question": None, "interview_done": True}
+    ctx.events.emit("question", turn=state["turns"] + 1, area=question.area)
+    asked = [*state["asked_areas"], question.area]
+    return {"question": question.text, "budget": budget, "asked_areas": asked}
 
 
 async def await_answer(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
-    """Pause until a person or the simulator answers; both turns go into the graph as data."""
+    """Pause until a person or the simulator answers; both turns go into the graph as data.
+    The answer DONE ends the interview without a turn."""
     ctx = start(runtime, "await_answer")
     if state["stop"] is not None or state["question"] is None:
         return {}
-    answer = interrupt({"question": state["question"]})
+    answer = interrupt({"question": state["question"], "turn": state["turns"] + 1})
+    if answer == DONE:
+        ctx.events.emit("interview_end", reason="client", turns=state["turns"])
+        return {"question": None, "interview_done": True}
     turns = [("q", "agent", state["question"]), ("a", "client", str(answer))]
     patch = GraphPatch(
         ops=[
@@ -109,19 +169,38 @@ async def await_answer(state: RunState, runtime: Runtime[RunContext]) -> dict[st
 
 
 def mode_gate(state: RunState) -> str:
-    """interview — questions first; brief — straight to the Analyst; check — only the checks."""
-    return {"interview": "interviewer", "brief": "analyst", "check": "ci_check"}[state["mode"]]
+    """interview — the brief to the Analyst first, else straight to the coverage; brief — to the
+    Analyst; check — only the checks."""
+    if state["mode"] == "interview":
+        return "analyst" if state["brief"] else "coverage"
+    return {"brief": "analyst", "check": "ci_check"}[state["mode"]]
 
 
-def coverage_gate(state: RunState, runtime: Runtime[RunContext]) -> str:
-    """Enough asked: coverage reached, the turn limit, or the agents stopped (03_agents)."""
-    if (
-        state["stop"] is not None
-        or state["coverage"].complete
-        or state["turns"] >= runtime.context.max_turns
-    ):
-        return "done"
-    return "ask"
+async def coverage(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+    """Count the coverage from the graph and decide whether the interview goes on (03_agents):
+    coverage reached (with the tracker), the turn limit, «/готово», or the agents stopped."""
+    ctx = start(runtime, "coverage")
+    counted = coverage_of(state["graph"], state["coverage"].need)
+    reached = counted.complete and ctx.interviewer == "coverage"
+    limit = state["turns"] >= ctx.max_turns
+    done = state["interview_done"] or state["stop"] is not None or reached or limit
+    ctx.events.emit("coverage", turns=state["turns"], got=counted.got, need=counted.need, done=done)
+    if done and not state["interview_done"]:
+        reason = "coverage" if reached else "limit" if limit else "stop"
+        ctx.events.emit("interview_end", reason=reason, turns=state["turns"])
+    return {"coverage": counted, "interview_done": done}
+
+
+def coverage_gate(state: RunState) -> str:
+    return "done" if state["interview_done"] else "ask"
+
+
+def after_analyst(state: RunState) -> str:
+    """In an interview the Analyst runs after every answer, then the coverage is counted again;
+    once the interview is over (and in repair rounds) the pipeline goes on to the Modeler."""
+    if state["mode"] == "interview" and not state["interview_done"] and state["stop"] is None:
+        return "coverage"
+    return "modeler"
 
 
 async def ci_check(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:

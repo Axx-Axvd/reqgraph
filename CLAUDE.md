@@ -8,7 +8,7 @@
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
-- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`; TPL-001 — в T-204); S2 сделан (T-201…T-206: граф прогона на LangGraph, агенты Analyst, Modeler, Standards, Reviewer, цикл ремонта с детектором повторов, `reqgraph init` и `reqgraph run`, демо M2 — docs/demo/m2.md), дальше S3: T-301 (`reqgraph interview`).
+- Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`; TPL-001 — в T-204); S2 сделан (T-201…T-206: граф прогона на LangGraph, агенты Analyst, Modeler, Standards, Reviewer, цикл ремонта с детектором повторов, `reqgraph init` и `reqgraph run`, демо M2 — docs/demo/m2.md), S3: T-301 (`reqgraph interview`: покрытие, пауза и продолжение) сделан, дальше T-303 (сценарии), T-302 (симулятор), T-304 (метрики).
 
 ## Команды
 Работают сейчас:
@@ -28,6 +28,8 @@
 - uv run reqgraph init <папка> --name <название> --brief <бриф.md> [--id] [--profile]   # новый проект: reqgraph.yaml и brief.md
 - uv run reqgraph run <папка> [--brief] [--budget-usd] [--max-iter] [--reviewer llm|template] [--offline] [--no-write] [--json]   # бриф → агенты → проверки → ремонт (нужна сеть); код 0 / 1 ошибки остались / 2 не запустился
 - uv run pytest packages/core/tests/agents/test_run_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету сквозного прогона dev-01
+- uv run reqgraph interview <папка> [--brief] [--restart] [--max-turns] [--interviewer coverage|free] [--offline]   # интервью в терминале: /готово, /пауза; продолжение после перезапуска
+- uv run pytest packages/core/tests/agents/test_interview_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету живого интервью
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)

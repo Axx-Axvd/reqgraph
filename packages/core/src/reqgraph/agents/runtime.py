@@ -25,6 +25,7 @@ from reqgraph.agents.state import (
     initial_state,
 )
 from reqgraph.checks.report import CIReport
+from reqgraph.graph.edges import Rel
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.store.base import ProjectStore
 from reqgraph.graph.store.project import Project
@@ -69,6 +70,7 @@ class RunContext:
     max_iter: int = 5  # repair rounds (05_ci)
     max_turns: int = 40  # interview questions (03_agents)
     reviewer: Literal["llm", "template"] = "llm"  # template: the «without Reviewer» ablation
+    interviewer: Literal["coverage", "free"] = "coverage"  # free: no coverage tracker (M1, H1)
 
     @classmethod
     def for_project(cls, project: Project, **options: Any) -> "RunContext":
@@ -117,7 +119,8 @@ class RunContext:
         return output, BudgetState.of(run_budget)
 
 
-STATE_TYPES: tuple[type, ...] = (ArtifactGraph, CIReport, Coverage, RepairTask, BudgetState)
+# Pydantic models of the state and the enums inside them (an edge keeps its relation as Rel)
+STATE_TYPES: tuple[type, ...] = (ArtifactGraph, CIReport, Coverage, RepairTask, BudgetState, Rel)
 
 
 def checkpoint_serde() -> JsonPlusSerializer:

@@ -94,7 +94,7 @@ gantt
 
 <sub>`Definition of Done`</sub>
 
-- [ ] **reqgraph interview ведёт диалог в терминале** — interrupt / resume через чекпоинтер
+- [x] **reqgraph interview ведёт диалог в терминале** — interrupt / resume через чекпоинтер
 - [ ] **симулятор раскрывает требование только по теме вопроса** — ручная проверка 3 диалогов
 - [ ] **15 сценариев: 3 dev + 12 test, по 25-60 скрытых требований** — домены согласованы с руководителем
 - [ ] **метрики recall, ambiguity, validity, soundness, trace считаются скриптом** — results.csv
