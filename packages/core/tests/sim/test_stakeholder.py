@@ -136,7 +136,7 @@ async def test_asked_again_the_client_repeats_instead_of_forgetting() -> None:
     again = await sim.answer("Ещё раз: до какого времени отмена?")
     assert [t.mode for t in again.told] == ["repeat"] and again.revealed == []
     told = reply_part(client.replies[1])
-    assert "уже говорил" in told and "3 часа" in told
+    assert "уже шла речь" in told and "3 часа" in told
 
 
 def test_a_law_number_is_not_a_quantity_to_get_wrong() -> None:

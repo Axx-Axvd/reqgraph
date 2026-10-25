@@ -178,7 +178,9 @@ def _fill(
     areas = [e.get("area") for e in events if e["type"] == "question"]
     for turn, area in zip(turns, areas, strict=False):
         turn.area = area
-        row.off_topic += sum(1 for t in turn.told if area is not None and t["area"] != area)
+        row.off_topic += sum(  # a repeat is not a hint: it was told before
+            1 for t in turn.told if area is not None and t["area"] != area and t["mode"] != "repeat"
+        )
     ends = [e["reason"] for e in events if e["type"] == "interview_end"]
     row.end = ends[-1] if ends else ""
     row.turns = len(turns)
@@ -214,7 +216,8 @@ def dialog_markdown(row: Row, turns: Sequence[Turn], sim: Stakeholder) -> str:
         lines += [f"**Интервьюер:** {turn.question}", "", f"**Заказчик:** {turn.answer}", ""]
         for t in turn.told:
             item = items[t["id"]]
-            flag = " ⚠" if turn.area is not None and item.area != turn.area else ""
+            off = turn.area is not None and item.area != turn.area and t["mode"] != "repeat"
+            flag = " ⚠" if off else ""
             lines.append(
                 f"- {t['id']} ({item.area}){flag} — {MODES[t['mode']]}: {item.statement} "
                 f"[тема: {item.reveal}]"
