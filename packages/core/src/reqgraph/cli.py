@@ -1,11 +1,14 @@
 """Command-line entry point: ``reqgraph``."""
 
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
 from reqgraph import __version__
+
+if TYPE_CHECKING:
+    from reqgraph.agents.run import RunSummary
 
 app = typer.Typer(name="reqgraph", no_args_is_help=True, add_completion=False)
 
@@ -190,7 +193,6 @@ def run(
     Exit code 0: no errors left; 1: errors left (needs_human, budget, rounds); 2: cannot run.
     """
     import asyncio
-    import json
 
     from reqgraph.agents.run import RunFailed, run_project
 
@@ -214,25 +216,126 @@ def run(
     except (RunFailed, OSError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(2) from None
+    _print_summary(summary, None if no_write else path, as_json)
+    raise typer.Exit(0 if report.ok else 1)
+
+
+def _print_summary(summary: "RunSummary", path: Path | None, as_json: bool) -> None:
+    import json
+
     if as_json:
         typer.echo(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
-    else:
-        s = summary
-        typer.echo("")
-        typer.echo(
-            f"Требований: {s.requirements}, ролей: {s.actors}, процессов: {s.processes}, "
-            f"сущностей: {s.entities}, разделов SRS: {s.sections}"
+        return
+    s = summary
+    typer.echo("")
+    if s.turns:
+        typer.echo(f"Вопросов задано и отвечено: {s.turns}")
+    typer.echo(
+        f"Требований: {s.requirements}, ролей: {s.actors}, процессов: {s.processes}, "
+        f"сущностей: {s.entities}, разделов SRS: {s.sections}"
+    )
+    stop = {"needs_human": "нужен человек", "budget": "кончился бюджет"}.get(s.stop or "", "")
+    typer.echo(f"Проверки: {s.headline}")
+    typer.echo(f"Кругов ремонта: {s.iterations}" + (f" — {stop}" if stop else ""))
+    typer.echo(
+        f"Вызовов LLM: {s.llm_calls}, токенов: {s.input_tokens + s.output_tokens}, "
+        f"${s.cost_usd:.4f}, {s.seconds:.0f} с"
+    )
+    if path is not None:
+        typer.echo(f"Отчёт: {path / 'reports' / 'ci-report.md'}")
+
+
+HELP_ANSWERS = (
+    "Отвечайте одной строкой и нажимайте Enter. /готово — закончить интервью и перейти к моделям, "
+    "/пауза (или Ctrl+C) — прервать; продолжить потом той же командой."
+)
+
+
+@app.command("interview")
+def interview(
+    path: Annotated[Path, typer.Argument(help="Project folder (with reqgraph.yaml).")],
+    brief: Annotated[
+        Path | None,
+        typer.Option("--brief", help="Brief to start from instead of the project's brief.md."),
+    ] = None,
+    restart: Annotated[
+        bool, typer.Option("--restart", help="Start a new interview instead of the paused one.")
+    ] = False,
+    max_turns: Annotated[int | None, typer.Option("--max-turns", help="Questions at most.")] = None,
+    interviewer: Annotated[
+        str, typer.Option("--interviewer", help="coverage, or free (no coverage tracker, M1).")
+    ] = "coverage",
+    profile: Annotated[
+        str | None, typer.Option("--profile", help="Model profile of llm/roles.yaml.")
+    ] = None,
+    budget_usd: Annotated[
+        float | None, typer.Option("--budget-usd", help="Budget of the run, $.")
+    ] = None,
+    max_iter: Annotated[int | None, typer.Option("--max-iter", help="Repair rounds.")] = None,
+    offline: Annotated[
+        bool, typer.Option("--offline", help="Skip the checks that need Kroki.")
+    ] = False,
+    as_json: Annotated[bool, typer.Option("--json", help="Print the summary as JSON.")] = False,
+) -> None:
+    """Interview in the terminal: a question, your answer, the next question by coverage; then
+    models, checks and repair as in `reqgraph run`. Pause and resume after a restart.
+
+    Exit code 0: paused, or no errors left; 1: errors left; 2: cannot run.
+    """
+    import asyncio
+
+    from reqgraph.agents.interview import Reply, has_open_interview, interview_project
+    from reqgraph.agents.nodes import DONE
+    from reqgraph.agents.run import RunFailed
+
+    if interviewer not in ("coverage", "free"):
+        raise typer.BadParameter("interviewer: coverage или free")
+
+    async def ask(question: str, turn: int) -> Reply:
+        typer.echo(f"\nВопрос {turn}: {question}")
+        while True:
+            try:
+                line = (await asyncio.to_thread(input, "> ")).strip()
+            except (EOFError, KeyboardInterrupt):
+                return None
+            if line == "/пауза":
+                return None
+            if line == "/готово":
+                return DONE
+            if line:
+                return line
+
+    try:
+        resumed = has_open_interview(path) and not restart
+        typer.echo("Продолжаем интервью." if resumed else "Новое интервью.")
+        typer.echo(HELP_ANSWERS)
+        text = brief.read_text(encoding="utf-8") if brief is not None else None
+        outcome = asyncio.run(
+            interview_project(
+                path,
+                ask,
+                brief=text,
+                restart=restart,
+                profile=profile,
+                budget_usd=budget_usd,
+                max_turns=max_turns,
+                max_iter=max_iter,
+                interviewer="coverage" if interviewer == "coverage" else "free",
+                offline=offline,
+                on_line=None if as_json else typer.echo,
+            )
         )
-        stop = {"needs_human": "нужен человек", "budget": "кончился бюджет"}.get(s.stop or "", "")
-        typer.echo(f"Проверки: {s.headline}")
-        typer.echo(f"Кругов ремонта: {s.iterations}" + (f" — {stop}" if stop else ""))
-        typer.echo(
-            f"Вызовов LLM: {s.llm_calls}, токенов: {s.input_tokens + s.output_tokens}, "
-            f"${s.cost_usd:.4f}, {s.seconds:.0f} с"
-        )
-        if not no_write:
-            typer.echo(f"Отчёт: {path / 'reports' / 'ci-report.md'}")
-    raise typer.Exit(0 if report.ok else 1)
+    except (RunFailed, OSError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
+    except KeyboardInterrupt:
+        outcome = None
+    if outcome is None or outcome.paused:
+        typer.echo(f"\nПауза. Продолжить: reqgraph interview {path}")
+        raise typer.Exit(0)
+    assert outcome.summary is not None and outcome.report is not None
+    _print_summary(outcome.summary, path, as_json)
+    raise typer.Exit(0 if outcome.report.ok else 1)
 
 
 if __name__ == "__main__":

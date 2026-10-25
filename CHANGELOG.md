@@ -8,6 +8,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- `reqgraph interview` (T-301): the interview in the terminal with pause and resume. The Analyst reads every answer
+  right away (only the new turns), `agents/coverage.py` counts the coverage of the 9 areas from the graph
+  (requirements derived from client turns and not assumptions; actors; distinct ISO 25010 characteristics), the
+  `coverage` node decides on the next question; the interviewer (`prompts/interviewer/ask.md`) asks about the
+  emptiest areas and moves on after two questions about one area; `--interviewer free` (no tracker, method M1).
+  State is checkpointed into the project folder (`.reqgraph/checkpoints.sqlite`, new dependency
+  `langgraph-checkpoint-sqlite` 3.1.2, MIT); «/готово» ends the interview, «/пауза» or Ctrl+C pauses it.
+  `agents/interview.py` (`interview_project()` with an answer callback, used by the simulator in T-302);
+  `RunSummary.turns`; `RunState.interview_done`, `extracted_upto`, `asked_areas`.
 - Scenarios of the experiment (T-303): `evals/scenarios/` — 3 dev and 12 test scenarios (brief, persona, hidden
   requirements: 25 / 40 / 60 per size, all 9 coverage areas, `in_brief` marks what the brief already says);
   `reqgraph_evals/scenario.py` (schemas, loader that refuses test scenarios without `final=True`, protocol checks,
@@ -30,6 +39,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Checkpoints restored edges with a warning (`Rel` was not in the msgpack allow-list); now allowed and tested.
 - Analyst: an edit of an existing requirement no longer wipes fields the model did not send (acceptance criteria).
 - guard(): links to a document section added in the same patch were dropped.
 - Standards agent and TPL-001 (T-204): own SRS structure `standards/iso29148_srs.yaml` (section names only, ADR-012;
