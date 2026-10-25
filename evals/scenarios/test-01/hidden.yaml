@@ -1,0 +1,27 @@
+# Эталон test-01 (размер S): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Доля заявок, выполненных в срок, должна вырасти с 60% до 90% за полгода.", reveal: "цели проекта, сроки заявок"}
+  - {id: H-002, kind: BR, area: goals, priority: should, statement: "Число звонков диспетчерам должно снизиться вдвое за 3 месяца после запуска.", reveal: "цели проекта, звонки"}
+  - {id: H-003, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Жилец оставляет заявку на сайте и видит её статус.", reveal: "что делает жилец"}
+  - {id: H-004, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Диспетчер принимает заявки и назначает мастера.", reveal: "работа диспетчера"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: should, statement: "Главный инженер видит все заявки по домам и отдельно — просроченные.", reveal: "кто контролирует заявки"}
+  - {id: H-006, kind: FR, area: scenarios, priority: must, statement: "Жилец выбирает тип заявки из списка — сантехника, электрика, лифт, уборка, другое — и прикладывает до 3 фото.", reveal: "как оставить заявку"}
+  - {id: H-007, kind: FR, area: scenarios, priority: should, statement: "Жилец подтверждает, что работа выполнена, или возвращает заявку с комментарием.", reveal: "закрытие заявки"}
+  - {id: H-008, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Мастер видит свои заявки на телефоне и отмечает выполнение.", reveal: "работа мастера"}
+  - {id: H-009, kind: FR, area: scenarios, priority: should, statement: "При каждой смене статуса жилец получает уведомление по SMS или на почту, как он выбрал.", reveal: "уведомления жильцу"}
+  - {id: H-010, kind: FR, area: scenarios, priority: should, statement: "Диспетчер создаёт заявку за жильца, когда тот звонит по телефону.", reveal: "заявки по телефону"}
+  - {id: H-011, kind: FR, area: exceptions, priority: must, statement: "Аварийная заявка — течь, нет света, застрял лифт — сразу уходит дежурному мастеру и диспетчеру со звуковым сигналом.", reveal: "аварии"}
+  - {id: H-012, kind: FR, area: exceptions, priority: should, statement: "Если мастер не взял заявку в работу за 30 минут, она возвращается диспетчеру.", reveal: "мастер не реагирует"}
+  - {id: H-013, kind: FR, area: exceptions, priority: should, statement: "Если мастера не пустили в квартиру, он переносит визит, а жилец выбирает новое время.", reveal: "нет доступа в квартиру"}
+  - {id: H-014, kind: FR, area: exceptions, priority: could, statement: "Повторная заявка по той же проблеме в течение 30 дней помечается как повторная и видна главному инженеру.", reveal: "повторные заявки"}
+  - {id: H-015, kind: FR, area: data, priority: must, statement: "Заявка хранит дом, подъезд, квартиру, тип, описание, фото, срочность, мастера, статус и даты.", reveal: "данные заявки"}
+  - {id: H-016, kind: FR, area: data, priority: must, statement: "О жильце хранятся ФИО, телефон, почта и квартира.", reveal: "данные о жильце"}
+  - {id: H-017, kind: FR, area: data, priority: should, statement: "О мастере хранятся ФИО, специализация и закреплённые за ним дома.", reveal: "данные о мастерах"}
+  - {id: H-018, kind: FR, area: rules, priority: must, statement: "Аварийная заявка выполняется за 2 часа, обычная — за 3 рабочих дня.", reveal: "нормативные сроки"}
+  - {id: H-019, kind: FR, area: rules, priority: must, statement: "Заявку от квартиры можно подать после подтверждения: жилец вводит номер лицевого счёта и телефон из договора.", reveal: "кто может подать заявку"}
+  - {id: H-020, kind: FR, area: rules, priority: should, statement: "Заявка назначается мастеру по его специализации и закреплённым домам.", reveal: "распределение заявок"}
+  - {id: H-021, kind: FR, area: integrations, priority: should, statement: "Список квартир и лицевых счетов раз в неделю загружается из программы начислений 1С.", reveal: "откуда брать список квартир"}
+  - {id: H-022, kind: NFR, area: nfr, priority: should, statement: "Оставить заявку с телефона можно за 2 минуты без установки приложения.", reveal: "удобство для жильцов"}
+  - {id: H-023, kind: NFR, area: nfr, priority: must, statement: "Приём аварийных заявок работает круглосуточно с доступностью не ниже 99,9%.", reveal: "круглосуточная работа"}
+  - {id: H-024, kind: NFR, area: nfr, priority: must, statement: "Жилец видит только заявки своей квартиры и общедомовые.", reveal: "кто что видит, безопасность"}
+  - {id: H-025, kind: CON, area: constraints, priority: must, statement: "Персональные данные жильцов хранятся в России, запуск — до начала отопительного сезона 1 октября.", reveal: "законы и сроки"}

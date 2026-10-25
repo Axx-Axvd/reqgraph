@@ -1,0 +1,62 @@
+# Эталон test-09 (размер L): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Загрузка баз за год должна вырасти с 45% до 60%.", reveal: "цели, загрузка"}
+  - {id: H-002, kind: BR, area: goals, priority: should, statement: "Через два года активности и прокат дают 30% выручки.", reveal: "цели, активности"}
+  - {id: H-003, kind: BR, area: goals, priority: should, statement: "Доля повторных гостей через два года — 35%.", reveal: "цели, повторные гости"}
+  - {id: H-004, kind: BR, area: goals, priority: could, statement: "Затраты на обработку броней снижаются на 40%.", reveal: "цели, затраты"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Гость бронирует проживание и активности на любой базе сети.", reveal: "что делает гость"}
+  - {id: H-006, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Инструктор ведёт расписание активностей и список участников.", reveal: "работа инструктора"}
+  - {id: H-007, kind: UR, area: stakeholders, priority: should, statement: "Сотрудник проката выдаёт и принимает снаряжение.", reveal: "прокат"}
+  - {id: H-008, kind: UR, area: stakeholders, priority: should, statement: "Вожатый детского лагеря отмечает детей на мероприятиях.", reveal: "работа вожатого"}
+  - {id: H-009, kind: UR, area: stakeholders, priority: should, statement: "Турагентство бронирует места для своих клиентов со скидкой.", reveal: "турагентства"}
+  - {id: H-010, kind: UR, area: stakeholders, priority: should, statement: "Директор сети видит загрузку и выручку по базам.", reveal: "отчёты руководству"}
+  - {id: H-011, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Гость бронирует домик или номер на выбранной базе.", reveal: "бронирование проживания"}
+  - {id: H-012, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Гость записывается на сплав, конную прогулку или экскурсию.", reveal: "запись на активности"}
+  - {id: H-013, kind: FR, area: scenarios, priority: should, statement: "Гость покупает готовый тур: проживание, питание и активности одним пакетом.", reveal: "готовые туры"}
+  - {id: H-014, kind: FR, area: scenarios, priority: should, statement: "Гость бронирует снаряжение — байдарку, велосипед, лыжи — на нужное время.", reveal: "бронирование снаряжения"}
+  - {id: H-015, kind: FR, area: scenarios, priority: must, statement: "При выдаче снаряжения сотрудник отмечает его состояние и берёт залог.", reveal: "выдача снаряжения"}
+  - {id: H-016, kind: FR, area: scenarios, priority: must, statement: "Родитель покупает путёвку в детский лагерь на смену и загружает медицинскую справку.", reveal: "путёвки в лагерь"}
+  - {id: H-017, kind: FR, area: scenarios, priority: should, statement: "Родитель получает от вожатого ежедневный фотоотчёт и уведомления.", reveal: "связь с родителями"}
+  - {id: H-018, kind: FR, area: scenarios, priority: should, statement: "Агентство бронирует места по квоте и раз в месяц получает счёт.", reveal: "работа с агентствами"}
+  - {id: H-019, kind: FR, area: scenarios, priority: must, statement: "Перед активностью участник подтверждает в приложении, что прошёл инструктаж по технике безопасности.", reveal: "инструктаж"}
+  - {id: H-020, kind: FR, area: scenarios, priority: could, statement: "Гость покупает подарочный сертификат для себя или в подарок.", reveal: "сертификаты"}
+  - {id: H-021, kind: FR, area: scenarios, priority: should, statement: "В личном кабинете гость видит все брони, чеки и бонусы.", reveal: "личный кабинет"}
+  - {id: H-022, kind: FR, area: scenarios, priority: could, statement: "Гость оставляет отзыв об активности и инструкторе.", reveal: "отзывы"}
+  - {id: H-023, kind: FR, area: exceptions, priority: must, statement: "Если активность отменена из-за погоды, участникам предлагают перенос или возврат денег.", reveal: "отмена из-за погоды"}
+  - {id: H-024, kind: FR, area: exceptions, priority: must, statement: "Если снаряжение вернули повреждённым, стоимость ремонта удерживается из залога.", reveal: "повреждённое снаряжение"}
+  - {id: H-025, kind: FR, area: exceptions, priority: must, statement: "Если ребёнок заболел в лагере, вожатый вызывает медика и сообщает родителю.", reveal: "ребёнок заболел"}
+  - {id: H-026, kind: FR, area: exceptions, priority: should, statement: "Если агентство не выкупило квоту за 14 дней до заезда, места возвращаются в общую продажу.", reveal: "невыкупленная квота"}
+  - {id: H-027, kind: FR, area: exceptions, priority: should, statement: "Если на активность записалось меньше минимального числа участников, она отменяется за сутки.", reveal: "мало участников"}
+  - {id: H-028, kind: FR, area: exceptions, priority: could, statement: "Если гость опоздал на активность больше чем на 15 минут, деньги не возвращаются.", reveal: "опоздание на активность"}
+  - {id: H-029, kind: FR, area: exceptions, priority: must, statement: "Если база закрыта из-за паводка или пожара, брони переносятся на другие базы или деньги возвращаются.", reveal: "закрытие базы"}
+  - {id: H-030, kind: FR, area: exceptions, priority: should, statement: "Потерянное снаряжение оплачивается по прайсу.", reveal: "утеря снаряжения"}
+  - {id: H-031, kind: FR, area: exceptions, priority: must, statement: "Если медицинская справка не загружена за 3 дня до смены, путёвка не подтверждается.", reveal: "нет справки"}
+  - {id: H-032, kind: FR, area: data, priority: must, statement: "О базе хранятся адрес, координаты, виды размещения, активности и сезон работы.", reveal: "данные о базах"}
+  - {id: H-033, kind: FR, area: data, priority: must, statement: "У размещения есть тип, вместимость, удобства и цены по сезонам.", reveal: "данные размещения"}
+  - {id: H-034, kind: FR, area: data, priority: must, statement: "У активности есть название, инструктор, длительность, минимум и максимум участников, возраст и цена.", reveal: "данные активностей"}
+  - {id: H-035, kind: FR, area: data, priority: should, statement: "У снаряжения есть тип, инвентарный номер, размер, состояние и место.", reveal: "данные снаряжения"}
+  - {id: H-036, kind: FR, area: data, priority: must, statement: "О ребёнке хранятся ФИО, возраст, смена, отряд, медицинские данные и родители.", reveal: "данные о детях"}
+  - {id: H-037, kind: FR, area: data, priority: should, statement: "Об агентстве хранятся договор, квота, скидка и счета.", reveal: "данные агентств"}
+  - {id: H-038, kind: FR, area: data, priority: must, statement: "Бронь хранит гостя, базу, размещение, даты, активности, снаряжение и оплаты.", reveal: "данные брони"}
+  - {id: H-039, kind: FR, area: data, priority: could, statement: "У сертификата есть номинал, срок, владелец и отметка об использовании.", reveal: "данные сертификатов"}
+  - {id: H-040, kind: FR, area: rules, priority: should, statement: "Агентствам даётся скидка 12%, счёт оплачивается за 10 дней.", reveal: "условия агентств"}
+  - {id: H-041, kind: FR, area: rules, priority: must, statement: "Залог за снаряжение — 50% его стоимости, но не меньше 2000 рублей.", reveal: "размер залога"}
+  - {id: H-042, kind: FR, area: rules, priority: must, statement: "На сплав допускаются с 12 лет и только после инструктажа.", reveal: "допуск на сплав"}
+  - {id: H-043, kind: FR, area: rules, priority: must, statement: "Смена в лагере — 14 дней, в отряде не больше 20 детей на двух вожатых.", reveal: "правила лагеря"}
+  - {id: H-044, kind: FR, area: rules, priority: should, statement: "Сертификат действует 12 месяцев и не обменивается на деньги.", reveal: "правила сертификатов"}
+  - {id: H-045, kind: FR, area: rules, priority: must, statement: "Бесплатная отмена проживания — за 14 дней, туров — за 21 день.", reveal: "правила отмены"}
+  - {id: H-046, kind: FR, area: rules, priority: should, statement: "Повторный гость получает бонусами 5% от суммы прошлой поездки.", reveal: "бонусы"}
+  - {id: H-047, kind: FR, area: rules, priority: could, statement: "В будни активности дешевле на 20%.", reveal: "цены по дням"}
+  - {id: H-048, kind: FR, area: integrations, priority: must, statement: "Размещение синхронизируется с агрегаторами через менеджер каналов.", reveal: "агрегаторы"}
+  - {id: H-049, kind: FR, area: integrations, priority: should, statement: "Отмены по погоде планируются по прогнозу из погодного сервиса.", reveal: "прогноз погоды"}
+  - {id: H-050, kind: FR, area: integrations, priority: should, statement: "Оплаты и счета агентствам передаются в 1С.", reveal: "бухгалтерия"}
+  - {id: H-051, kind: NFR, area: nfr, priority: must, statement: "В день открытия продаж летних смен сайт выдерживает 2000 пользователей одновременно.", reveal: "нагрузка"}
+  - {id: H-052, kind: NFR, area: nfr, priority: must, statement: "На базах без связи прокат и заселение работают офлайн и синхронизируются, когда связь появится.", reveal: "работа без связи"}
+  - {id: H-053, kind: NFR, area: nfr, priority: must, statement: "Медицинские данные детей видят только медик и вожатый отряда.", reveal: "защита данных детей"}
+  - {id: H-054, kind: NFR, area: nfr, priority: should, statement: "Купить тур можно за 10 минут без предварительной регистрации.", reveal: "удобство покупки"}
+  - {id: H-055, kind: NFR, area: nfr, priority: should, statement: "Новая база или активность добавляется в справочник без программиста.", reveal: "расширение"}
+  - {id: H-056, kind: NFR, area: nfr, priority: should, statement: "Приложение инструктора работает на планшетах Android.", reveal: "устройства инструкторов"}
+  - {id: H-057, kind: NFR, area: nfr, priority: could, statement: "Сайт работает на русском, английском и китайском языках.", reveal: "языки"}
+  - {id: H-058, kind: CON, area: constraints, priority: must, in_brief: true, statement: "Детский лагерь работает по санитарным правилам и с лицензией на медицинскую деятельность.", reveal: "требования к лагерю"}
+  - {id: H-059, kind: CON, area: constraints, priority: must, in_brief: true, statement: "Персональные данные гостей и детей хранятся в России.", reveal: "где хранить данные"}
+  - {id: H-060, kind: CON, area: constraints, priority: should, statement: "Первая очередь — к летнему сезону через 7 месяцев, бюджет — 10 млн рублей.", reveal: "бюджет и сроки"}

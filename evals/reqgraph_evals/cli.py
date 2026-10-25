@@ -1,4 +1,5 @@
-"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards | repair``."""
+"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards | repair |
+scenarios``."""
 
 import asyncio
 from datetime import date
@@ -8,6 +9,7 @@ from typing import Annotated, Literal
 import typer
 
 from reqgraph_evals import analyst, modeler, probe, repair, standards
+from reqgraph_evals import scenario as scenario_files
 
 app = typer.Typer(name="reqgraph-evals", no_args_is_help=True, add_completion=False)
 REPORTS = Path(__file__).resolve().parent.parent / "reports"
@@ -149,3 +151,37 @@ def repair_cmd(
     (out / f"{stem}.md").write_text(summary, encoding="utf-8")
     typer.echo(summary)
     typer.echo(f"-> {out / stem}.csv, {stem}.md")
+
+
+@app.command("scenarios")
+def scenarios_cmd(
+    seal: Annotated[
+        bool, typer.Option(help="переписать печать test-сценариев (после проверки автором)")
+    ] = False,
+) -> None:
+    """Проверить 15 сценариев: формат, размер, области, долю в брифе и печать test-сценариев.
+
+    Тексты test-сценариев не печатаются: только id, размер и найденные проблемы."""
+    bad = 0
+    for scenario_id in scenario_files.scenario_ids():
+        item = scenario_files.load_scenario(scenario_id, final=True)  # only checked, not printed
+        found = scenario_files.problems(item)
+        hidden = item.hidden.requirements
+        share = sum(r.in_brief for r in hidden) / len(hidden)
+        typer.echo(
+            f"{scenario_id}: {item.info.size}, требований {len(hidden)}, в брифе {share:.0%}"
+            + ("" if found else " — ок")
+        )
+        for problem in found:
+            typer.echo(f"  {problem}")
+        bad += bool(found)
+    if seal:
+        path = scenario_files.SCENARIOS / scenario_files.MANIFEST
+        path.write_text(scenario_files.manifest(), encoding="utf-8", newline="\n")
+        typer.echo(f"печать обновлена: {path}")
+    broken = scenario_files.seal_broken()
+    if broken:
+        typer.echo("печать test-сценариев нарушена (файлы менялись после печати):")
+        for line in broken:
+            typer.echo(f"  {line.split('  ', 1)[-1]}")
+    raise typer.Exit(1 if bad or broken else 0)

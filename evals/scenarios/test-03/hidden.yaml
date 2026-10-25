@@ -1,0 +1,62 @@
+# Эталон test-03 (размер L): что знает заказчик. Черновик Claude (T-303), проверяет автор.
+requirements:
+  - {id: H-001, kind: BR, area: goals, priority: must, statement: "Доля заявок, закрытых в нормативный срок, должна быть не ниже 95% через год.", reveal: "цели проекта, сроки"}
+  - {id: H-002, kind: BR, area: goals, priority: should, statement: "Выручка от платных услуг жильцам должна вырасти на 30% за год.", reveal: "цели проекта, платные услуги"}
+  - {id: H-003, kind: BR, area: goals, priority: should, statement: "Электронные общие собрания должны набирать кворум в 70% случаев.", reveal: "цели проекта, собрания"}
+  - {id: H-004, kind: BR, area: goals, priority: should, statement: "Затраты на колл-центр должны снизиться на 25% за год.", reveal: "цели проекта, колл-центр"}
+  - {id: H-005, kind: UR, area: stakeholders, priority: must, in_brief: true, statement: "Жилец пользуется личным кабинетом с телефона.", reveal: "что делает жилец"}
+  - {id: H-006, kind: UR, area: stakeholders, priority: must, statement: "Оператор колл-центра создаёт заявки и видит историю обращений жильца.", reveal: "работа колл-центра"}
+  - {id: H-007, kind: UR, area: stakeholders, priority: must, statement: "Мастер получает заявки в мобильном приложении и отмечает время прибытия и окончания работ.", reveal: "работа мастера"}
+  - {id: H-008, kind: UR, area: stakeholders, priority: should, statement: "Инициатор собрания — управляющий или собственник — создаёт собрание и вопросы для голосования.", reveal: "кто проводит собрания"}
+  - {id: H-009, kind: UR, area: stakeholders, priority: should, statement: "Охранник на въезде проверяет гостевые пропуска.", reveal: "охрана двора"}
+  - {id: H-010, kind: UR, area: stakeholders, priority: should, statement: "Руководство видит сводные показатели по районам.", reveal: "отчёты для руководства"}
+  - {id: H-011, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Жилец оставляет заявку и следит за её статусом.", reveal: "заявки жильцов"}
+  - {id: H-012, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Жилец заказывает платную услугу и оплачивает её онлайн.", reveal: "платные услуги"}
+  - {id: H-013, kind: FR, area: scenarios, priority: should, statement: "Перед заказом платной услуги жилец видит фиксированную цену из прайса или получает смету от мастера.", reveal: "цена платной услуги"}
+  - {id: H-014, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Собственники голосуют на общем собрании электронно.", reveal: "электронное собрание"}
+  - {id: H-015, kind: FR, area: scenarios, priority: must, statement: "Собственник голосует по каждому вопросу «за», «против» или «воздержался» и подтверждает голос кодом из SMS.", reveal: "как голосовать"}
+  - {id: H-016, kind: FR, area: scenarios, priority: must, statement: "После окончания собрания система формирует протокол с итогами по вопросам и подсчётом голосов по площади.", reveal: "итоги собрания, протокол"}
+  - {id: H-017, kind: FR, area: scenarios, priority: should, in_brief: true, statement: "Жилец оформляет гостевой пропуск на машину.", reveal: "гостевые пропуска"}
+  - {id: H-018, kind: FR, area: scenarios, priority: should, statement: "Гостевой пропуск действует до 24 часов, охранник проверяет его по номеру машины.", reveal: "как работает пропуск"}
+  - {id: H-019, kind: FR, area: scenarios, priority: must, statement: "Жилец передаёт показания счётчиков.", reveal: "показания счётчиков"}
+  - {id: H-020, kind: FR, area: scenarios, priority: should, statement: "Жилец получает квитанцию в личном кабинете и оплачивает её.", reveal: "квитанции и оплата"}
+  - {id: H-021, kind: FR, area: scenarios, priority: should, statement: "Мастер отмечает в заявке израсходованные материалы, и их стоимость попадает в отчёт.", reveal: "материалы мастера"}
+  - {id: H-022, kind: FR, area: scenarios, priority: could, statement: "Жилец оценивает выполненную заявку и оставляет отзыв.", reveal: "отзывы жильцов"}
+  - {id: H-023, kind: FR, area: exceptions, priority: must, statement: "Пока платная услуга не оплачена, мастер не выезжает, кроме аварий.", reveal: "неоплаченные услуги"}
+  - {id: H-024, kind: FR, area: exceptions, priority: should, statement: "Если смета больше 5000 рублей, работу начинают только после подтверждения жильцом.", reveal: "дорогие работы"}
+  - {id: H-025, kind: FR, area: exceptions, priority: must, statement: "Если к дате окончания собрания нет кворума, оно признаётся несостоявшимся и инициатор получает уведомление.", reveal: "нет кворума"}
+  - {id: H-026, kind: FR, area: exceptions, priority: should, statement: "Если собственник продал квартиру, его голоса в незавершённом собрании аннулируются.", reveal: "смена собственника во время собрания"}
+  - {id: H-027, kind: FR, area: exceptions, priority: should, statement: "Если по дому за час пришло больше 10 заявок, они объединяются в одну массовую, а жильцы получают общее уведомление.", reveal: "массовая авария"}
+  - {id: H-028, kind: FR, area: exceptions, priority: should, statement: "Если мастер не пришёл в окно визита, жилец в один клик жалуется начальнику участка.", reveal: "мастер не пришёл"}
+  - {id: H-029, kind: FR, area: exceptions, priority: should, statement: "Без связи отметки мастера сохраняются в приложении и отправляются позже.", reveal: "нет связи у мастера"}
+  - {id: H-030, kind: FR, area: exceptions, priority: could, statement: "Если пропуск выписан на машину из чёрного списка, охранник видит предупреждение.", reveal: "нежелательные машины"}
+  - {id: H-031, kind: FR, area: exceptions, priority: should, statement: "Ошибочную оплату бухгалтер возвращает с указанием причины.", reveal: "возврат оплаты"}
+  - {id: H-032, kind: FR, area: data, priority: must, statement: "О доме хранятся адрес, район, участок, год постройки, число квартир, лифты и управляющий.", reveal: "данные о доме"}
+  - {id: H-033, kind: FR, area: data, priority: must, statement: "О квартире хранятся номер, площадь, собственники с долями и лицевой счёт.", reveal: "данные о квартире"}
+  - {id: H-034, kind: FR, area: data, priority: must, statement: "О собственнике хранятся ФИО, телефон, почта, доля в праве и документ о собственности.", reveal: "данные о собственнике"}
+  - {id: H-035, kind: FR, area: data, priority: must, statement: "Заявка хранит тип, срочность, описание, фото, исполнителя, окно визита, время прибытия и окончания, материалы и оценку.", reveal: "данные заявки"}
+  - {id: H-036, kind: FR, area: data, priority: should, statement: "Платная услуга хранит название, цену, единицу и нормативное время.", reveal: "прайс платных услуг"}
+  - {id: H-037, kind: FR, area: data, priority: must, statement: "Собрание хранит инициатора, дом, вопросы, сроки, бюллетени, итоги и протокол.", reveal: "данные собрания"}
+  - {id: H-038, kind: FR, area: data, priority: should, statement: "Пропуск хранит номер машины, квартиру, имя гостя, срок действия и кто его выдал.", reveal: "данные пропуска"}
+  - {id: H-039, kind: FR, area: data, priority: should, statement: "Все действия операторов и мастеров записываются в журнал: кто, что и когда сделал.", reveal: "журнал действий"}
+  - {id: H-040, kind: FR, area: rules, priority: must, statement: "Кворум общего собрания — больше 50% голосов, голос считается пропорционально площади собственника.", reveal: "кворум и подсчёт голосов"}
+  - {id: H-041, kind: FR, area: rules, priority: should, statement: "Собрание длится от 7 до 60 дней.", reveal: "сроки собрания"}
+  - {id: H-042, kind: FR, area: rules, priority: should, statement: "Квартира выписывает не больше 5 гостевых пропусков в сутки.", reveal: "лимит пропусков"}
+  - {id: H-043, kind: FR, area: rules, priority: must, statement: "Мастер прибывает на аварию за час, обычная заявка выполняется за 3 рабочих дня.", reveal: "нормативные сроки"}
+  - {id: H-044, kind: FR, area: rules, priority: should, statement: "Цены платных услуг утверждает директор, новые цены действуют с 1 числа месяца.", reveal: "изменение цен"}
+  - {id: H-045, kind: FR, area: rules, priority: should, statement: "Заявки распределяются по участкам и специализации мастеров с учётом их загрузки.", reveal: "распределение заявок"}
+  - {id: H-046, kind: FR, area: rules, priority: should, statement: "Оценка ниже 3 баллов открывает разбор у начальника участка.", reveal: "низкие оценки"}
+  - {id: H-047, kind: FR, area: rules, priority: could, statement: "Пенсионерам по заявлению даётся скидка 10% на платные услуги.", reveal: "скидки"}
+  - {id: H-048, kind: FR, area: integrations, priority: must, statement: "Лицевые счета, начисления и оплаты каждый час синхронизируются с биллингом 1С.", reveal: "биллинг"}
+  - {id: H-049, kind: FR, area: integrations, priority: must, statement: "Онлайн-оплата идёт через платёжный сервис банка, чеки — через онлайн-кассу.", reveal: "оплата и чеки"}
+  - {id: H-050, kind: FR, area: integrations, priority: should, statement: "Протоколы собраний и показания передаются в ГИС ЖКХ.", reveal: "государственная система ЖКХ"}
+  - {id: H-051, kind: NFR, area: nfr, priority: must, statement: "Система выдерживает 3000 пользователей одновременно и 20 тысяч заявок в месяц.", reveal: "нагрузка"}
+  - {id: H-052, kind: NFR, area: nfr, priority: must, statement: "Приём аварийных заявок доступен круглосуточно с доступностью 99,9%.", reveal: "доступность"}
+  - {id: H-053, kind: NFR, area: nfr, priority: must, statement: "Каждое действие в голосовании подтверждается кодом из SMS и пишется в журнал, который нельзя изменить.", reveal: "защита голосования"}
+  - {id: H-054, kind: NFR, area: nfr, priority: should, statement: "В приложении мастера любая отметка делается не больше чем в 3 нажатия крупными кнопками.", reveal: "удобство для мастеров"}
+  - {id: H-055, kind: NFR, area: nfr, priority: should, statement: "Новые виды заявок и услуг добавляются в справочник без программиста.", reveal: "изменения справочников"}
+  - {id: H-056, kind: NFR, area: nfr, priority: should, statement: "Приложение мастера работает на Android 10 и новее.", reveal: "телефоны мастеров"}
+  - {id: H-057, kind: NFR, area: nfr, priority: should, statement: "Личный кабинет открывается быстрее 3 секунд на мобильном интернете.", reveal: "скорость кабинета"}
+  - {id: H-058, kind: CON, area: constraints, priority: must, in_brief: true, statement: "Электронные общие собрания проводятся по правилам Жилищного кодекса.", reveal: "законы о собраниях"}
+  - {id: H-059, kind: CON, area: constraints, priority: must, in_brief: true, statement: "Персональные данные хранятся в России.", reveal: "где хранить данные"}
+  - {id: H-060, kind: CON, area: constraints, priority: should, statement: "Внедрение идёт поэтапно за 9 месяцев, бюджет — 6 млн рублей.", reveal: "бюджет и сроки"}
