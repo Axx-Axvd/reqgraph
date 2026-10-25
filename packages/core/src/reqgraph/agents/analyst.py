@@ -27,7 +27,7 @@ from reqgraph.graph.patch import AddOp, GraphPatch, LinkOp, Op, RemoveOp, Update
 from reqgraph.graph.store.config import Area
 from reqgraph.llm.router import BudgetExceeded
 
-PROVIDER_ERRORS = (ModelHTTPError, FallbackExceptionGroup, UnexpectedModelBehavior)
+PROVIDER_ERRORS = (ModelHTTPError, FallbackExceptionGroup, UnexpectedModelBehavior, TimeoutError)
 
 RequirementKind = Literal["BR", "UR", "FR", "NFR", "CON"]
 

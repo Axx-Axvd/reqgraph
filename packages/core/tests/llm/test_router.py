@@ -247,5 +247,6 @@ async def test_other_errors_and_too_many_429_are_not_waited_out(
     with pytest.raises(ModelHTTPError):
         await structured("stakeholder", "п", Requirement, profile="free")
     assert router.rate_limited(FallbackExceptionGroup("x", [ModelHTTPError(429, "a")])) == 20.0
+    assert router.rate_limited(ModelHTTPError(429, "a", retry_after=3600)) is None  # a daily limit
     mixed = FallbackExceptionGroup("x", [ModelHTTPError(429, "a"), ModelHTTPError(500, "b")])
     assert router.rate_limited(mixed) is None
