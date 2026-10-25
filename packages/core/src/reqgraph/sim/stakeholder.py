@@ -31,7 +31,8 @@ Mode = Literal["tell", "general", "detail", "wrong", "correct", "repeat"]
 MAX_ITEMS = 3  # requirements one answer may reveal (09_eval: no hints without a question)
 WRONG_CHANCE = 0.3  # a contradictory client names a wrong number in about every third answer
 FIX_CHANCE = 0.5  # and corrects it in one of the next answers
-RECENT = 4  # turns of the dialog the simulator sees
+RECENT = 4  # turns of the dialog the reply sees
+RECENT_SELECT = 1  # the choice needs only the question and the last exchange (tokens per day)
 
 
 @cache
@@ -95,7 +96,7 @@ class Stakeholder:
             "stakeholder/select",
             Selection,
             question=question,
-            recent=recent,
+            recent=recent[-RECENT_SELECT:],
             items=list(self.items.values()),
             revealed=sorted(self.revealed),
             max_items=MAX_ITEMS,
