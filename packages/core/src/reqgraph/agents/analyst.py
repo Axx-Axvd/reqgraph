@@ -11,8 +11,8 @@ from functools import cache
 from typing import Any, Literal, get_args
 
 from langgraph.runtime import Runtime
-from pydantic_ai.exceptions import FallbackExceptionGroup, ModelHTTPError, UnexpectedModelBehavior
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic_ai.exceptions import FallbackExceptionGroup, ModelHTTPError, UnexpectedModelBehavior
 
 from reqgraph.agents.common import ALLOWED, Attempt, apply_with_retry, diff_summary, guarded, start
 from reqgraph.agents.prompts import load_prompt
