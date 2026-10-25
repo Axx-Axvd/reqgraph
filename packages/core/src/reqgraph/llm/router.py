@@ -32,12 +32,16 @@ log = logging.getLogger(__name__)
 PLACEHOLDER_KEY = "placeholder"
 CHARS_PER_TOKEN = 3  # rough estimate for Russian text, enough to skip small-context providers
 RATE_LIMIT_WAIT_S = 20.0  # free tiers count tokens per minute: wait a part of that minute
+RATE_LIMIT_MAX_WAIT_S = 60.0  # a longer retry-after is a daily limit: do not wait it out
 
 
 def rate_limited(exc: BaseException) -> float | None:
     """Seconds to wait when every model of the ladder answered 429, else None."""
     if isinstance(exc, ModelHTTPError):
-        return (exc.retry_after or RATE_LIMIT_WAIT_S) if exc.status_code == 429 else None
+        if exc.status_code != 429:
+            return None
+        wait = exc.retry_after or RATE_LIMIT_WAIT_S
+        return wait if wait <= RATE_LIMIT_MAX_WAIT_S else None
     if isinstance(exc, FallbackExceptionGroup):
         waits = [rate_limited(e) for e in exc.exceptions]
         if waits and all(w is not None for w in waits):
@@ -202,13 +206,17 @@ async def structured[T](
     started, waited = time.perf_counter(), 0.0
     for attempt in range(cfg.defaults.rate_limit_retries + 1):
         try:
-            result = await agent.run(
-                prompt,
-                model_settings=settings,
-                usage_limits=UsageLimits(
-                    request_limit=cfg.defaults.retries + 2, total_tokens_limit=token_cap
-                ),
-            )
+            # a hard cap over the whole ladder: a hung connection must not stop a run for good
+            async with asyncio.timeout(
+                cfg.defaults.timeout_s * (cfg.defaults.retries + 2) * len(steps)
+            ):
+                result = await agent.run(
+                    prompt,
+                    model_settings=settings,
+                    usage_limits=UsageLimits(
+                        request_limit=cfg.defaults.retries + 2, total_tokens_limit=token_cap
+                    ),
+                )
             break
         except UsageLimitExceeded as exc:
             raise BudgetExceeded(
