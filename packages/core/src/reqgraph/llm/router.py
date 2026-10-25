@@ -5,6 +5,7 @@ retries invalid output, falls back to the next model on 429 / 5xx / timeout, and
 cost and latency as ``CallStats``. API keys are read from the environment and never logged.
 """
 
+import asyncio
 import logging
 import os
 import time
@@ -13,7 +14,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from pydantic_ai import Agent
-from pydantic_ai.exceptions import UsageLimitExceeded
+from pydantic_ai.exceptions import FallbackExceptionGroup, ModelHTTPError, UsageLimitExceeded
 from pydantic_ai.messages import ModelResponse
 from pydantic_ai.models import Model
 from pydantic_ai.models.fallback import FallbackModel
@@ -30,6 +31,18 @@ log = logging.getLogger(__name__)
 # injects the real key; elsewhere the provider answers 401 and the error names key_env.
 PLACEHOLDER_KEY = "placeholder"
 CHARS_PER_TOKEN = 3  # rough estimate for Russian text, enough to skip small-context providers
+RATE_LIMIT_WAIT_S = 20.0  # free tiers count tokens per minute: wait a part of that minute
+
+
+def rate_limited(exc: BaseException) -> float | None:
+    """Seconds to wait when every model of the ladder answered 429, else None."""
+    if isinstance(exc, ModelHTTPError):
+        return (exc.retry_after or RATE_LIMIT_WAIT_S) if exc.status_code == 429 else None
+    if isinstance(exc, FallbackExceptionGroup):
+        waits = [rate_limited(e) for e in exc.exceptions]
+        if waits and all(w is not None for w in waits):
+            return min(w for w in waits if w is not None)
+    return None
 
 
 class BudgetExceeded(RuntimeError):
@@ -186,20 +199,29 @@ async def structured[T](
         model, output_type=output_type, instructions=instructions, retries=cfg.defaults.retries
     )
 
-    started = time.perf_counter()
-    try:
-        result = await agent.run(
-            prompt,
-            model_settings=settings,
-            usage_limits=UsageLimits(
-                request_limit=cfg.defaults.retries + 2, total_tokens_limit=token_cap
-            ),
-        )
-    except UsageLimitExceeded as exc:
-        raise BudgetExceeded(
-            f"вызов роли «{role}» превысил остаток токенов прогона: {exc}"
-        ) from exc
-    latency_ms = int((time.perf_counter() - started) * 1000)
+    started, waited = time.perf_counter(), 0.0
+    for attempt in range(cfg.defaults.rate_limit_retries + 1):
+        try:
+            result = await agent.run(
+                prompt,
+                model_settings=settings,
+                usage_limits=UsageLimits(
+                    request_limit=cfg.defaults.retries + 2, total_tokens_limit=token_cap
+                ),
+            )
+            break
+        except UsageLimitExceeded as exc:
+            raise BudgetExceeded(
+                f"вызов роли «{role}» превысил остаток токенов прогона: {exc}"
+            ) from exc
+        except (ModelHTTPError, FallbackExceptionGroup) as exc:
+            wait = rate_limited(exc)
+            if wait is None or attempt == cfg.defaults.rate_limit_retries:
+                raise
+            log.info("llm %s: all models rate-limited, waiting %.0f s", role, wait)
+            await asyncio.sleep(wait)
+            waited += wait
+    latency_ms = int((time.perf_counter() - started - waited) * 1000)  # waits are not the model's
 
     step = _answered_by(steps, result.response.model_name)
     usage = result.usage

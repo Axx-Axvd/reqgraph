@@ -48,6 +48,7 @@ defaults:
   temperature: 0.2
   timeout_s: 60
   retries: 2
+  rate_limit_retries: 3              # every model of the ladder answered 429: wait and ask again
   seed: 42
 
 role_settings:                       # differences from the defaults, by role
