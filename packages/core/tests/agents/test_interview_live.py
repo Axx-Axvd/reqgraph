@@ -16,6 +16,7 @@ from reqgraph.agents.interview import Reply, interview_project
 from reqgraph.agents.nodes import DONE
 from reqgraph.agents.run import init_project
 from reqgraph.graph.store import FileStore
+from reqgraph.llm.config import load_roles
 
 from .conftest import BRIEF, stub_models
 
@@ -52,7 +53,8 @@ async def test_live_interview_asks_by_coverage_and_counts_the_answers(tmp_path: 
         "analyst",  # the brief first
         "interviewer",
     ]
-    assert {c["provider"] for c in calls if c["role"] == "analyst"} == {"gemini"}
+    ladder = {s.provider for s in load_roles().ladder("analyst", "free")}  # 429 -> the next model
+    assert {c["provider"] for c in calls if c["role"] == "analyst"} <= ladder
     graph = FileStore(root).load().graph
     counted = coverage_of(graph)
     assert counted.got["goals"] + counted.got["exceptions"] >= 1  # the answers were counted

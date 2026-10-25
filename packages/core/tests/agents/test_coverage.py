@@ -35,7 +35,7 @@ def test_requirements_from_client_turns_count_in_their_area() -> None:
     assert counted.got["stakeholders"] == 1  # the actor «Пациент»
     assert counted.got["nfr"] == 1  # one ISO 25010 characteristic: reliability
     assert counted.got["constraints"] == 0  # CON is an assumption: not told by the client
-    assert counted.got["goals"] == 0  # BR has no area
+    assert counted.got["goals"] == 1  # a BR is a goal whatever its area tag (it has none here)
 
 
 def test_nfr_counts_distinct_characteristics_and_assumptions_do_not_count() -> None:
