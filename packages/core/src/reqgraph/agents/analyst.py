@@ -12,6 +12,7 @@ from typing import Any, Literal, get_args
 
 from langgraph.runtime import Runtime
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic_ai.exceptions import FallbackExceptionGroup, ModelHTTPError, UnexpectedModelBehavior
 
 from reqgraph.agents.common import ALLOWED, Attempt, apply_with_retry, diff_summary, guarded, start
 from reqgraph.agents.prompts import load_prompt
@@ -25,6 +26,8 @@ from reqgraph.graph.nodes import ISO25010, InterviewTurn, Node, NodeKind, Priori
 from reqgraph.graph.patch import AddOp, GraphPatch, LinkOp, Op, RemoveOp, UpdateOp
 from reqgraph.graph.store.config import Area
 from reqgraph.llm.router import BudgetExceeded
+
+PROVIDER_ERRORS = (ModelHTTPError, FallbackExceptionGroup, UnexpectedModelBehavior)
 
 RequirementKind = Literal["BR", "UR", "FR", "NFR", "CON"]
 
@@ -295,6 +298,13 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
     except BudgetExceeded:
         ctx.events.emit("stop", reason="budget", node="analyst")
         return {"stop": "budget", "tasks": rest, "budget": budget[0]}
+    except PROVIDER_ERRORS as exc:
+        if not interviewing(state):
+            raise
+        # every model of the ladder failed on this answer: the interview goes on, the turns stay
+        # unread and the next pass reads them again (free tiers run out of requests per day)
+        ctx.events.emit("llm_failed", agent="analyst", error=type(exc).__name__)
+        return {"budget": budget[0]}
     update: dict[str, Any] = {"budget": budget[0], "tasks": rest}
     if result is None:  # the turns stay unread: the next pass gets them again
         return update
