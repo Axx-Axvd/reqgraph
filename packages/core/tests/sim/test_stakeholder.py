@@ -127,3 +127,32 @@ async def test_contradictions_repeat_with_the_seed_and_get_corrected() -> None:
     for item_id in wrong:  # and every one is corrected later in this dialog
         assert f"{item_id}:correct" in flat[flat.index(f"{item_id}:wrong") + 1 :]
     assert all(not m.startswith("H-003:wrong") for m in flat)  # no number, nothing to get wrong
+
+
+async def test_asked_again_the_client_repeats_instead_of_forgetting() -> None:
+    client = Client(["H-001"], ["H-001"])
+    sim = Stakeholder(SCENARIO, model=client.model())
+    await sim.answer("Когда можно отменить запись?")
+    again = await sim.answer("Ещё раз: до какого времени отмена?")
+    assert [t.mode for t in again.told] == ["repeat"] and again.revealed == []
+    told = reply_part(client.replies[1])
+    assert "уже говорил" in told and "3 часа" in told
+
+
+def test_a_law_number_is_not_a_quantity_to_get_wrong() -> None:
+    from reqgraph.sim.stakeholder import _has_number
+
+    law = item(9, "Данные хранятся в России по 152-ФЗ.", "закон")
+    assert not _has_number(law) and _has_number(item(8, "Не больше 4 заказов в час.", "лимиты"))
+
+
+async def test_a_correction_waits_for_the_same_area() -> None:
+    other = item(6, "Логотип клиники — синий.", "оформление").model_copy(update={"area": "data"})
+    scenario = SCENARIO.model_copy(
+        update={"hidden": Hidden(requirements=[*SCENARIO.hidden.requirements, other])}
+    )
+    sim = Stakeholder(scenario, character="contradictory", model=Client(["H-006"]).model())
+    sim.wrong.append("H-001")  # a wrong number about the cancel rules was said before
+    sim.rng.random = lambda: 0.0  # type: ignore[method-assign]  # always ready to correct
+    answer = await sim.answer("Какой у вас логотип?")
+    assert [t.mode for t in answer.told] == ["tell"] and sim.wrong == ["H-001"]

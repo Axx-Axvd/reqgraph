@@ -12,6 +12,7 @@ The model is of another family than the agents (roles.yaml, against self-prefere
 """
 
 import random
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
@@ -25,7 +26,7 @@ from reqgraph.llm.router import CallStats, structured
 from reqgraph.sim.scenario import HiddenRequirement, Scenario
 
 Character = Literal["cooperative", "vague", "contradictory"]
-Mode = Literal["tell", "general", "detail", "wrong", "correct"]
+Mode = Literal["tell", "general", "detail", "wrong", "correct", "repeat"]
 
 MAX_ITEMS = 3  # requirements one answer may reveal (09_eval: no hints without a question)
 WRONG_CHANCE = 0.3  # a contradictory client names a wrong number in about every third answer
@@ -101,7 +102,7 @@ class Stakeholder:
         )
         picked = [i for i in dict.fromkeys(selection.ids) if i in self.items][:MAX_ITEMS]
         told = self._modes(picked, selection.details)
-        told += self._correction(told)
+        told += self._correction(told, {self.items[i].area for i in picked})
         reply, reply_stats = await self._ask(
             "stakeholder/reply",
             Reply,
@@ -133,8 +134,9 @@ class Stakeholder:
     def _modes(self, picked: list[str], details: bool) -> list[Told]:
         told = []
         for item_id in picked:
-            if item_id in self.revealed:
-                continue  # already told: repeating it reveals nothing new
+            if item_id in self.revealed:  # asked again: the client says the same, not «no idea»
+                told.append(Told(item_id, "repeat"))
+                continue
             if item_id in self.wrong:  # asked again about a wrong number: now it is right
                 self.wrong.remove(item_id)
                 told.append(Told(item_id, "correct"))
@@ -154,13 +156,16 @@ class Stakeholder:
                 told.append(Told(item_id, "tell"))
         return told
 
-    def _correction(self, told: list[Told]) -> list[Told]:
-        """A contradictory client corrects one earlier wrong number now and then."""
-        if not self.wrong or self.rng.random() >= FIX_CHANCE:
+    def _correction(self, told: list[Told], areas: set[str]) -> list[Told]:
+        """A contradictory client corrects an earlier wrong number when the talk comes back to its
+        area — not out of the blue, which would tell it without a question."""
+        if any(t.mode in ("wrong", "correct") for t in told):
+            return []  # one mistake or correction per answer
+        due = [i for i in self.wrong if self.items[i].area in areas]
+        if not due or self.rng.random() >= FIX_CHANCE:
             return []
-        if any(t.mode == "wrong" for t in told):
-            return []  # not in the same answer as a new mistake
-        return [Told(self.wrong.pop(0), "correct")]
+        self.wrong.remove(due[0])
+        return [Told(due[0], "correct")]
 
     async def _ask[T](self, name: str, output: type[T], **values: Any) -> tuple[T, CallStats]:
         prompt = load_prompt(name)
@@ -170,8 +175,12 @@ class Stakeholder:
         return result, stats
 
 
+_QUANTITY = re.compile(r"(?<![\w-])\d+(?:[.,]\d+)?(?!\s*-?\s*ФЗ)(?![\w-])")
+
+
 def _has_number(item: HiddenRequirement) -> bool:
-    return any(ch.isdigit() for ch in item.statement)
+    """A quantity to get wrong (a count, a share, a term) — not the number of a law (152-ФЗ)."""
+    return _QUANTITY.search(item.statement) is not None
 
 
 def summary(sim: Stakeholder) -> Mapping[str, int]:
