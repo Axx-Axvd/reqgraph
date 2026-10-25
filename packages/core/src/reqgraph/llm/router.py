@@ -180,7 +180,7 @@ async def structured[T](
         models = [_build_model(s) for s in steps]
         model = models[0] if len(models) == 1 else FallbackModel(*models)
     # seed is set per model in _build_model: not every provider accepts it.
-    settings = ModelSettings(temperature=cfg.defaults.temperature, timeout=cfg.defaults.timeout_s)
+    settings = ModelSettings(temperature=cfg.temperature(role), timeout=cfg.defaults.timeout_s)
     token_cap = cfg.budget.run_tokens if budget is None else budget.tokens - budget.spent_tokens
     agent = Agent(
         model, output_type=output_type, instructions=instructions, retries=cfg.defaults.retries

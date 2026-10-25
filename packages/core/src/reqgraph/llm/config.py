@@ -57,6 +57,14 @@ class Defaults(BaseModel):
     seed: int | None = 42
 
 
+class RoleSettings(BaseModel):
+    """Settings of one role that differ from the defaults (the simulator answers at 0.7)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    temperature: float | None = Field(default=None, ge=0, le=2)
+
+
 class Budget(BaseModel):
     run_usd: float = Field(gt=0)
     run_tokens: int = Field(gt=0)
@@ -66,6 +74,7 @@ class RolesConfig(BaseModel):
     providers: dict[str, Provider]
     profiles: dict[str, dict[str, list[str]]]
     defaults: Defaults = Defaults()
+    role_settings: dict[str, RoleSettings] = {}
     budget: Budget = Budget(run_usd=0.5, run_tokens=800_000)
 
     @model_validator(mode="after")
@@ -99,6 +108,13 @@ class RolesConfig(BaseModel):
         if not steps:
             raise ConfigError(f"в профиле «{name}» нет роли «{role}» и нет записи «*»")
         return steps
+
+    def temperature(self, role: str) -> float:
+        """The role's own temperature, else the default one."""
+        own = self.role_settings.get(role)
+        if own is not None and own.temperature is not None:
+            return own.temperature
+        return self.defaults.temperature
 
     def is_free(self, step: Step) -> bool:
         """Free tier provider, or an OpenRouter model whose id ends with ":free"."""
