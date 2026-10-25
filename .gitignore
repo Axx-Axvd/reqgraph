@@ -35,6 +35,7 @@ examples/*/exports/*
 # T-206 demo kept: reqgraph run on the 3 dev briefs (docs/demo/m2.md)
 evals/runs/*
 !evals/runs/2026-10-24/
+evals/runs/2026-10-24/interview/
 
 # os / editors
 .DS_Store
