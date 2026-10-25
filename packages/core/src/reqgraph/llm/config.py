@@ -54,6 +54,7 @@ class Defaults(BaseModel):
     temperature: float = 0.2
     timeout_s: float = 60
     retries: int = Field(default=2, ge=0)
+    rate_limit_retries: int = Field(default=3, ge=0)  # waits when every model answered 429
     seed: int | None = 42
 
 
