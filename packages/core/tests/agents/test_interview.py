@@ -141,3 +141,27 @@ async def test_question_events_name_the_area_but_keep_no_texts(
     assert question == {"type": "question", "turn": 1, "area": "exceptions"}
     text = json.dumps(events_of(ctx, "coverage") + events_of(ctx, "answer"), ensure_ascii=False)
     assert "заболел" not in text and QUESTION not in text
+
+
+async def test_a_failed_analyst_call_keeps_the_turns_for_the_next_answer(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    from pydantic_ai.exceptions import ModelHTTPError
+
+    prompts: list[str] = []
+
+    def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        prompts.append(str(messages[-1].parts[-1].content))  # type: ignore[union-attr]
+        if len(prompts) == 1:
+            raise ModelHTTPError(503, "analyst")  # the whole ladder is down on this answer
+        return ModelResponse(parts=[TextPart(json.dumps({"requirements": []}))])
+
+    models = stub_models() | {"analyst": FunctionModel(fn)}
+    ctx = brief_context(models=models, max_turns=2, max_iter=0)
+    run = interview(ctx)
+    await run.start()
+    out = await run.answer("Записываются по телефону.")
+    assert out["__interrupt__"][0].value["turn"] == 2  # the interview goes on
+    assert events_of(ctx, "llm_failed")[0]["agent"] == "analyst"
+    out = await run.answer("Неявок около 10%.")
+    assert "Записываются по телефону" in prompts[1] and "Неявок около 10%" in prompts[1]
