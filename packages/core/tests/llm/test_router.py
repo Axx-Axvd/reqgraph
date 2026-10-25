@@ -165,7 +165,7 @@ async def test_on_call_hook_receives_stats(fake_models: dict[str, Model]) -> Non
 async def test_missing_key_uses_placeholder(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     step = load_roles().ladder("reviewer", "free")[0]
-    assert router._api_key(load_roles().providers[step.provider]) == "placeholder"
+    assert router.api_key(load_roles().providers[step.provider]) == "placeholder"
 
 
 def test_seed_only_for_providers_that_accept_it() -> None:

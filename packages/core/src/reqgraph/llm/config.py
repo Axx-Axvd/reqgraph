@@ -75,6 +75,7 @@ class RolesConfig(BaseModel):
     profiles: dict[str, dict[str, list[str]]]
     defaults: Defaults = Defaults()
     role_settings: dict[str, RoleSettings] = {}
+    embeddings: dict[str, str] = {}  # profile -> "provider/model" (recall of T-304)
     budget: Budget = Budget(run_usd=0.5, run_tokens=800_000)
 
     @model_validator(mode="after")
@@ -115,6 +116,17 @@ class RolesConfig(BaseModel):
         if own is not None and own.temperature is not None:
             return own.temperature
         return self.defaults.temperature
+
+    def embedding(self, profile: str | None = None) -> Step:
+        """The embedding model of a profile."""
+        name = profile or os.environ.get("REQGRAPH_PROFILE") or DEFAULT_PROFILE
+        raw = self.embeddings.get(name)
+        if raw is None:
+            raise ConfigError(f"в roles.yaml нет модели эмбеддингов для профиля «{name}»")
+        step = Step.parse(raw)
+        if step.provider not in self.providers:
+            raise ConfigError(f"embeddings.{name}: неизвестный провайдер «{step.provider}»")
+        return step
 
     def is_free(self, step: Step) -> bool:
         """Free tier provider, or an OpenRouter model whose id ends with ":free"."""
