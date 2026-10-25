@@ -2,15 +2,17 @@
 
 Matching in three steps: embeddings pick up to TOP_K candidates per hidden requirement among the
 requirements of the final graph; an LLM judge of another family than the agents decides which
-candidate, if any, states the same requirement; 20% of the judged pairs are labelled by a person
-(label.py) to check the judge (Cohen's kappa, agreement.py). Every pair is kept for that check.
+candidates, if any, state the same requirement — one, or several when the system split it in
+parts; 20% of the judged pairs are labelled by a person (label.py) to check the judge (Cohen's
+kappa, agreement.py). Every pair is kept for that check.
 """
 
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from functools import cache
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from reqgraph.graph.edges import Rel
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.nodes import InterviewTurn
@@ -31,10 +33,24 @@ def judge_prompt() -> Prompt:
 
 
 class Verdict(BaseModel):
+    """The candidates that express the reference: one, or parts of it split over several."""
+
     model_config = ConfigDict(frozen=True, extra="ignore")
 
-    match: int = Field(ge=0, description="номер кандидата, 0 — ни один")
+    matches: list[int] = Field(
+        default_factory=list,
+        description="номера кандидатов, которые сами или вместе выражают эталон; пусто — ни один",
+    )
     reason: str = ""
+
+    @field_validator("matches", mode="before")
+    @classmethod
+    def _numbers(cls, value: Any) -> Any:
+        if isinstance(value, int):  # a model may answer with one number, 0 — none
+            value = [value]
+        if isinstance(value, list):
+            return sorted({v for v in value if isinstance(v, int) and v > 0})
+        return value
 
 
 Judge = Callable[[str, list[str]], Awaitable[Verdict]]
@@ -60,7 +76,7 @@ class Pair:
 @dataclass
 class Recall:
     hidden: int  # hidden requirements not in the brief
-    matched: dict[str, str] = field(default_factory=dict)  # hidden id -> found id (told only)
+    matched: dict[str, str] = field(default_factory=dict)  # hidden id -> found ids (told only)
     matched_all: dict[str, str] = field(default_factory=dict)  # incl. assumptions and the brief
     pairs: list[Pair] = field(default_factory=list)
     in_brief: int = 0
@@ -116,11 +132,13 @@ async def recall(
         if not candidates:
             continue
         verdict = await judge(item.statement, [f.text for _, f in candidates])
+        parts = [f for number, (_, f) in enumerate(candidates, 1) if number in verdict.matches]
         for number, (score, f) in enumerate(candidates, 1):
-            same = verdict.match == number
+            same = number in verdict.matches
             result.pairs.append(Pair(item.id, item.statement, f.id, f.text, round(score, 4), same))
-            if same:
-                result.matched_all[item.id] = f.id
-                if not item.in_brief and not f.assumption:
-                    result.matched[item.id] = f.id
+        if parts:
+            ids = ", ".join(sorted(f.id for f in parts))
+            result.matched_all[item.id] = ids
+            if not item.in_brief and not any(f.assumption for f in parts):  # every part was told
+                result.matched[item.id] = ids
     return result

@@ -44,7 +44,7 @@ def model_elements(graph: Any) -> int:
 class Quality:
     requirements: int = 0
     ambiguity: float = 0.0
-    models: int = 0
+    model_count: int = 0  # processes and the ERD
     validity: float = 0.0
     processes: int = 0
     soundness: float = 0.0
@@ -92,7 +92,7 @@ def measure(graph: Any, report: CIReport, *, has_erd: bool) -> Quality:
     return Quality(
         requirements=len(requirements),
         ambiguity=_share(len(vague), len(requirements)),
-        models=models,
+        model_count=models,
         validity=_share(valid, models),
         processes=len(processes),
         soundness=_share(sum(p not in unsound for p in processes), len(processes)),

@@ -67,7 +67,7 @@ async def test_recall_counts_judged_matches_told_by_the_client() -> None:
 
     async def judge(reference_text: str, candidates: list[str]) -> Verdict:
         asked.append((reference_text, candidates))
-        return Verdict(match=1)  # the closest candidate is the same requirement
+        return Verdict(matches=[1])  # the closest candidate is the same requirement
 
     result = await recall(reference, found, embed=by_words, judge=judge)
     assert result.hidden == 3 and result.in_brief == 1
@@ -76,6 +76,40 @@ async def test_recall_counts_judged_matches_told_by_the_client() -> None:
     assert result.recall == pytest.approx(1 / 3) and result.recall_all == pytest.approx(2 / 4)
     assert "Врач видит своё расписание." not in [a[0] for a in asked]  # nothing close: no call
     assert {p.found_id for p in result.pairs if p.judge} == {"FR-001", "FR-002"}
+
+
+async def test_a_requirement_split_in_two_is_found_by_both_parts() -> None:
+    reference = [
+        hidden(1, "Отмена записи за 3 часа, врач получает SMS."),
+        hidden(2, "Врач и отмена: SMS пациенту."),
+    ]
+    found = [
+        Found("FR-001", "Отмена записи за 3 часа", False),
+        Found("FR-002", "Врач получает SMS об отмене", False),
+        Found("FR-003", "SMS врачу и отмена (допущение)", True),
+    ]
+
+    async def judge(reference_text: str, candidates: list[str]) -> Verdict:
+        wanted = ("FR-001", "FR-002") if "3 часа" in reference_text else ("FR-001", "FR-003")
+        texts = {f.text: f.id for f in found}
+        return Verdict(matches=[i for i, c in enumerate(candidates, 1) if texts[c] in wanted])
+
+    result = await recall(reference, found, embed=by_words, judge=judge)
+    assert result.matched == {"H-001": "FR-001, FR-002"}  # H-002 needs an assumption: not told
+    assert result.matched_all == {"H-001": "FR-001, FR-002", "H-002": "FR-001, FR-003"}
+    judged = {(p.hidden_id, p.found_id) for p in result.pairs if p.judge}
+    assert judged == {
+        ("H-001", "FR-001"),
+        ("H-001", "FR-002"),
+        ("H-002", "FR-001"),
+        ("H-002", "FR-003"),
+    }
+
+
+def test_the_verdict_takes_one_number_or_none() -> None:
+    assert Verdict.model_validate({"matches": 2}).matches == [2]
+    assert Verdict.model_validate({"matches": 0}).matches == []
+    assert Verdict.model_validate({"matches": [0, 1, 1]}).matches == [1]
 
 
 async def test_embeddings_are_cached_per_model_and_text(tmp_path: Path) -> None:
@@ -154,9 +188,29 @@ def test_labels_of_a_seeded_sample_can_be_continued(tmp_path: Path) -> None:
         label.compare(tmp_path / "pairs-none.csv")
 
 
+def test_labelling_shows_the_other_candidates_of_the_reference(tmp_path: Path) -> None:
+    pairs = tmp_path / "pairs-y.csv"
+    rows = [
+        {
+            "run": "r",
+            "hidden_id": "H-001",
+            "hidden": "э",
+            "found_id": f"FR-00{i}",
+            "found": f"кандидат {i}",
+            "similarity": 0.9,
+            "judge": "True",
+        }
+        for i in (1, 2)
+    ]
+    harness.write_pairs(rows, pairs)
+    shown: list[str] = []
+    label.label(pairs, lambda _: "q", share=1.0, echo=shown.append)
+    assert any("FR-002: кандидат 2" in line for line in shown)  # the other part of the match
+
+
 def judge_first() -> FunctionModel:
     def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-        return ModelResponse(parts=[TextPart(json.dumps({"match": 1, "reason": "то же"}))])
+        return ModelResponse(parts=[TextPart(json.dumps({"matches": [1], "reason": "то же"}))])
 
     return FunctionModel(fn)
 
@@ -201,6 +255,7 @@ async def test_the_harness_scores_a_saved_run(tmp_path: Path) -> None:
     )
     (result,) = results
     assert result.error == "" and result.run == "dev-01-cooperative-M2-r1"
+    assert result.models == row.models  # a quality score never overwrites the run's record
     assert result.hidden == 20 and result.requirements >= 1 and 0 <= result.recall <= 1
     assert result.judge_model.startswith("function/") and result.embedding_model
     assert result.llm_calls > row.llm_calls  # the judge's calls are counted too

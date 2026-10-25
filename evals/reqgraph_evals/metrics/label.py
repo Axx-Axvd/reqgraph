@@ -62,13 +62,19 @@ def label(
         echo(f"\n[{number}/{len(todo)}] {pair['run']}")
         echo(f"  эталон  {pair['hidden_id']}: {pair['hidden']}")
         echo(f"  система {pair['found_id']}: {pair['found']}")
-        while (
-            answer := ask("  то же требование? y — да, n — нет, q — закончить: ").strip()
-        ) not in (
-            "y",
-            "n",
-            "q",
-        ):
+        others = [
+            p
+            for p in pairs
+            if (p["run"], p["hidden_id"]) == (pair["run"], pair["hidden_id"]) and p is not pair
+        ]
+        for other in others:  # the reference may be split over several requirements
+            echo(f"  рядом   {other['found_id']}: {other['found']}")
+        question = (
+            "  выражает эталон — сам или вместе с соседними? y — да, n — нет, q — закончить: "
+            if others
+            else "  то же требование? y — да, n — нет, q — закончить: "
+        )
+        while (answer := ask(question).strip()) not in ("y", "n", "q"):
             echo("  ответьте y, n или q")
         if answer == "q":
             break
