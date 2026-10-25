@@ -8,6 +8,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Metrics of the experiment (T-304): `evals/reqgraph_evals/metrics/` on pydantic-evals — a case is scenario ×
+  character × method × repeat, evaluators score it. Recall: hidden requirements vs requirements found (not
+  assumptions) — embeddings pick the top 3 candidates above 0.5, the judge (`prompts/judge/match.md`, another model
+  family than the agents) decides; `recall` counts the hidden requirements outside the brief, `recall_all` the whole
+  reference. Ambiguity, validity, soundness, trace coverage and orphan rate come from the deterministic checks.
+  `results-*.csv` keeps the whole record of a run (models, temperatures, seed, prompt hashes, version, judge and
+  embedding models, tokens, $, time) and every judged pair goes to `labels/pairs-*.csv`. Manual check of the judge:
+  a seeded 20% sample (`reqgraph-evals label`), agreement and Cohen's kappa (`reqgraph-evals agreement`).
+  `reqgraph-evals metrics` scores saved interview runs, `reqgraph-evals matrix` runs and scores in one go.
+  `llm/embed.py` — embeddings through pydantic-ai with a disk cache; `embeddings` in roles.yaml.
+
 - Stakeholder simulator (T-302): `sim/stakeholder.py` — two steps per answer: `select` (the model sees the hidden
   list and picks at most 3 requirements the question is about, code checks the ids) and `reply` (the answer in the
   persona's manner; the model sees only the picked ones, so it cannot give away others); already told requirements
