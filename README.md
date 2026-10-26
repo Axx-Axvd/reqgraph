@@ -4,47 +4,33 @@
 
 [![ci](https://github.com/Axx-Axvd/reqgraph/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Axx-Axvd/reqgraph/actions/workflows/ci.yml)
 
-**reqgraph turns a conversation with a client into software requirements you can check.** A team of AI agents interviews the client, writes the requirements, draws the diagrams, and a strict checker that uses no AI catches the mistakes and sends them back to the agents until everything agrees. At the end, the same set of requirements becomes two documents: a software requirements specification (ISO/IEC/IEEE 29148) and a Russian technical specification (GOST 34.602-2020).
+reqgraph takes a short description of what a client wants, interviews the client, and gives you the requirements, process and data diagrams, and in the end two documents: an SRS by ISO/IEC/IEEE 29148 and a Russian technical specification by GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through checks that have no AI in them at all. If a check finds a mistake, the agent fixes it, and this goes on until everything adds up.
 
-> **Status, 26 October 2026:** sprints S0–S2 are done; S3 (interview and client simulator) is in progress, ahead of the plan. You can already run it from the command line: brief → requirements → diagrams → checks → repair. Documents (SRS, GOST) come in S4, the web demo in S5. Release v1.0: 21 February 2027.
+This is my thesis project. As of 26 October 2026 the core and the agents are done (sprints S0–S2) and S3 is in progress: the interview and a simulated client. From the command line you can already go from a brief to a checked report. Documents come in S4, the website in S5, version 1.0 on 21 February 2027.
 
----
+## Why
 
-## Contents
+Before anyone writes code, someone has to find out what actually needs to be built. Usually that's an analyst: they talk to the client, ask questions, write down requirements, draw diagrams. This is the stage where projects go wrong most often, and they go wrong the same way every time.
 
-- [The problem](#the-problem)
-- [The idea](#the-idea)
-- [How it works](#how-it-works)
-- [Before and after](#before-and-after)
-- [Goals and how we measure them](#goals-and-how-we-measure-them)
-- [Project progress](#project-progress)
-- [Try it](#try-it)
-- [What is inside the repository](#what-is-inside-the-repository)
-- [What reqgraph does not do](#what-reqgraph-does-not-do)
-- [Tech stack](#tech-stack)
-- [License](#license)
+The interview runs from memory. You ask about the main scenario and forget to ask what happens when the doctor is sick or the patient doesn't show up. You forget about speed, and about where the law says personal data has to be stored. It comes up later, when changing it is expensive.
 
-## The problem
+Requirements get lost along the way. A week later nobody can say where a requirement came from, or what the client said that never made it into the document.
 
-Before anyone writes code, someone has to find out what the software must do. A business analyst talks to the client, writes down the requirements and draws diagrams: how the work flows, what data is stored. This "primary documentation" is where many projects go wrong, and it goes wrong in the same ways again and again:
+Diagrams live separately from the text. A step gets added to the text but not to the diagram. The data model has a table that no requirement needs.
 
-1. **Interviews run from memory.** The analyst asks about the main scenario and forgets the rest: what happens when something goes wrong, how fast the system must be, which laws apply. Those gaps surface months later, when they are expensive to fix.
-2. **Requirements get lost on the way.** Between "the client said it" and "it is in the document" there is no link, so nobody can tell where a requirement came from or whether something was dropped.
-3. **Text and diagrams drift apart.** Diagrams are drawn separately from the text. A step is added to the text but not to the diagram; a table in the data model belongs to no requirement at all.
-4. **AI writes smooth but unchecked text.** Today you can ask a chatbot for a requirements document, and you get something that reads well. But nobody checks it: a diagram may be invalid, a requirement may be vague ("the page loads fast"), a process may have a dead end.
-5. **The same content is typed twice.** Teams in Russia often need both an international SRS and a document by the Russian GOST standard. They are filled in by hand, separately, and then disagree.
+A neural network can write a spec in a minute these days, and it reads fine. But nobody checks it: the diagram can be invalid, a requirement can be vague ("the page should load fast"), a process can have a branch that leads nowhere.
 
-## The idea
+On top of that, in Russia you often need two documents at once, an SRS and a GOST spec. People fill them in by hand, separately, and after a couple of edits they contradict each other.
 
-Treat requirements the way programmers treat code.
+## How I'm solving it
 
-Programmers do not trust code because it looks good: every change goes through automatic checks (tests, linters, "CI"), and broken code does not get in. reqgraph brings the same discipline to requirements:
+The idea is to treat requirements the way programmers treat code. Nobody takes code on trust: every change goes through automatic checks (CI), and if they're red, the change doesn't get in. Same here, except what gets checked is requirements and diagrams.
 
-- **One source of truth.** Every requirement, diagram element and interview answer is a node in one graph, with an id and links: *this requirement came from that answer*, *this process step implements that requirement*.
-- **Diagrams are code.** Processes, data models and architecture are written as text (a JSON process format, DBML, PlantUML, Structurizr), so a program can read and check them. The AI never draws a BPMN diagram directly: it describes the process in a simple format, and a compiler turns it into a valid BPMN diagram.
-- **Strict checks without AI.** 22 deterministic checks look for real defects: invalid diagrams, process steps that lead nowhere, vague wording, requirements that no diagram implements, diagram elements that belong to no requirement. The same input always gives the same result.
-- **A repair loop.** When a check fails, a Reviewer agent turns the error into a task for the agent that owns it, and the agent fixes it. This repeats until the report is green or the iteration limit is reached; then whatever is left is explained in the report.
-- **An interviewer that knows what it has not asked yet.** A coverage tracker counts what is already known in 9 areas (goals, people, scenarios, exceptions, data, rules, integrations, quality requirements, constraints) and points the interviewer to the emptiest one.
+To make that possible, everything lives in one graph. Every requirement, every process step, every line of the interview is a separate node with its own id, with links between them: this requirement came from that answer, this process step implements that requirement. Diagrams are written as text too (JSON for processes, DBML for data, PlantUML and Structurizr for the rest), so a program can read and check them. The model never draws BPMN itself: it describes the process in a simple format, and a compiler builds the BPMN from it, so the diagram is always valid.
+
+There are 22 checks, 21 of them work now (the last one comes with the GOST export). They catch specific things: a diagram that won't open, a process you can't get out of, wording without a number where a number is needed, a requirement that no diagram implements, a diagram element that no requirement needs. Same input, same result, every time.
+
+The interview doesn't run from memory either. A coverage tracker counts what is already known across nine areas (goals, people, scenarios, exceptions, data, rules, integrations, quality requirements, constraints), and the next question goes where the gap is.
 
 ## How it works
 
@@ -56,142 +42,136 @@ flowchart LR
   E -->|green or limit| G[7 · documents<br/>SRS, GOST, ReqIF]
 ```
 
-1. **Brief.** You describe the idea in a few sentences: "a dental clinic wants online booking".
-2. **Interview.** The **Interviewer** agent asks one question at a time, always about the area that is covered least. You can pause and continue later.
-3. **Requirements.** The **Analyst** agent turns every answer into requirements of four kinds: business (why), user (who does what), functional (what the system does) and non-functional (how well: speed, reliability, law). Each one links back to the answer it came from.
-4. **Models.** The **Modeler** agent describes the processes and the data model and links every step and table to the requirement it implements.
-5. **Checks.** 22 checks in five groups: schema (is the file valid), soundness (can every process finish), ISO 29148 (is the wording clear and measurable), traceability (does everything link up), templates (are all document sections filled).
-6. **Repair.** The **Reviewer** agent hands each error to its owner; the loop repeats.
-7. **Documents.** The **Standards** agent fills in the document sections; exporters build the SRS, the GOST specification and a ReqIF file for requirement tools, all from the same graph.
+1. You write a brief, a couple of sentences like "a dental clinic wants online booking".
+2. The Interviewer asks one question at a time, about the area where least is known. You can pause the interview and pick it up later from the same place.
+3. After every answer the Analyst writes down requirements: business (why the clinic needs this), user (who does what), functional (what the system does) and non-functional (how fast, how reliable, which laws apply). Each requirement links back to the line of the interview it came from.
+4. The Modeler draws the processes and the data model and ties every step and table to a requirement.
+5. The checks run.
+6. If something is red, the Reviewer hands each error to the agent that owns it, and that agent fixes it. At most five rounds; whatever isn't fixed stays in the report with an explanation.
+7. The Standards agent fills in the document sections, and the SRS, the GOST spec and a ReqIF file for requirements tools are all built from the same graph.
 
-Nodes marked *approved* by a person are never changed by the agents: the analyst stays in charge.
+Anything a person marked as approved, the agents leave alone. The analyst always has the last word.
+
+This is what a run on a bakery brief looks like:
 
 ![reqgraph run on a bakery brief: requirements, processes, checks, one repair round](docs/demo/reqgraph-run.svg)
 
-## Before and after
+## What should change
 
 | | Usually | With reqgraph |
 |---|---|---|
-| Interview | from memory; quality requirements and exceptions get forgotten | a coverage tracker over 9 areas picks the next question |
-| Where a requirement came from | unknown after a week | every requirement links to the interview answer |
+| Interview | from memory, exceptions and quality requirements get forgotten | the next question is picked by the gaps in coverage |
+| Where a requirement came from | nobody remembers a week later | every one links to the client's answer |
 | Diagrams | drawn separately, drift away from the text | written as code, linked to requirements, checked |
-| AI-generated text | reads well, nobody checks it | 22 checks without AI; errors go back to the agents |
-| SRS and GOST documents | filled in by hand, twice | one graph, two exporters, a completeness check |
-| Changes | one edit quietly breaks something else | every change goes through the checks again |
-| Time to a first draft | about a day | goal: about an hour (hypothesis H4 below) |
+| Text from a neural network | nobody checks it | 21 checks without AI, errors go back to the agents |
+| SRS and GOST spec | twice, by hand | one graph, two documents |
+| First draft | about a day | the goal is about an hour |
 
-## Goals and how we measure them
+## How I'm going to check that it works
 
-reqgraph is also a research project: it has to *prove* that the approach works, not just look good. Four hypotheses are tested on the same inputs, with the same AI model and budget for every method:
+Building the system isn't enough, I have to show with numbers that it's better. I'm testing four hypotheses:
 
-| | Hypothesis, in plain words | How we check |
+- H1: an interviewer with a coverage tracker gets more out of the client, things the client knows but wouldn't mention on their own;
+- H2: checks plus repair give more correct diagrams than the same agents without checks;
+- H3: the link checks keep the text and the diagrams from drifting apart;
+- H4: the documents are no worse than a junior analyst's draft, in a tenth of the time. Three experts rate them blind.
+
+To keep the comparison fair, every method gets the same model, the same inputs and the same budget.
+
+The tricky part is how to measure "found more". You can't interview a real client hundreds of times, so a simulator plays the client. Every scenario has a short brief and a closed list of 25–60 requirements that only the simulator knows. It talks about a requirement only if the question is really about it. So whoever asks better questions finds more. The simulator and the judge that compares what was found with the closed list run on a different family of models than the agents, otherwise the system would be grading itself. On top of that I check 20% of the judge's decisions by hand.
+
+The targets I set for myself:
+
+| What | Minimum (MVP) | Thesis goal |
 |---|---|---|
-| **H1** | An interviewer with a coverage tracker finds more of what the client knows but did not say | "hidden requirements" found (recall) |
-| **H2** | The check-and-repair loop gives more correct diagrams | share of valid diagrams and of processes that can finish |
-| **H3** | Traceability checks stop text and diagrams from drifting apart | share of requirements implemented in a model; share of elements without a requirement |
-| **H4** | reqgraph documents are no worse than a junior analyst's draft, at a tenth of the time | blind ratings by three experts |
+| Hidden requirements found | 70% | 85% |
+| Valid diagrams | 95% | 100% |
+| Processes you can always get out of | 80% | 95% |
+| Functional requirements that are in a diagram | 80% | 95% |
+| Vague requirements | 15% at most | 5% at most |
 
-**How "hidden requirements" work.** A real client cannot be interviewed hundreds of times, so a **simulated client** plays the role. Each test scenario has a short brief and a secret list of 25–60 requirements that only the simulated client knows. It tells one of them only when the question is actually about it, so an interviewer that asks better questions finds more. The simulator and the judge that matches the found requirements against the secret list use a different family of AI models than the agents, so the system does not grade its own homework, and a person checks a random 20% of the judge's decisions.
+There are 15 scenarios: I tune the prompts on three, and twelve are kept for the final test. Those twelve are sealed with hashes and nobody opens them until the final run. Every run records the model, temperature, seed, prompt versions, tokens, money and time. Failed runs get written down just like the good ones, they're in the [journal](docs/journal.md). I develop on free models and run experiments on cheap ones, $20 a month at most.
 
-**Acceptance thresholds:**
+The full method is in [docs/tech-design/09_eval.md](docs/tech-design/09_eval.md) (in Russian).
 
-| Metric | MVP | Thesis goal |
-|---|---|---|
-| Hidden requirements found | ≥ 70% | ≥ 85% |
-| Valid diagrams | ≥ 95% | 100% |
-| Processes that can always finish | ≥ 80% | ≥ 95% |
-| Functional requirements implemented in a model | ≥ 80% | ≥ 95% |
-| Vague requirements | ≤ 15% | ≤ 5% |
+## Where the project is now
 
-**Rules of a fair experiment:** 15 scenarios: 3 for tuning, 12 for the final test. The 12 test scenarios are sealed with hashes and are not opened until the final run. Every run records the model, temperature, seed, prompt versions, tokens, cost and time. Failed runs and rejected ideas are written down just like the successful ones ([docs/journal.md](docs/journal.md)). Development runs on free models, experiments on cheap ones: at most $20 a month.
-
-The full method: [docs/tech-design/09_eval.md](docs/tech-design/09_eval.md).
-
-## Project progress
-
-| Sprint | Dates | Goal | Status |
+| Sprint | Dates | What's in it | Status |
 |---|---|---|---|
-| S0 · Foundation | 19.10–01.11.2026 | repository, CI, database, AI layer, model benchmark | ✅ done |
-| S1 · Graph, process format, checks | 02.11–15.11 | the core without AI: graph, BPMN compiler, checks | ✅ done |
-| S2 · Agents and repair loop | 16.11–29.11 | **v0.1**: from a brief to requirements, diagrams and a checked report | ✅ done |
-| S3 · Interview and simulator | 30.11–13.12 | interviewer with coverage, simulated client, 15 scenarios, metrics | 🔄 in progress |
-| S4 · Documents and first evaluation | 14.12–27.12 | **v0.5**: SRS, GOST, ReqIF; baselines; first run on tuning scenarios | ⏳ planned |
-| S5 · Web and deploy | 11.01–24.01.2027 | public demo: sign-in, interview in the browser, graph, BPMN, report, download | ⏳ planned |
-| S6 · Experiments | 25.01–07.02 | full comparison, ablations, expert ratings, live interviews, statistics | ⏳ planned |
-| S7 · Release | 08.02–21.02 | **v1.0**, technical report, demo video, thesis chapters | ⏳ planned |
+| S0 | 19.10–01.11.2026 | repository, CI, database, the layer that talks to models, a small exam for models | done |
+| S1 | 02.11–15.11 | the graph, the process format and its BPMN compiler, the checks | done |
+| S2 | 16.11–29.11 | agents and the repair loop, version 0.1 | done |
+| S3 | 30.11–13.12 | interviewer with coverage, the simulator, 15 scenarios, metrics | in progress |
+| S4 | 14.12–27.12 | SRS, GOST spec, ReqIF, baseline methods to compare against, first run, version 0.5 | ahead |
+| S5 | 11.01–24.01.2027 | the website: sign-in, interview in the browser, graph, BPMN, report, download | ahead |
+| S6 | 25.01–07.02 | the full comparison, ablations, experts, live interviews, statistics | ahead |
+| S7 | 08.02–21.02 | version 1.0, technical report, video, thesis chapters | ahead |
 
-**What exists today:**
+I'm ahead of schedule, S3 isn't supposed to start until 30 November. What's there already:
 
-- **S0–S1:** the artifact graph and its storage in plain files, the process format and its compiler to BPMN 2.0, data models (DBML), diagrams rendered to SVG through Kroki, 21 working checks and the `reqgraph check` command.
-- **S2:** the run graph on LangGraph and four agents (Analyst, Modeler, Standards, Reviewer), the repair loop with a detector of repeated errors, the `reqgraph init` and `reqgraph run` commands, the M2 demo ([docs/demo/m2.md](docs/demo/m2.md)).
-- **S3 so far:** `reqgraph interview` with coverage, pause and resume (T-301); 15 scenarios with hidden requirements, the test set sealed (T-303). Under review: the simulated client (T-302) and the metrics on pydantic-evals (T-304).
+- the graph and its storage in plain files, the process format with a compiler to BPMN 2.0, data models in DBML, diagram images through Kroki, 21 checks and the `reqgraph check` command;
+- the run graph on LangGraph, the Analyst, Modeler, Standards and Reviewer agents, a repair loop that notices when an agent is going in circles, the `reqgraph init` and `reqgraph run` commands ([demo](docs/demo/m2.md));
+- `reqgraph interview` with pause and resume, 15 scenarios with hidden requirements. The simulated client and the metrics are in review right now.
 
-Every task, its acceptance criteria and status: [docs/backlog.md](docs/backlog.md). What was done each day, including failures: [docs/journal.md](docs/journal.md). Decisions and why: [docs/adr/](docs/adr/README.md).
+All tasks with their acceptance criteria are in [docs/backlog.md](docs/backlog.md), what was decided and why is in [docs/adr/](docs/adr/README.md).
 
-## Try it
+## Running it
 
-You need [uv](https://docs.astral.sh/uv/), Node.js ≥ 22 and pnpm 10 (Windows: [docs/setup/windows.md](docs/setup/windows.md)).
+You'll need [uv](https://docs.astral.sh/uv/), Node.js 22+ and pnpm 10. There's a separate guide for Windows: [docs/setup/windows.md](docs/setup/windows.md).
 
 ```bash
 uv sync                           # Python 3.12 and dependencies
 uv run pytest -q                  # tests, no network needed
-uv run python scripts/doctor.py   # is the environment ready
+uv run python scripts/doctor.py   # check that the environment is ready
 uv run reqgraph --version
 ```
 
-From a brief to a checked report (needs free API keys in `.env`, see [docs/setup/accounts.md](docs/setup/accounts.md)):
+To run a brief you need free provider keys in `.env`; where to get them is in [docs/setup/accounts.md](docs/setup/accounts.md).
 
 ```bash
 uv run reqgraph init projects/smile --name "Smile dental clinic" --brief brief.md
 uv run reqgraph run projects/smile         # Analyst → Modeler → Standards → checks → repair
-uv run reqgraph check projects/smile       # the checks again, no AI
-uv run reqgraph interview projects/smile   # the interview: /готово to finish, /пауза to pause
+uv run reqgraph check projects/smile       # just the checks, no AI
+uv run reqgraph interview projects/smile   # the interview, /готово to finish, /пауза to pause
 ```
 
-Exit codes: 0 means no errors, 1 means errors are left (see `reports/ci-report.md`), 2 means the run did not start. The agents' prompts and check messages are in Russian, the language of the first users. More commands: [CLAUDE.md](CLAUDE.md).
+Exit code 0 means no errors. 1 means some errors are left, they're in `reports/ci-report.md`. 2 means the run didn't start at all. The prompts and check messages are in Russian for now, since that's who the first users are. The rest of the commands are in [CLAUDE.md](CLAUDE.md).
 
 <details>
-<summary>Developer commands</summary>
+<summary>For development</summary>
 
 ```bash
 uv run ruff check . && uv run ruff format --check .
 uv run mypy packages/core evals/reqgraph_evals
-uv run pre-commit install          # hooks before every commit (once)
+uv run pre-commit install          # pre-commit hooks, once
 pnpm install && pnpm -C apps/web lint && pnpm -C apps/web build
-pnpm db:start && pnpm db:reset     # local Postgres for Supabase (needs Docker)
-pnpm db:test                       # row-level security tests
+pnpm db:start && pnpm db:reset     # local Postgres for Supabase, needs Docker
+pnpm db:test                       # access rule tests (RLS)
 uv run reqgraph schemas            # JSON Schemas from the Pydantic models
 ```
 
 </details>
 
-## What is inside the repository
+## What's where
 
-| Where | What |
-|---|---|
-| `packages/core` | the library and the `reqgraph` command: graph, process format, checks, agents, AI layer, exporters, simulator |
-| `evals/` | scenarios with hidden requirements, the experiment harness, reports of every run |
-| `apps/web`, `apps/api` | the web demo (Next.js) and its API (FastAPI), from S5 |
-| `supabase/` | database migrations and access rules |
-| [examples/garage61](examples/garage61/README.md) | a hand-made reference project: a car service called "Garage 61" |
-| [docs/tech-design/](docs/tech-design/README.md) | the technical design, section by section (in Russian) |
-| [docs/adr/](docs/adr/README.md) | 17 decision records (16 accepted, 1 rejected) |
-| [docs/backlog.md](docs/backlog.md) · [docs/journal.md](docs/journal.md) | tasks with acceptance criteria · the work diary |
+- `packages/core` is the library itself and the `reqgraph` command: graph, process format, checks, agents, talking to models, export, the simulator.
+- `evals/` has the scenarios with hidden requirements, the experiment setup and the run reports.
+- `apps/web` and `apps/api` are the website on Next.js and its API on FastAPI, coming in S5.
+- `supabase/` has the database migrations and access rules.
+- [examples/garage61](examples/garage61/README.md) is a reference project done by hand: a car service called "Garage 61".
+- [docs/tech-design/](docs/tech-design/README.md) is the technical design, section by section (in Russian).
+- [docs/journal.md](docs/journal.md) is the diary: what I did each day and what didn't work.
 
-## What reqgraph does not do
+## What reqgraph doesn't do
 
-- It does not write the application code and does not estimate effort.
-- It does not replace the analyst: every requirement can be edited or locked, and the agents never touch what a person approved.
-- It does not store the texts of ISO or GOST standards: only its own checklists and section names.
-- It is not a full BPMN editor: diagrams are viewed in the browser and edited through the process format.
-- Version 1 has no teams, roles, real-time co-editing or voice.
+It doesn't write the application code and doesn't estimate how long things will take. It doesn't replace the analyst: any requirement can be edited or locked. The texts of ISO and GOST standards are not in the repository, only my own checklists and section names. It won't be a full BPMN editor either, in the browser you only look at diagrams, and you change them through the process format. Teams, roles and voice input aren't in the first version.
 
-## Tech stack
+## Stack
 
-Python 3.12 · LangGraph · pydantic-ai · pydantic-evals · FastAPI · PM4Py · Kroki · pandoc · Next.js · Supabase · bpmn-js · open-weight models through OpenRouter, Groq, Google AI Studio and Ollama (offline).
+Python 3.12, LangGraph, pydantic-ai, pydantic-evals, FastAPI, PM4Py, Kroki, pandoc, Next.js, Supabase, bpmn-js. The models are open-weight, through OpenRouter, Groq and Google AI Studio, and Ollama for working offline.
 
 ## License
 
-[MIT](LICENSE). The texts of ISO and GOST standards are not part of the repository: only its own checklists and section names.
+[MIT](LICENSE). The texts of ISO and GOST standards are not part of the repository.
 
-The process soundness check uses [pm4py](https://pypi.org/project/pm4py/) (AGPL-3.0-or-later), so a build or a public demo that includes pm4py is covered by the AGPL; all sources are open in this repository (ADR-014). bpmn-js (MIT with a condition) requires the bpmn.io watermark to stay visible. Other dependencies are MIT, BSD, Apache-2.0, LGPL (psycopg) and MPL-2.0 (hypothesis, tests only). A new dependency is added only with a reason in its pull request.
+The check that a process can always finish is built on [pm4py](https://pypi.org/project/pm4py/), which is AGPL-3.0-or-later. So a build or a public demo that includes pm4py falls under the AGPL; all the sources are here (ADR-014). bpmn-js is MIT with a condition to keep the bpmn.io watermark visible. Other dependencies are MIT, BSD, Apache-2.0, LGPL (psycopg) and MPL-2.0 (hypothesis, tests only). I only add a new dependency if I can explain in the PR why it's needed.
