@@ -45,6 +45,7 @@ class _Out(BaseModel):
 
 
 class Selection(_Out):
+    topic: str = Field(default="", description="о чём вопрос, 2–5 слов")
     ids: list[str] = Field(default_factory=list, description="id требований, о которых вопрос")
     details: bool = Field(default=False, description="вопрос уточняет уже сказанное")
 
@@ -114,6 +115,7 @@ class Stakeholder:
             character=self.character,
             told=[(self.items[t.id], t.mode) for t in told],
         )
+        told = _checked(told, reply.text, self.items)
         for t in told:
             if t.mode in ("tell", "detail", "correct"):
                 self.revealed.add(t.id)
@@ -128,6 +130,7 @@ class Stakeholder:
                 "picked": picked,
                 "told": [{"id": t.id, "mode": t.mode} for t in told],
                 "details": selection.details,
+                "topic": selection.topic,
             }
         )
         return answer
@@ -182,6 +185,18 @@ _QUANTITY = re.compile(r"(?<![\w-])\d+(?:[.,]\d+)?(?!\s*-?\s*ФЗ)(?![\w-])")
 def _has_number(item: HiddenRequirement) -> bool:
     """A quantity to get wrong (a count, a share, a term) — not the number of a law (152-ФЗ)."""
     return _QUANTITY.search(item.statement) is not None
+
+
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", ".") for n in _QUANTITY.findall(text)}
+
+
+def _checked(told: list[Told], text: str, items: Mapping[str, HiddenRequirement]) -> list[Told]:
+    """A wrong number counts only if the reply names one: a number none of the told requirements
+    has. A model that said the right numbers (or only words) told the requirement as it is."""
+    known = set().union(*(_numbers(items[t.id].statement) for t in told)) if told else set()
+    named_wrong = bool(_numbers(text) - known)
+    return [Told(t.id, "tell") if t.mode == "wrong" and not named_wrong else t for t in told]
 
 
 def summary(sim: Stakeholder) -> Mapping[str, int]:
