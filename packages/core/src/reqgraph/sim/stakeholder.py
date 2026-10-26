@@ -45,7 +45,6 @@ class _Out(BaseModel):
 
 
 class Selection(_Out):
-    topic: str = Field(default="", description="о чём вопрос, 2–5 слов")
     ids: list[str] = Field(default_factory=list, description="id требований, о которых вопрос")
     details: bool = Field(default=False, description="вопрос уточняет уже сказанное")
 
@@ -130,7 +129,6 @@ class Stakeholder:
                 "picked": picked,
                 "told": [{"id": t.id, "mode": t.mode} for t in told],
                 "details": selection.details,
-                "topic": selection.topic,
             }
         )
         return answer
