@@ -170,3 +170,18 @@ async def test_a_wrong_number_counts_only_when_the_reply_names_one() -> None:
         assert [t.mode for t in answer.told] == [mode]
         assert (sim.wrong == ["H-001"]) is mistakes and ("H-001" in sim.revealed) is not mistakes
         assert sim.log[-1]["told"] == [{"id": "H-001", "mode": mode}]
+
+
+def test_a_wrong_number_may_be_one_the_statement_has_elsewhere() -> None:
+    from reqgraph.sim.stakeholder import Told, _checked
+
+    goal = item(7, "Доля неявок снизится с 10% до 5% за 6 месяцев.", "цели")
+    items = {goal.id: goal}
+    said = "Неявки должны упасть с 10% до 6% за полгода."  # 5% became 6%, a number it already has
+    assert _checked([Told(goal.id, "wrong")], said, items, named="6") == [Told(goal.id, "wrong")]
+    assert _checked([Told(goal.id, "wrong")], said, items, named="7") == [Told(goal.id, "tell")]
+    right = "Неявки должны упасть с 10% до 5% за 6 месяцев."
+    assert _checked([Told(goal.id, "wrong")], right, items) == [Told(goal.id, "tell")]
+    words = "Сейчас не приходят пять из десяти, а через полгода — два из десяти."
+    assert _checked([Told(goal.id, "wrong")], words, items, named="5") == [Told(goal.id, "wrong")]
+    assert _checked([Told(goal.id, "wrong")], words, items) == [Told(goal.id, "tell")]
