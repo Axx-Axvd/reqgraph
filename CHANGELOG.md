@@ -138,8 +138,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
-- README rewritten for any visitor, in the author's own voice: why the project exists, how it works, what should
-  change, how it is measured, where it is now; English is the main `README.md`, the Russian version is
+- README rewritten for any visitor, in a plain professional style: purpose, approach, how it works, what changes,
+  evaluation, project status; English is the main `README.md`, the Russian version is
   `README.ru.md`, with a language switch at the top of both.
 - 06_models, 07_deploy, 09_eval: current free models, DeepSeek V4 Pro price (0.955 / 1.911 on 2026-10-23), payment from
   Russia through ruble aggregators, risk R7. CLAUDE.md: network-blocking flag, mypy command.
