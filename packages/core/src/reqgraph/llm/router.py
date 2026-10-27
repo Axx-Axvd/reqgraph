@@ -14,7 +14,13 @@ from dataclasses import dataclass
 from typing import Literal
 
 from pydantic_ai import Agent
-from pydantic_ai.exceptions import FallbackExceptionGroup, ModelHTTPError, UsageLimitExceeded
+from pydantic_ai.exceptions import (
+    FallbackExceptionGroup,
+    ModelAPIError,
+    ModelHTTPError,
+    UnexpectedModelBehavior,
+    UsageLimitExceeded,
+)
 from pydantic_ai.messages import ModelResponse
 from pydantic_ai.models import Model
 from pydantic_ai.models.fallback import FallbackModel
@@ -142,8 +148,16 @@ def _fitting_steps(role: str, profile: str | None, prompt_chars: int) -> tuple[S
 
 def model_for(role: str, profile: str | None = None, *, prompt_chars: int = 0) -> Model:
     """The model for a role: a single model or a FallbackModel over the ladder."""
-    models = [_build_model(s) for s in _fitting_steps(role, profile, prompt_chars)]
-    return models[0] if len(models) == 1 else FallbackModel(*models)
+    return _ladder([_build_model(s) for s in _fitting_steps(role, profile, prompt_chars)])
+
+
+# A provider that blocks an answer (Gemini: finish_reason «content_filter: PROHIBITED_CONTENT»,
+# dev-02 27.10) gives a response pydantic-ai cannot read: the next model of the ladder answers.
+FALLBACK_ON = (ModelAPIError, UnexpectedModelBehavior)
+
+
+def _ladder(models: list[Model]) -> Model:
+    return models[0] if len(models) == 1 else FallbackModel(*models, fallback_on=FALLBACK_ON)
 
 
 def _list_price(response: ModelResponse) -> float | None:
@@ -194,8 +208,7 @@ async def structured[T](
     else:
         steps = _fitting_steps(role, profile, len(prompt) + len(instructions or ""))
     if model is None:
-        models = [_build_model(s) for s in steps]
-        model = models[0] if len(models) == 1 else FallbackModel(*models)
+        model = _ladder([_build_model(s) for s in steps])
     # seed is set per model in _build_model: not every provider accepts it.
     settings = ModelSettings(temperature=cfg.temperature(role), timeout=cfg.defaults.timeout_s)
     token_cap = cfg.budget.run_tokens if budget is None else budget.tokens - budget.spent_tokens

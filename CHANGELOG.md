@@ -47,6 +47,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- LLM ladder: a provider that blocks an answer (Gemini `finish_reason: content_filter: PROHIBITED_CONTENT` on an
+  ordinary repair prompt) no longer ends the run; the next model of the ladder answers.
 - `structured()` waits and asks again when every model of a ladder answers 429 (free tiers count tokens per
   minute); an interview goes on when the Analyst's ladder fails on one answer (the turns stay unread).
 - Interview coverage: a BR counts as a goal and a CON as a constraint whatever the Analyst's area tag; the

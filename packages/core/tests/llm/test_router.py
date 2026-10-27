@@ -75,6 +75,21 @@ async def test_falls_back_to_next_model_on_429(fake_models: dict[str, Model]) ->
     assert stats.model == second.model
 
 
+async def test_falls_back_when_a_provider_blocks_the_answer(fake_models: dict[str, Model]) -> None:
+    """Gemini answered a repair prompt with finish_reason «content_filter: PROHIBITED_CONTENT»
+    (dev-02, 27.10): pydantic-ai raises UnexpectedModelBehavior, the ladder must go on."""
+    from pydantic_ai.exceptions import UnexpectedModelBehavior
+
+    first, second = load_roles().ladder("analyst", "free")[:2]
+
+    def blocked(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        raise UnexpectedModelBehavior("Invalid response: content_filter: PROHIBITED_CONTENT")
+
+    fake_models[first.id] = FunctionModel(blocked, model_name=first.model)
+    _, stats = await structured("analyst", "x", Requirement, profile="free")
+    assert stats.model == second.model
+
+
 async def test_all_models_failing_raises(fake_models: dict[str, Model]) -> None:
     for step in load_roles().ladder("reviewer", "free"):
         fake_models[step.id] = failing_model(step.model, 503)
