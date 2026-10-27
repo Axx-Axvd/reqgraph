@@ -97,7 +97,7 @@ gantt
 - [x] **reqgraph interview ведёт диалог в терминале** — interrupt / resume через чекпоинтер
 - [x] **симулятор раскрывает требование только по теме вопроса** — ручная проверка 3 диалогов
 - [ ] **15 сценариев: 3 dev + 12 test, по 25-60 скрытых требований** — домены согласованы с руководителем
-- [ ] **метрики recall, ambiguity, validity, soundness, trace считаются скриптом** — results.csv
+- [x] **метрики recall, ambiguity, validity, soundness, trace считаются скриптом** — results.csv
 
 ## S4 · Экспорт и evals v1  `14.12 - 27.12 -> M4`
 

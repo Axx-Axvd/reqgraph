@@ -162,7 +162,7 @@
 
 - **Критерий приёмки:** results.csv; согласие судьи с ручной разметкой >= 0.8
 - **Зависит от:** T-302, T-303
-- **Статус:** код готов в feat/T-304: `evals/reqgraph_evals/metrics/` на pydantic-evals (recall: эмбеддинги Gemini → судья на другой семье моделей; ambiguity, validity, soundness, trace, сироты — из детерминированных проверок), `llm/embed.py` с кэшем, команды `reqgraph-evals metrics | matrix | label | agreement`. Осталось: живой прогон метрик по диалогам T-302 (по мере бесплатного лимита Groq), ручная разметка 20% пар автором и κ ≥ 0.8
+- **Статус:** код и results.csv готовы в feat/T-304: `evals/reqgraph_evals/metrics/` на pydantic-evals (recall: эмбеддинги Gemini → судья на другой семье моделей, в том числе требование, разложенное системой на части; ambiguity, validity, soundness, trace, сироты — из детерминированных проверок), `llm/embed.py` с кэшем, команды `reqgraph-evals metrics | matrix | label | agreement`; первый живой прогон — `evals/reports/results-2026-10-27-free-v8.csv` по трём итоговым диалогам T-302. Осталось **[you]**: ручная разметка 20% пар (`evals/reports/labels/pairs-results-2026-10-27-free-v8.csv`) и κ ≥ 0.8
 
 ## E4 · Экспорт и evals
 
