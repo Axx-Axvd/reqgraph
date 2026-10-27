@@ -51,6 +51,7 @@ class Selection(_Out):
 
 class Reply(_Out):
     text: str = Field(min_length=1, description="ответ заказчика")
+    wrong_number: str = Field(default="", description="неверно названное число, если просили")
 
 
 @dataclass(frozen=True)
@@ -114,6 +115,7 @@ class Stakeholder:
             character=self.character,
             told=[(self.items[t.id], t.mode) for t in told],
         )
+        told = _checked(told, reply.text, self.items, named=reply.wrong_number)
         for t in told:
             if t.mode in ("tell", "detail", "correct"):
                 self.revealed.add(t.id)
@@ -182,6 +184,23 @@ _QUANTITY = re.compile(r"(?<![\w-])\d+(?:[.,]\d+)?(?!\s*-?\s*ФЗ)(?![\w-])")
 def _has_number(item: HiddenRequirement) -> bool:
     """A quantity to get wrong (a count, a share, a term) — not the number of a law (152-ФЗ)."""
     return _QUANTITY.search(item.statement) is not None
+
+
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", ".") for n in _QUANTITY.findall(text)}
+
+
+def _checked(
+    told: list[Told], text: str, items: Mapping[str, HiddenRequirement], named: str = ""
+) -> list[Told]:
+    """A wrong number counts only if the reply says one: the text has a number none of the told
+    requirements has, or the number the model names as wrong is in the text (it may be one the
+    statement has elsewhere: 5% → 6% «за 6 месяцев»). Numbers said only in words cannot be checked,
+    so there the model's own report decides; no report and right numbers — told as it is."""
+    known = set().union(*(_numbers(items[t.id].statement) for t in told)) if told else set()
+    said = _numbers(text)
+    named_wrong = bool(said - known) or bool(named and (_numbers(named) & said or not said))
+    return [Told(t.id, "tell") if t.mode == "wrong" and not named_wrong else t for t in told]
 
 
 def summary(sim: Stakeholder) -> Mapping[str, int]:
