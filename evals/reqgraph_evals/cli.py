@@ -326,21 +326,25 @@ def matrix_cmd(
 @app.command("label")
 def label_cmd(
     pairs: Annotated[Path, typer.Argument(help="labels/pairs-*.csv", exists=True, dir_okay=False)],
-    share: Annotated[float, typer.Option(min=0.01, max=1.0, help="доля пар для разметки")] = 0.2,
+    share: Annotated[
+        float, typer.Option(min=0.01, max=1.0, help="доля эталонов для разметки")
+    ] = 0.2,
     seed: Annotated[int, typer.Option(help="seed выборки")] = 42,
 ) -> None:
-    """Ручная разметка случайных 20% пар «эталон — найденное»: y / n; q — закончить и сохранить."""
+    """Ручная разметка случайных 20% эталонов со всеми кандидатами: f — полностью, p — частично,
+    n — нет; q — закончить и сохранить."""
     from reqgraph_evals.metrics import label
 
     done = label.label(pairs, input, share=share, seed=seed, echo=typer.echo)
-    typer.echo(f"размечено пар: {done} -> {label.human_path(pairs)}")
+    typer.echo(f"размечено эталонов: {done} -> {label.human_path(pairs)}")
 
 
 @app.command("agreement")
 def agreement_cmd(
     pairs: Annotated[Path, typer.Argument(help="labels/pairs-*.csv", exists=True, dir_okay=False)],
 ) -> None:
-    """Согласие судьи с ручной разметкой: каппа Коэна (порог 0.8) и доля совпадений."""
+    """Согласие судьи с ручной разметкой по эталонам: каппа Коэна «найдено полностью или нет»
+    (порог 0.8), «найдено хоть как-то» и по трём уровням."""
     from reqgraph_evals.metrics import label
 
     try:
@@ -350,10 +354,13 @@ def agreement_cmd(
         raise typer.Exit(2) from None
     verdict = "да" if result["kappa"] >= 0.8 else "нет"
     text = (
-        f"# Согласие судьи с ручной разметкой\n\nПар: {result['pairs']}; каппа Коэна "
-        f"{result['kappa']}; доля совпадений {result['agreement']}; «да» у судьи "
-        f"{result['judge_yes']}, у человека {result['human_yes']}. Порог T-304 (каппа ≥ 0.8) "
-        f"выполнен: {verdict}.\n"
+        f"# Согласие судьи с ручной разметкой\n\nЭталонов: {result['references']}. "
+        f"«Найдено полностью или нет» (это считает recall): каппа Коэна {result['kappa']}, доля "
+        f"совпадений {result['agreement']}; полностью у судьи {result['judge_full']}, у человека "
+        f"{result['human_full']}. «Найдено хоть как-то»: каппа {result['kappa_found']}. "
+        f"Три уровня: каппа {result['kappa_3']}, доля совпадений {result['agreement_3']}; "
+        f"частично у судьи {result['judge_partial']}, у человека {result['human_partial']}. "
+        f"Порог T-304 (каппа «полностью» ≥ 0.8) выполнен: {verdict}.\n"
     )
     (pairs.parent / f"agreement-{pairs.stem.removeprefix('pairs-')}.md").write_text(
         text, encoding="utf-8"

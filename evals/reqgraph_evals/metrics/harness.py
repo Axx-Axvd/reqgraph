@@ -68,6 +68,7 @@ class Result:
     turns: int = 0
     end: str = ""
     recall: float = 0.0  # hidden requirements outside the brief, told by the client
+    recall_partial: float = 0.0  # the same, partial matches (the topic without its numbers) too
     recall_all: float = 0.0  # the whole reference, the brief and assumptions included
     hidden: int = 0
     matched: int = 0
@@ -88,7 +89,7 @@ class Result:
 
 
 RESULT_FIELDS = [f.name for f in fields(Result)]
-PAIR_FIELDS = ["run", "hidden_id", "hidden", "found_id", "found", "similarity", "judge"]
+PAIR_FIELDS = ["run", "hidden_id", "hidden", "found_id", "found", "similarity", "judge", "level"]
 
 
 @dataclass
@@ -136,6 +137,7 @@ class RecallEvaluator(Evaluator[RunInputs, RunOutput, None]):
         self.collected.pairs += [_pair(ctx.inputs.name, p) for p in result.pairs]
         return {
             "recall": round(result.recall, 4),
+            "recall_partial": round(result.recall_partial, 4),
             "recall_all": round(result.recall_all, 4),
             "hidden": result.hidden,
             "matched": len(result.matched),
@@ -328,17 +330,20 @@ def summary_markdown(results: Sequence[Result]) -> str:
     lines = [
         "# Метрики прогонов (T-304)",
         "",
-        "recall — доля скрытых требований вне брифа, которые рассказал заказчик и нашла "
-        "система (сопоставление: эмбеддинги → судья); recall_all — по всему эталону, с брифом "
-        "и допущениями.",
+        "recall — доля скрытых требований вне брифа, которые рассказал заказчик и система нашла "
+        "полностью (сопоставление: эмбеддинги → судья); с частичными — вместе с найденными "
+        "частично (тема без чисел или главного условия); recall_all — по всему эталону, с брифом "
+        "и допущениями, только полные.",
         "",
-        "| Прогон | Вопросов | recall | recall_all | на 10 вопросов | Требований | Неоднозначных "
-        "| Validity | Soundness | Trace | Сироты | Ошибок | Вызовов LLM | $ | Минут | Ошибка |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Прогон | Вопросов | recall | с частичными | recall_all | на 10 вопросов "
+        "| Требований | Неоднозначных | Validity | Soundness | Trace | Сироты | Ошибок "
+        "| Вызовов LLM | $ | Минут | Ошибка |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in results:
         lines.append(
-            f"| {r.run} | {r.turns} | {r.recall:.0%} ({r.matched}/{r.hidden}) | {r.recall_all:.0%} "
+            f"| {r.run} | {r.turns} | {r.recall:.0%} ({r.matched}/{r.hidden}) "
+            f"| {r.recall_partial:.0%} | {r.recall_all:.0%} "
             f"| {r.recall_per_10q} | {r.requirements} | {r.ambiguity:.0%} | {r.validity:.0%} "
             f"| {r.soundness:.0%} | {r.trace_coverage:.0%} | {r.orphan_rate:.0%} | {r.errors} "
             f"| {r.llm_calls} | {r.cost_usd:.4f} | {r.minutes} | {r.error} |"

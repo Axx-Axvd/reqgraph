@@ -112,6 +112,32 @@ def test_the_verdict_takes_one_number_or_none() -> None:
     assert Verdict.model_validate({"matches": [0, 1, 1]}).matches == [1]
 
 
+async def test_a_partial_match_counts_apart_from_recall() -> None:
+    reference = [hidden(1, "Отмена записи не позднее чем за 3 часа."), hidden(2, "SMS за сутки.")]
+    found = [
+        Found("FR-001", "Отмена записи пациентом", False),
+        Found("FR-002", "SMS за сутки", False),
+    ]
+
+    async def judge(reference_text: str, candidates: list[str]) -> Verdict:
+        if "3 часа" in reference_text:  # the same rule without its number
+            return Verdict(level="partial", matches=[1])
+        return Verdict(level="full", matches=[1])
+
+    result = await recall(reference, found, embed=by_words, judge=judge)
+    assert result.matched == {"H-002": "FR-002"} and result.partial == {"H-001": "FR-001"}
+    assert result.recall == pytest.approx(1 / 2) and result.recall_partial == pytest.approx(1.0)
+    levels = {(p.hidden_id, p.found_id): (p.level, p.judge) for p in result.pairs}
+    assert levels[("H-001", "FR-001")] == ("partial", True)
+
+
+def test_the_verdict_level_follows_its_matches() -> None:
+    assert Verdict(matches=[2]).level == "full"  # no level given: a match is a full one
+    assert Verdict(level="partial", matches=[]).level == "none"
+    assert Verdict(level="none", matches=[1]).level == "full"
+    assert Verdict(level="partial", matches=[1, 2]).matches == [1, 2]
+
+
 async def test_embeddings_are_cached_per_model_and_text(tmp_path: Path) -> None:
     model = TestEmbeddingModel()
     first = await embed(["а", "б", "а"], model=model, model_id="test/m", cache=tmp_path)
@@ -157,55 +183,56 @@ def test_quality_counts_broken_models() -> None:
     assert q.validity < 1.0 and q.soundness < 1.0
 
 
-def write_pairs(path: Path, count: int) -> None:
+def write_pairs(path: Path, references: int, candidates: int = 3) -> None:
+    """Pairs of `references` judged references, `candidates` each; every second is matched."""
     rows = [
         {
             "run": "r",
             "hidden_id": f"H-{i:03d}",
-            "hidden": "э",
-            "found_id": "FR-001",
-            "found": "с",
+            "hidden": f"эталон {i}",
+            "found_id": f"FR-{j:03d}",
+            "found": f"кандидат {i}.{j}",
             "similarity": 0.9,
-            "judge": str(i % 2 == 0),
+            "judge": str(i % 2 == 0 and j == 1),
+            "level": "full" if i % 2 == 0 else "none",
         }
-        for i in range(count)
+        for i in range(references)
+        for j in range(1, candidates + 1)
     ]
     harness.write_pairs(rows, path)
 
 
-def test_labels_of_a_seeded_sample_can_be_continued(tmp_path: Path) -> None:
+def test_labels_of_a_seeded_sample_of_references_can_be_continued(tmp_path: Path) -> None:
     pairs = tmp_path / "pairs-x.csv"
     write_pairs(pairs, 20)
-    picked = label.sample(label.read_pairs(pairs))
-    assert len(picked) == 4 and picked == label.sample(label.read_pairs(pairs))  # 20%, repeatable
-    answers = iter(["y", "maybe", "n", "q"])
+    refs = label.references(label.read_pairs(pairs))
+    assert len(refs) == 20 and all(len(r["candidates"]) == 3 for r in refs)
+    picked = label.sample(refs)
+    assert len(picked) == 4 and picked == label.sample(refs)  # 20% of references, repeatable
+    answers = iter(["f", "maybe", "n", "q"])
     assert label.label(pairs, lambda _: next(answers), echo=lambda _: None) == 2
-    answers = iter(["y", "n"])
+    answers = iter(["p", "n"])
     assert label.label(pairs, lambda _: next(answers), echo=lambda _: None) == 4
     result = label.compare(pairs)
-    assert result["pairs"] == 4 and 0 <= result["agreement"] <= 1
+    assert result["references"] == 4 and set(result) >= {"kappa", "kappa_found", "kappa_3"}
     with pytest.raises(ValueError, match="нет разметки"):
         label.compare(tmp_path / "pairs-none.csv")
 
 
-def test_labelling_shows_the_other_candidates_of_the_reference(tmp_path: Path) -> None:
+def test_labelling_shows_the_reference_with_all_its_candidates(tmp_path: Path) -> None:
     pairs = tmp_path / "pairs-y.csv"
-    rows = [
-        {
-            "run": "r",
-            "hidden_id": "H-001",
-            "hidden": "э",
-            "found_id": f"FR-00{i}",
-            "found": f"кандидат {i}",
-            "similarity": 0.9,
-            "judge": "True",
-        }
-        for i in (1, 2)
-    ]
-    harness.write_pairs(rows, pairs)
+    write_pairs(pairs, 1)
     shown: list[str] = []
     label.label(pairs, lambda _: "q", share=1.0, echo=shown.append)
-    assert any("FR-002: кандидат 2" in line for line in shown)  # the other part of the match
+    assert any("эталон 0" in line for line in shown)
+    assert all(any(f"FR-00{j}: кандидат 0.{j}" in line for line in shown) for j in (1, 2, 3))
+    assert not any("full" in line or "True" in line for line in shown)  # blind to the judge
+
+
+def test_kappa_takes_three_answers() -> None:
+    a = ["full", "partial", "none", "none"]
+    assert cohen_kappa(a, a) == 1.0
+    assert cohen_kappa(a, ["full", "none", "none", "none"]) == pytest.approx(5 / 9)
 
 
 def judge_first() -> FunctionModel:

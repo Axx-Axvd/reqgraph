@@ -1,8 +1,11 @@
-"""Manual check of the judge (09_eval, R4): a person labels a random 20% of the judged pairs.
+"""Manual check of the judge (09_eval, R4): a person labels a random 20% of the judged references.
 
-The sample is drawn with a fixed seed, so it can be repeated and extended; the answers go into
-<pairs>.human.csv next to the pairs file, and the work can be stopped and continued — labelled pairs
-are not asked again. agreement.py then compares the judge with the person.
+The unit is a reference requirement with all its candidates — what the judge decides and what
+recall counts — not a single pair: asked about one candidate «alone or with its neighbours», a
+person answers for the reference anyway (27.10, κ 0.22 on pairs). The answer has the judge's three
+levels: fully, partly (the topic without its numbers or a key condition), not at all. The sample is
+drawn with a fixed seed, so it can be repeated; the answers go into <pairs>.human.csv next to the
+pairs file, and the work can be stopped and continued. The judge's verdict is never shown.
 """
 
 import csv
@@ -14,7 +17,8 @@ from typing import Any
 from reqgraph_evals.metrics.agreement import agreement, cohen_kappa
 
 SHARE = 0.2
-HUMAN_FIELDS = ["run", "hidden_id", "found_id", "judge", "human"]
+HUMAN_FIELDS = ["run", "hidden_id", "judge", "human"]
+LEVELS = {"f": "full", "p": "partial", "n": "none"}
 Ask = Callable[[str], str]
 
 
@@ -27,17 +31,35 @@ def human_path(pairs: Path) -> Path:
     return pairs.with_name(pairs.stem + ".human.csv")
 
 
-def sample(pairs: Sequence[dict[str, Any]], share: float = SHARE, seed: int = 42) -> list[int]:
-    """Indexes of the pairs to label: a seeded random share, at least one pair."""
-    count = max(1, round(len(pairs) * share)) if pairs else 0
-    return sorted(random.Random(seed).sample(range(len(pairs)), count))
+def _key(row: dict[str, Any]) -> tuple[str, str]:
+    return (row["run"], row["hidden_id"])
 
 
-def _key(row: dict[str, Any]) -> tuple[str, str, str]:
-    return (row["run"], row["hidden_id"], row["found_id"])
+def references(pairs: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The judged references in file order, each with its candidates and the judge's level."""
+    refs: dict[tuple[str, str], dict[str, Any]] = {}
+    for pair in pairs:
+        ref = refs.setdefault(
+            _key(pair),
+            {
+                "run": pair["run"],
+                "hidden_id": pair["hidden_id"],
+                "hidden": pair["hidden"],
+                "level": pair.get("level") or "none",
+                "candidates": [],
+            },
+        )
+        ref["candidates"].append({"id": pair["found_id"], "text": pair["found"]})
+    return list(refs.values())
 
 
-def read_human(path: Path) -> dict[tuple[str, str, str], dict[str, Any]]:
+def sample(items: Sequence[Any], share: float = SHARE, seed: int = 42) -> list[int]:
+    """Indexes of the items to label: a seeded random share, at least one."""
+    count = max(1, round(len(items) * share)) if items else 0
+    return sorted(random.Random(seed).sample(range(len(items)), count))
+
+
+def read_human(path: Path) -> dict[tuple[str, str], dict[str, Any]]:
     if not path.is_file():
         return {}
     with path.open(encoding="utf-8") as fh:
@@ -52,38 +74,30 @@ def label(
     seed: int = 42,
     echo: Callable[[str], None] = print,
 ) -> int:
-    """Ask about every sampled pair not labelled yet; «q» stops and keeps what is done."""
-    pairs = read_pairs(pairs_path)
+    """Ask about every sampled reference not labelled yet; «q» stops and keeps what is done."""
+    refs = references(read_pairs(pairs_path))
     out = human_path(pairs_path)
     done = read_human(out)
-    todo = [pairs[i] for i in sample(pairs, share, seed) if _key(pairs[i]) not in done]
-    echo(f"к разметке {len(todo)} пар (уже размечено {len(done)})")
-    for number, pair in enumerate(todo, 1):
-        echo(f"\n[{number}/{len(todo)}] {pair['run']}")
-        echo(f"  эталон  {pair['hidden_id']}: {pair['hidden']}")
-        echo(f"  система {pair['found_id']}: {pair['found']}")
-        others = [
-            p
-            for p in pairs
-            if (p["run"], p["hidden_id"]) == (pair["run"], pair["hidden_id"]) and p is not pair
-        ]
-        for other in others:  # the reference may be split over several requirements
-            echo(f"  рядом   {other['found_id']}: {other['found']}")
+    todo = [refs[i] for i in sample(refs, share, seed) if _key(refs[i]) not in done]
+    echo(f"к разметке {len(todo)} эталонов (уже размечено {len(done)})")
+    for number, ref in enumerate(todo, 1):
+        echo(f"\n[{number}/{len(todo)}] {ref['run']}")
+        echo(f"  эталон {ref['hidden_id']}: {ref['hidden']}")
+        for cand in ref["candidates"]:
+            echo(f"  система {cand['id']}: {cand['text']}")
         question = (
-            "  выражает эталон — сам или вместе с соседними? y — да, n — нет, q — закончить: "
-            if others
-            else "  то же требование? y — да, n — нет, q — закончить: "
+            "  есть ли среди них то же требование (одно или несколько вместе)? "
+            "f — полностью, p — частично (без чисел или главного условия), n — нет, q — закончить: "
         )
-        while (answer := ask(question).strip()) not in ("y", "n", "q"):
-            echo("  ответьте y, n или q")
+        while (answer := ask(question).strip()) not in (*LEVELS, "q"):
+            echo("  ответьте f, p, n или q")
         if answer == "q":
             break
-        done[_key(pair)] = {
-            "run": pair["run"],
-            "hidden_id": pair["hidden_id"],
-            "found_id": pair["found_id"],
-            "judge": pair["judge"],
-            "human": str(answer == "y"),
+        done[_key(ref)] = {
+            "run": ref["run"],
+            "hidden_id": ref["hidden_id"],
+            "judge": ref["level"],
+            "human": LEVELS[answer],
         }
         _write(out, list(done.values()))
     return len(done)
@@ -97,16 +111,24 @@ def _write(path: Path, rows: Sequence[dict[str, Any]]) -> None:
 
 
 def compare(pairs_path: Path) -> dict[str, float]:
-    """Kappa and agreement of the judge with the person on the labelled pairs."""
+    """Kappa of the judge and the person on the labelled references: «found fully» or not (what
+    recall counts, the T-304 threshold), «found at all», and the three levels as they are."""
     rows = list(read_human(human_path(pairs_path)).values())
     if not rows:
         raise ValueError(f"нет разметки: сначала reqgraph-evals label {pairs_path}")
-    judge = [r["judge"] == "True" for r in rows]
-    human = [r["human"] == "True" for r in rows]
+    judge = [r["judge"] for r in rows]
+    human = [r["human"] for r in rows]
+    full = ([j == "full" for j in judge], [h == "full" for h in human])
+    found = ([j != "none" for j in judge], [h != "none" for h in human])
     return {
-        "pairs": len(rows),
-        "kappa": round(cohen_kappa(judge, human), 3),
-        "agreement": round(agreement(judge, human), 3),
-        "judge_yes": sum(judge),
-        "human_yes": sum(human),
+        "references": len(rows),
+        "kappa": round(cohen_kappa(*full), 3),
+        "agreement": round(agreement(*full), 3),
+        "kappa_found": round(cohen_kappa(*found), 3),
+        "kappa_3": round(cohen_kappa(judge, human), 3),
+        "agreement_3": round(agreement(judge, human), 3),
+        "judge_full": sum(full[0]),
+        "human_full": sum(full[1]),
+        "judge_partial": judge.count("partial"),
+        "human_partial": human.count("partial"),
     }
