@@ -86,6 +86,7 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-204": ("feature", "agents"),
     "T-205": ("feature", "agents"),
     "T-206": ("feature", "agents"),
+    "T-207": ("feature", "agents"),
     "T-301": ("feature", "agents"),
     "T-302": ("feature", "evals"),
     "T-303": ("research", "evals"),
@@ -125,6 +126,7 @@ EPIC_DOCS: dict[str, list[str]] = {
     "E7": ["docs/tech-design/09_eval.md", "docs/tech-design/08_plan.md"],
 }
 TASK_DOCS: dict[str, list[str]] = {
+    "T-207": ["docs/tech-design/04_data.md", "docs/adr/010-diagrams.md"],
     "T-002": ["docs/adr/README.md"],
     "T-003": ["docs/tech-design/07_deploy.md"],
     "T-004": [
