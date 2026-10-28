@@ -75,6 +75,21 @@ async def test_falls_back_to_next_model_on_429(fake_models: dict[str, Model]) ->
     assert stats.model == second.model
 
 
+async def test_falls_back_when_a_provider_blocks_the_answer(fake_models: dict[str, Model]) -> None:
+    """Gemini answered a repair prompt with finish_reason «content_filter: PROHIBITED_CONTENT»
+    (dev-02, 27.10): pydantic-ai raises UnexpectedModelBehavior, the ladder must go on."""
+    from pydantic_ai.exceptions import UnexpectedModelBehavior
+
+    first, second = load_roles().ladder("analyst", "free")[:2]
+
+    def blocked(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        raise UnexpectedModelBehavior("Invalid response: content_filter: PROHIBITED_CONTENT")
+
+    fake_models[first.id] = FunctionModel(blocked, model_name=first.model)
+    _, stats = await structured("analyst", "x", Requirement, profile="free")
+    assert stats.model == second.model
+
+
 async def test_all_models_failing_raises(fake_models: dict[str, Model]) -> None:
     for step in load_roles().ladder("reviewer", "free"):
         fake_models[step.id] = failing_model(step.model, 503)
@@ -205,3 +220,48 @@ async def test_given_model_replaces_the_ladder() -> None:
         0.0,
         None,
     )
+
+
+async def test_a_rate_limited_ladder_waits_and_asks_again(
+    fake_models: dict[str, Model], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Free tiers count tokens per minute: when every model answers 429, wait and retry."""
+    calls: list[int] = []
+
+    def flaky(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        calls.append(1)
+        if len(calls) < 3:
+            raise ModelHTTPError(429, "qwen", retry_after=7)
+        return ModelResponse(parts=[TextPart('{"statement": "Система должна ...", "priority": 1}')])
+
+    waits: list[float] = []
+
+    async def no_sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr("reqgraph.llm.router.asyncio.sleep", no_sleep)
+    for step in load_roles().ladder("stakeholder", "free"):  # one model: no fallback to try
+        fake_models[step.id] = FunctionModel(flaky, model_name=step.model)
+    out, stats = await structured("stakeholder", "п", Requirement, profile="free")
+    assert out.priority == 1 and waits == [7, 7] and stats.latency_ms < 7000
+
+
+async def test_other_errors_and_too_many_429_are_not_waited_out(
+    fake_models: dict[str, Model], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def no_sleep(seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr("reqgraph.llm.router.asyncio.sleep", no_sleep)
+    for step in load_roles().ladder("stakeholder", "free"):
+        fake_models[step.id] = failing_model(step.model, 500)
+    with pytest.raises(ModelHTTPError):
+        await structured("stakeholder", "п", Requirement, profile="free")
+    for step in load_roles().ladder("stakeholder", "free"):
+        fake_models[step.id] = failing_model(step.model, 429)
+    with pytest.raises(ModelHTTPError):
+        await structured("stakeholder", "п", Requirement, profile="free")
+    assert router.rate_limited(FallbackExceptionGroup("x", [ModelHTTPError(429, "a")])) == 20.0
+    assert router.rate_limited(ModelHTTPError(429, "a", retry_after=3600)) is None  # a daily limit
+    mixed = FallbackExceptionGroup("x", [ModelHTTPError(429, "a"), ModelHTTPError(500, "b")])
+    assert router.rate_limited(mixed) is None

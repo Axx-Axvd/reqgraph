@@ -1,5 +1,5 @@
 """Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards | repair |
-scenarios``."""
+scenarios | interview``."""
 
 import asyncio
 from datetime import date
@@ -8,7 +8,7 @@ from typing import Annotated, Literal
 
 import typer
 
-from reqgraph_evals import analyst, modeler, probe, repair, standards
+from reqgraph_evals import analyst, interview, modeler, probe, repair, standards
 from reqgraph_evals import scenario as scenario_files
 
 app = typer.Typer(name="reqgraph-evals", no_args_is_help=True, add_completion=False)
@@ -185,3 +185,51 @@ def scenarios_cmd(
         for line in broken:
             typer.echo(f"  {line.split('  ', 1)[-1]}")
     raise typer.Exit(1 if bad or broken else 0)
+
+
+@app.command("interview")
+def interview_cmd(
+    scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
+    characters: Annotated[
+        str, typer.Option(help="характеры: cooperative, vague, contradictory")
+    ] = ",".join(interview.CHARACTERS),
+    repeat: Annotated[int, typer.Option(min=1, help="повторов на сценарий и характер")] = 1,
+    profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
+    interviewer: Annotated[str, typer.Option(help="coverage (M2) или free (M1)")] = "coverage",
+    max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
+    out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
+    tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+) -> None:
+    """Интервью «интервьюер ↔ симулятор заказчика» на dev-сценариях (T-302): CSV, сводка и
+    диалоги для ручной проверки; проекты прогонов — в evals/runs/<дата>/interview/."""
+    if interviewer not in ("coverage", "free"):
+        raise typer.BadParameter("interviewer: coverage или free")
+    picked = [c.strip() for c in characters.split(",") if c.strip()]
+    if unknown := [c for c in picked if c not in interview.CHARACTERS]:
+        raise typer.BadParameter(f"нет характера: {', '.join(unknown)}")
+    stem = f"interview-{date.today().isoformat()}-{profile}-{interviewer}{'-' + tag if tag else ''}"
+    keep = REPORTS.parent / "runs" / date.today().isoformat() / "interview"
+    rows: list[interview.Row] = []
+    for scenario_id in [s.strip() for s in scenarios.split(",") if s.strip()]:
+        for character in picked:
+            for index in range(1, repeat + 1):
+                typer.echo(f"interview: {scenario_id} {character} #{index}")
+                rows.append(
+                    asyncio.run(
+                        interview.run_interview(
+                            scenario_id,
+                            character,  # type: ignore[arg-type]
+                            index,
+                            profile=profile,
+                            interviewer="coverage" if interviewer == "coverage" else "free",
+                            max_turns=max_turns,
+                            dialogs=out / "dialogs" / stem,
+                            keep=keep,
+                        )
+                    )
+                )
+    interview.write_csv(rows, out / f"{stem}.csv")
+    summary = interview.summary_markdown(rows)
+    (out / f"{stem}.md").write_text(summary, encoding="utf-8")
+    typer.echo(summary)
+    typer.echo(f"-> {out / stem}.csv, {stem}.md, dialogs/{stem}/")

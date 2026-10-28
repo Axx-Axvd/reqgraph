@@ -1,0 +1,9 @@
+scenario,character,repeat,interviewer,models,temperature,sim_temperature,seed,prompt_hashes,package_version,turns,end,hidden,revealed,revealed_share,mentioned_only,wrong_left,off_topic,coverage,requirements,errors_final,llm_calls,input_tokens,output_tokens,cost_usd,latency_ms,error
+dev-01,cooperative,1,coverage,analyst=openrouter/nvidia/nemotron-3.5-super-vl:free; interviewer=groq/openai/gpt-oss-20b; stakeholder=groq/qwen/qwen3.8-27b,0.2,0.7,43,analyst/extract=1f9be025c339; interviewer/ask=7e3d8d19a306,0.1.0,18,,20,12,0.6,0,0,13,goals=3/2 stakeholders=5/2 scenarios=6/4 exceptions=8/3 data=6/3 rules=1/3 integrations=1/1 nfr=2/4 constraints=2/2,0,0,72,187732,108647,0.0,1097363,"UnexpectedModelBehavior: Invalid response from openai chat completions endpoint: 3 validation errors for ChatCompletion
+choices
+  Input should be a valid list [type=list_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.14/v/list_type
+model
+"
+dev-01,vague,1,coverage,analyst=openrouter/nvidia/nemotron-3.5-super-vl:free; interviewer=groq/openai/gpt-oss-20b; stakeholder=groq/qwen/qwen3.8-27b,0.2,0.7,43,analyst/extract=1f9be025c339; interviewer/ask=7e3d8d19a306,0.1.0,3,,20,2,0.1,3,0,1,goals=2/2 stakeholders=2/2 scenarios=8/4 exceptions=2/3 data=0/3 rules=0/3 integrations=0/1 nfr=0/4 constraints=0/2,0,0,12,22989,16860,0.0,126541,FallbackExceptionGroup: All models from FallbackModel failed (3 sub-exceptions)
+dev-01,contradictory,1,coverage,,0.2,0.7,43,,0.1.0,0,,20,0,0.0,0,0,0,,0,0,0,0,0,0,0,FallbackExceptionGroup: All models from FallbackModel failed (3 sub-exceptions)

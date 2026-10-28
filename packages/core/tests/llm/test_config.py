@@ -114,3 +114,16 @@ def test_profile_comes_from_environment(monkeypatch: pytest.MonkeyPatch) -> None
     monkeypatch.setenv("REQGRAPH_PROFILE", "local")
     cfg = load_roles()
     assert cfg.ladder("analyst")[0].provider == "ollama"
+
+
+def test_the_simulated_client_has_its_own_temperature(tmp_path: Path) -> None:
+    cfg = load_roles()
+    assert cfg.temperature("stakeholder") == 0.7  # 03_agents: the client talks like a person
+    assert cfg.temperature("analyst") == cfg.defaults.temperature
+    bad = tmp_path / "roles.yaml"
+    from reqgraph.llm.config import ROLES_YAML
+
+    text = ROLES_YAML.read_text(encoding="utf-8")
+    bad.write_text(text.replace("temperature: 0.7", "temperature: 5"), encoding="utf-8")
+    with pytest.raises(ConfigError):
+        load_roles(bad)

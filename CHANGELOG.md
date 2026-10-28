@@ -8,6 +8,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Stakeholder simulator (T-302): `sim/stakeholder.py` — two steps per answer: `select` (the model sees the hidden
+  list and picks at most 3 requirements the question is about, code checks the ids) and `reply` (the answer in the
+  persona's manner; the model sees only the picked ones, so it cannot give away others); already told requirements
+  are repeated, not forgotten; characters in code — vague (only the topic first, details on a follow-up),
+  contradictory (a seeded wrong quantity, corrected when the talk comes back to its area); `sim/scenario.py`
+  (scenario models moved from evals). `reqgraph-evals interview` — the interviewer against the simulator, a CSV row
+  per run, readable dialogs for the manual check, the run projects for T-304. `llm/prompts.py` — one Jinja2
+  loader for agents and the simulator; `role_settings` in roles.yaml (the simulator answers at 0.7).
+
 - `reqgraph interview` (T-301): the interview in the terminal with pause and resume. The Analyst reads every answer
   right away (only the new turns), `agents/coverage.py` counts the coverage of the 9 areas from the graph
   (requirements derived from client turns and not assumptions; actors; distinct ISO 25010 characteristics), the
@@ -21,7 +30,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   requirements: 25 / 40 / 60 per size, all 9 coverage areas, `in_brief` marks what the brief already says);
   `reqgraph_evals/scenario.py` (schemas, loader that refuses test scenarios without `final=True`, protocol checks,
   the SHA-256 seal of test files); `reqgraph-evals scenarios [--seal]`. Drafts by Claude, to be checked by the author.
-
 - `reqgraph init` and `reqgraph run` (T-206): `agents/run.py` — `init_project()` writes `reqgraph.yaml` and
   `brief.md`; `run_project()` runs brief → Analyst → Modeler → Standards → checks → repair on a project folder,
   prints a line per step, writes the project, `reports/ci-report.json|md`, `run-events.jsonl` and
@@ -38,6 +46,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   export. `reqgraph-evals repair [--reviewer template]`.
 
 ### Fixed
+
+- LLM ladder: a provider that blocks an answer (Gemini `finish_reason: content_filter: PROHIBITED_CONTENT` on an
+  ordinary repair prompt) no longer ends the run; the next model of the ladder answers.
+- `structured()` waits and asks again when every model of a ladder answers 429 (free tiers count tokens per
+  minute); an interview goes on when the Analyst's ladder fails on one answer (the turns stay unread).
+- Interview coverage: a BR counts as a goal and a CON as a constraint whatever the Analyst's area tag; the
+  Analyst prompt explains the areas of UR and FR.
 
 - Checkpoints restored edges with a warning (`Rel` was not in the msgpack allow-list); now allowed and tested.
 - Analyst: an edit of an existing requirement no longer wipes fields the model did not send (acceptance criteria).
