@@ -165,3 +165,33 @@ async def test_a_failed_analyst_call_keeps_the_turns_for_the_next_answer(
     assert events_of(ctx, "llm_failed")[0]["agent"] == "analyst"
     out = await run.answer("Неявок около 10%.")
     assert "Записываются по телефону" in prompts[1] and "Неявок около 10%" in prompts[1]
+
+
+async def test_the_interview_ends_when_every_open_area_told_nothing_twice(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
+    models = stub_models(analyst={"requirements": []}) | {"interviewer": recording(asks, [])}
+    ctx = brief_context(models=models, max_turns=10, max_iter=0)
+    run = interview(ctx, need=NO_NEED | {"goals": 1})
+    await run.start()
+    out = await run.answer("Пока не думали.")
+    assert out["__interrupt__"][0].value["turn"] == 2  # one empty answer: the area stays open
+    out = await run.answer("Не знаю.")
+    assert "__interrupt__" not in out and out["turns"] == 2
+    assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["saturated"]
+
+
+async def test_the_interviewer_sees_what_is_known_of_the_area_it_asks_about(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    prompts: list[str] = []
+    asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
+    models = stub_models(analyst=DRAFT) | {"interviewer": recording(asks, prompts)}
+    ctx = brief_context(models=models, max_turns=2, max_iter=0)
+    run = interview(ctx, need=NO_NEED | {"goals": 2})
+    await run.start()
+    assert "goals ещё не спрашивали" in prompts[0]
+    await run.answer("Хотим, чтобы половина записей шла через сайт за полгода.")
+    assert "goals уже спрашивали" in prompts[1]
+    assert "Доля онлайн-записей должна вырасти с 0% до 50% за 6 месяцев." in prompts[1]

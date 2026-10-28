@@ -56,6 +56,7 @@ class Row:
     mentioned_only: int = 0
     wrong_left: int = 0
     off_topic: int = 0  # told items whose area is not the area the question aimed at
+    empty: int = 0  # questions whose answer told no hidden requirement anew (T-305)
     coverage: str = ""  # area got/need at the end
     requirements: int = 0
     errors_final: int = 0
@@ -178,6 +179,8 @@ def _fill(
     areas = [e.get("area") for e in events if e["type"] == "question"]
     for turn, area in zip(turns, areas, strict=False):
         turn.area = area
+        new = [t for t in turn.told if t["mode"] != "repeat" and not sim.items[t["id"]].in_brief]
+        row.empty += not new
         row.off_topic += sum(  # a repeat is not a hint: it was told before
             1 for t in turn.told if area is not None and t["area"] != area and t["mode"] != "repeat"
         )
@@ -204,7 +207,7 @@ def dialog_markdown(row: Row, turns: Sequence[Turn], sim: Stakeholder) -> str:
         f"вопросов {row.turns}, конец: {row.end or '—'}.",
         f"Рассказано полностью {row.revealed} из {row.hidden} скрытых требований (вне брифа), "
         f"только упомянуто {row.mentioned_only}, неверных чисел не поправлено {row.wrong_left}; "
-        f"не в области вопроса — {row.off_topic}.",
+        f"не в области вопроса — {row.off_topic}; вопросов без нового требования — {row.empty}.",
         "",
         "Проверка (09_eval): каждое раскрытое требование должно относиться к теме вопроса. "
         "Отметка «⚠» — область требования не совпадает с областью, о которой спрашивал "
@@ -246,14 +249,15 @@ def summary_markdown(rows: Sequence[Row]) -> str:
     lines = [
         "# Интервью с симулятором заказчика",
         "",
-        "| Сценарий | Характер | Повтор | Вопросов | Конец | Рассказано | Упомянуто | Неверных | "
-        "Вне области | Требований | Ошибок | Вызовов LLM | Токены | Время, с | Ошибка |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Сценарий | Характер | Повтор | Вопросов | Конец | Рассказано | Пустых вопросов "
+        "| Упомянуто | Неверных | Вне области | Требований | Ошибок | Вызовов LLM | Токены "
+        "| Время, с | Ошибка |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         lines.append(
             f"| {r.scenario} | {r.character} | {r.repeat} | {r.turns} | {r.end or '—'} "
-            f"| {r.revealed}/{r.hidden} ({r.revealed_share:.0%}) | {r.mentioned_only} "
+            f"| {r.revealed}/{r.hidden} ({r.revealed_share:.0%}) | {r.empty} | {r.mentioned_only} "
             f"| {r.wrong_left} | {r.off_topic} | {r.requirements} | {r.errors_final} "
             f"| {r.llm_calls} | {r.input_tokens + r.output_tokens} | {r.latency_ms / 1000:.1f} "
             f"| {r.error} |"

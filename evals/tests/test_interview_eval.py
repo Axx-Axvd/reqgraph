@@ -57,6 +57,7 @@ async def test_a_dialog_with_the_simulator_is_recorded(tmp_path: Path) -> None:
     assert row.error == "" and row.turns == 2 and row.end == "limit"
     assert (row.revealed, row.hidden) == (1, 20)  # H-013 once; 5 of 25 are in the brief
     assert row.off_topic == 0  # H-013 is about exceptions, as the question
+    assert row.empty == 1  # the second answer only repeats H-013
     assert "stakeholder=function/" in row.models and "interviewer=test/test" in row.models
     assert row.sim_temperature == 0.7 and row.seed == 43  # roles.yaml seed + the repeat
     assert "interviewer/ask=" in row.prompt_hashes
@@ -69,7 +70,7 @@ async def test_a_dialog_with_the_simulator_is_recorded(tmp_path: Path) -> None:
     write_csv([row], tmp_path / "interview.csv")
     with (tmp_path / "interview.csv").open(encoding="utf-8") as fh:
         assert next(iter(csv.DictReader(fh))).keys() == set(CSV_FIELDS)
-    assert "| dev-01 | cooperative | 1 | 2 | limit | 1/20 (5%)" in summary_markdown([row])
+    assert "| dev-01 | cooperative | 1 | 2 | limit | 1/20 (5%) | 1 |" in summary_markdown([row])
 
 
 async def test_test_scenarios_stay_sealed() -> None:
