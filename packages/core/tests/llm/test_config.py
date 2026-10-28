@@ -127,3 +127,11 @@ def test_the_simulated_client_has_its_own_temperature(tmp_path: Path) -> None:
     bad.write_text(text.replace("temperature: 0.7", "temperature: 5"), encoding="utf-8")
     with pytest.raises(ConfigError):
         load_roles(bad)
+
+
+@pytest.mark.parametrize("profile", ["free", "cheap", "local"])
+def test_every_profile_has_an_embedding_model(profile: str) -> None:
+    step = load_roles().embedding(profile)
+    assert step.provider in load_roles().providers
+    with pytest.raises(ConfigError, match="эмбеддингов"):
+        load_roles().embedding("nope")

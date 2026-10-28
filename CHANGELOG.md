@@ -8,6 +8,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Metrics of the experiment (T-304): `evals/reqgraph_evals/metrics/` on pydantic-evals — a case is scenario ×
+  character × method × repeat, evaluators score it. Recall: hidden requirements vs requirements found (not
+  assumptions) — embeddings pick the top 3 candidates above 0.5, the judge (`prompts/judge/match.md`, another model
+  family than the agents) decides; `recall` counts the hidden requirements outside the brief, `recall_all` the whole
+  reference. Ambiguity, validity, soundness, trace coverage and orphan rate come from the deterministic checks.
+  `results-*.csv` keeps the whole record of a run (models, temperatures, seed, prompt hashes, version, judge and
+  embedding models, tokens, $, time) and every judged pair goes to `labels/pairs-*.csv`. Manual check of the judge:
+  a seeded 20% sample of references (`reqgraph-evals label`), agreement and Cohen's kappa (`reqgraph-evals agreement`).
+  The judge answers full / partial / none; on a fresh dev-03 sample labelled by the author, kappa of «full or not»
+  is 0.858 (threshold 0.8).
+  `reqgraph-evals metrics` scores saved interview runs, `reqgraph-evals matrix` runs and scores in one go.
+  `llm/embed.py` — embeddings through pydantic-ai with a disk cache; `embeddings` in roles.yaml.
+
 - Stakeholder simulator (T-302): `sim/stakeholder.py` — two steps per answer: `select` (the model sees the hidden
   list and picks at most 3 requirements the question is about, code checks the ids) and `reply` (the answer in the
   persona's manner; the model sees only the picked ones, so it cannot give away others); already told requirements
@@ -153,6 +166,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- README rewritten for any visitor, in a plain professional style: purpose, approach, how it works, what changes,
+  evaluation, project status; English is the main `README.md`, the Russian version is
+  `README.ru.md`, with a language switch at the top of both.
 - 06_models, 07_deploy, 09_eval: current free models, DeepSeek V4 Pro price (0.955 / 1.911 on 2026-10-23), payment from
   Russia through ruble aggregators, risk R7. CLAUDE.md: network-blocking flag, mypy command.
 - Free OpenRouter models in `roles.yaml`: minimax-m3.1-flash:free (retired) and nemotron-3-super:free (404) replaced.

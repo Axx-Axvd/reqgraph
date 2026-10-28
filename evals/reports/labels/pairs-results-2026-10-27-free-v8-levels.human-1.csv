@@ -1,0 +1,16 @@
+run,hidden_id,judge,human
+dev-01-cooperative-M2-r1,H-004,none,none
+dev-01-cooperative-M2-r1,H-005,full,full
+dev-01-cooperative-M2-r1,H-012,full,full
+dev-01-cooperative-M2-r1,H-014,none,full
+dev-01-cooperative-M2-r1,H-015,full,full
+dev-01-cooperative-M2-r1,H-018,partial,full
+dev-01-contradictory-M2-r1,H-004,none,partial
+dev-01-contradictory-M2-r1,H-007,none,partial
+dev-01-contradictory-M2-r1,H-008,full,none
+dev-01-contradictory-M2-r1,H-011,full,full
+dev-01-vague-M2-r1,H-005,none,none
+dev-01-vague-M2-r1,H-018,none,partial
+dev-01-vague-M2-r1,H-019,none,partial
+dev-01-vague-M2-r1,H-024,none,partial
+dev-01-vague-M2-r1,H-025,partial,full
