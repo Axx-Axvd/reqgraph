@@ -96,13 +96,13 @@ class RunBudget:
         self.spent_tokens += stats.input_tokens + stats.output_tokens
 
 
-def _api_key(provider: Provider) -> str:
+def api_key(provider: Provider) -> str:
     if provider.key_env is None:
         return "ollama"
     return os.environ.get(provider.key_env) or PLACEHOLDER_KEY
 
 
-def _base_url(provider: Provider) -> str:
+def base_url(provider: Provider) -> str:
     if provider.base_url_env and (url := os.environ.get(provider.base_url_env)):
         return url
     return provider.base_url
@@ -124,7 +124,7 @@ def _build_model(step: Step) -> Model:
     settings = ModelSettings()
     if cfg.defaults.seed is not None and provider.supports_seed:
         settings["seed"] = cfg.defaults.seed
-    client = OpenAIProvider(base_url=_base_url(provider), api_key=_api_key(provider))
+    client = OpenAIProvider(base_url=base_url(provider), api_key=api_key(provider))
     model = OpenAIChatModel(step.model, provider=client, settings=settings)
     if provider.output_mode is None:
         return model

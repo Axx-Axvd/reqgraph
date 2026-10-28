@@ -55,6 +55,11 @@ role_settings:                       # differences from the defaults, by role
   stakeholder:
     temperature: 0.7                 # the simulated client talks like a person (03_agents)
 
+embeddings:                          # recall: matching found requirements to the hidden ones (T-304)
+  free: gemini/gemini-embedding-001  # Google AI Studio, free; 3072 numbers per text
+  cheap: gemini/gemini-embedding-001
+  local: ollama/nomic-embed-text
+
 budget:                              # per run; REQGRAPH_RUN_BUDGET_USD overrides run_usd
   run_usd: 0.50
   run_tokens: 800000

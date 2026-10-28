@@ -1,15 +1,20 @@
 """Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards | repair |
-scenarios | interview``."""
+scenarios | interview | metrics | matrix | label | agreement``."""
 
 import asyncio
 from datetime import date
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal, cast
 
 import typer
 
 from reqgraph_evals import analyst, interview, modeler, probe, repair, standards
 from reqgraph_evals import scenario as scenario_files
+
+if TYPE_CHECKING:
+    from reqgraph.sim.stakeholder import Character
+
+    from reqgraph_evals.metrics import harness
 
 app = typer.Typer(name="reqgraph-evals", no_args_is_help=True, add_completion=False)
 REPORTS = Path(__file__).resolve().parent.parent / "reports"
@@ -233,3 +238,131 @@ def interview_cmd(
     (out / f"{stem}.md").write_text(summary, encoding="utf-8")
     typer.echo(summary)
     typer.echo(f"-> {out / stem}.csv, {stem}.md, dialogs/{stem}/")
+
+
+def _metrics_out(
+    results: list["harness.Result"], pairs: list[dict[str, object]], out: Path, stem: str
+) -> None:
+    from reqgraph_evals.metrics import harness
+
+    harness.write_results(results, out / f"{stem}.csv")
+    harness.write_pairs(pairs, out / "labels" / f"pairs-{stem}.csv")
+    summary = harness.summary_markdown(results)
+    (out / f"{stem}.md").write_text(summary, encoding="utf-8")
+    typer.echo(summary)
+    typer.echo(f"-> {out / stem}.csv, {stem}.md, labels/pairs-{stem}.csv")
+
+
+@app.command("metrics")
+def metrics_cmd(
+    interviews: Annotated[
+        Path,
+        typer.Argument(help="CSV отчёта reqgraph-evals interview", exists=True, dir_okay=False),
+    ],
+    runs: Annotated[
+        Path, typer.Option(help="папка проектов этих прогонов (runs/<дата>/interview)")
+    ],
+    profile: Annotated[str, typer.Option(help="профиль: судья и эмбеддинги")] = "free",
+    out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
+    tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+) -> None:
+    """Посчитать метрики (recall, ambiguity, validity, soundness, trace) по сохранённым прогонам
+    интервью: results-*.csv и пары для ручной проверки судьи (labels/pairs-*.csv)."""
+    from reqgraph_evals.metrics import harness
+
+    rows = harness.read_interview_rows(interviews)
+    cases = [
+        harness.RunInputs(
+            r.scenario,
+            cast("Character", r.character),
+            "M2" if r.interviewer == "coverage" else "M1",
+            r.repeat,
+        )
+        for r in rows.values()
+    ]
+    results, pairs = asyncio.run(
+        harness.evaluate(cases, harness.saved_task(rows, runs), profile=profile)
+    )
+    stem = f"results-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
+    _metrics_out(results, pairs, out, stem)
+
+
+@app.command("matrix")
+def matrix_cmd(
+    scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
+    characters: Annotated[str, typer.Option(help="характеры через запятую")] = ",".join(
+        interview.CHARACTERS
+    ),
+    methods: Annotated[str, typer.Option(help="M2 (с покрытием), M1 (без)")] = "M2",
+    repeat: Annotated[int, typer.Option(min=1, help="повторов")] = 1,
+    profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
+    max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
+    out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
+    tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+) -> None:
+    """Прогнать интервью с симулятором и сразу посчитать метрики (pydantic-evals): results-*.csv.
+    Test-сценарии не запускаются до финальной матрицы (S6)."""
+    from reqgraph_evals.metrics import harness
+
+    cases = [
+        harness.RunInputs(s.strip(), c.strip(), m.strip(), r)  # type: ignore[arg-type]
+        for s in scenarios.split(",")
+        if s.strip()
+        for c in characters.split(",")
+        if c.strip()
+        for m in methods.split(",")
+        if m.strip()
+        for r in range(1, repeat + 1)
+    ]
+    stem = f"results-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
+    runs = REPORTS.parent / "runs" / date.today().isoformat() / "matrix"
+    task = harness.run_task(
+        profile=profile, max_turns=max_turns, runs=runs, dialogs=out / "dialogs" / stem
+    )
+    results, pairs = asyncio.run(harness.evaluate(cases, task, profile=profile))
+    _metrics_out(results, pairs, out, stem)
+
+
+@app.command("label")
+def label_cmd(
+    pairs: Annotated[Path, typer.Argument(help="labels/pairs-*.csv", exists=True, dir_okay=False)],
+    share: Annotated[
+        float, typer.Option(min=0.01, max=1.0, help="доля эталонов для разметки")
+    ] = 0.2,
+    seed: Annotated[int, typer.Option(help="seed выборки")] = 42,
+) -> None:
+    """Ручная разметка случайных 20% эталонов со всеми кандидатами: f — полностью, p — частично,
+    n — нет; q — закончить и сохранить."""
+    from reqgraph_evals.metrics import label
+
+    done = label.label(pairs, input, share=share, seed=seed, echo=typer.echo)
+    typer.echo(f"размечено эталонов: {done} -> {label.human_path(pairs)}")
+
+
+@app.command("agreement")
+def agreement_cmd(
+    pairs: Annotated[Path, typer.Argument(help="labels/pairs-*.csv", exists=True, dir_okay=False)],
+) -> None:
+    """Согласие судьи с ручной разметкой по эталонам: каппа Коэна «найдено полностью или нет»
+    (порог 0.8), «найдено хоть как-то» и по трём уровням."""
+    from reqgraph_evals.metrics import label
+
+    try:
+        result = label.compare(pairs)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
+    verdict = "да" if result["kappa"] >= 0.8 else "нет"
+    text = (
+        f"# Согласие судьи с ручной разметкой\n\nЭталонов: {result['references']}. "
+        f"«Найдено полностью или нет» (это считает recall): каппа Коэна {result['kappa']}, доля "
+        f"совпадений {result['agreement']}; полностью у судьи {result['judge_full']}, у человека "
+        f"{result['human_full']}. «Найдено хоть как-то»: каппа {result['kappa_found']}. "
+        f"Три уровня: каппа {result['kappa_3']}, доля совпадений {result['agreement_3']}; "
+        f"частично у судьи {result['judge_partial']}, у человека {result['human_partial']}. "
+        f"Порог T-304 (каппа «полностью» ≥ 0.8) выполнен: {verdict}.\n"
+    )
+    (pairs.parent / f"agreement-{pairs.stem.removeprefix('pairs-')}.md").write_text(
+        text, encoding="utf-8"
+    )
+    typer.echo(text)
