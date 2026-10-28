@@ -167,7 +167,7 @@
 
 - **Критерий приёмки:** results.csv; согласие судьи с ручной разметкой >= 0.8
 - **Зависит от:** T-302, T-303
-- **Статус:** код и results.csv готовы в feat/T-304: `evals/reqgraph_evals/metrics/` на pydantic-evals (recall: эмбеддинги Gemini → судья на другой семье моделей, в том числе требование, разложенное системой на части; ambiguity, validity, soundness, trace, сироты — из детерминированных проверок), `llm/embed.py` с кэшем, команды `reqgraph-evals metrics | matrix | label | agreement`; первый живой прогон — `evals/reports/results-2026-10-27-free-v8.csv` по трём итоговым диалогам T-302. Осталось **[you]**: ручная разметка 20% пар (`evals/reports/labels/pairs-results-2026-10-27-free-v8.csv`) и κ ≥ 0.8
+- **Статус:** код и results.csv готовы в feat/T-304: `evals/reqgraph_evals/metrics/` на pydantic-evals (recall: эмбеддинги Gemini → судья на другой семье моделей, в том числе требование, разложенное системой на части; ambiguity, validity, soundness, trace, сироты — из детерминированных проверок), `llm/embed.py` с кэшем, команды `reqgraph-evals metrics | matrix | label | agreement`; первый живой прогон — `evals/reports/results-2026-10-27-free-v8.csv` по трём итоговым диалогам T-302. Сделано 28.10: судья с тремя уровнями (полностью / частично / нет), разметка автора по эталонам; после настройки на dev-01 и dev-02 на новой выборке dev-03 (28 из 60 эталонов, вердикты до разметки не открывались) κ «полностью или нет» 0.858, доля совпадений 0.929 (`evals/reports/labels/pairs-results-2026-10-28-free-check-dev03.human.csv`); прошлые попытки — κ 0.22 (пары), 0.455 и 0.727 (dev-01) — в journal
 
 ### T-305 — Interviewer без повторов: насыщение области, записанные факты в промпте, сначала открытый вопрос
 

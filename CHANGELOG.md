@@ -15,7 +15,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   reference. Ambiguity, validity, soundness, trace coverage and orphan rate come from the deterministic checks.
   `results-*.csv` keeps the whole record of a run (models, temperatures, seed, prompt hashes, version, judge and
   embedding models, tokens, $, time) and every judged pair goes to `labels/pairs-*.csv`. Manual check of the judge:
-  a seeded 20% sample (`reqgraph-evals label`), agreement and Cohen's kappa (`reqgraph-evals agreement`).
+  a seeded 20% sample of references (`reqgraph-evals label`), agreement and Cohen's kappa (`reqgraph-evals agreement`).
+  The judge answers full / partial / none; on a fresh dev-03 sample labelled by the author, kappa of «full or not»
+  is 0.858 (threshold 0.8).
   `reqgraph-evals metrics` scores saved interview runs, `reqgraph-evals matrix` runs and scores in one go.
   `llm/embed.py` — embeddings through pydantic-ai with a disk cache; `embeddings` in roles.yaml.
 
