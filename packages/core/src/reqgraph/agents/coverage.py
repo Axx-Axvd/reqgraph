@@ -7,6 +7,8 @@ ISO 25010 characteristics (03_agents: «at least 4»). UR and FR count in the ar
 
 An area is saturated when the client has nothing more to tell about it (T-305): an answer that
 yields no new requirement sends its area to the end of the queue, the second such answer closes it.
+Every area is asked at least once before any is asked again, even one the brief already covered:
+the brief gives the topic, the client knows more about it.
 """
 
 from collections import Counter
@@ -103,3 +105,19 @@ def gaps(coverage: Coverage) -> list[tuple[str, int, int]]:
     short = [(a, coverage.got.get(a, 0), n) for a, n in coverage.need.items() if n > 0]
     short = [g for g in short if g[1] < g[2]]
     return sorted(short, key=lambda g: (g[1] / g[2], -g[2]))
+
+
+def queue(
+    coverage: Coverage, graph: ArtifactGraph, asked_areas: Sequence[str | None]
+) -> list[tuple[str, int, int]]:
+    """What to ask about, in order: gaps never asked (the emptiest first), then areas the brief
+    covered but nobody asked about, then gaps asked before. Closed areas drop out."""
+    closed = closed_areas(graph, asked_areas)
+    asked = {a for a in asked_areas if a is not None}
+    short = [g for g in gaps(coverage) if g[0] not in closed]
+    covered = [
+        (a, coverage.got.get(a, 0), n)
+        for a, n in coverage.need.items()
+        if n > 0 and coverage.got.get(a, 0) >= n and a not in asked and a not in closed
+    ]
+    return [g for g in short if g[0] not in asked] + covered + [g for g in short if g[0] in asked]

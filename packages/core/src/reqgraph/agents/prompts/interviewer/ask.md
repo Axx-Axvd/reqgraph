@@ -26,7 +26,7 @@
 {% endfor %}
 
 {% if gaps %}
-Меньше всего известно об областях (по порядку): {% for area, got, need in gaps[:3] %}{{ area }} ({{ got }}/{{ need }}){% if not loop.last %}, {% endif %}{% endfor %}.
+Следующие области для вопроса (по порядку; сначала те, о которых ещё не спрашивали): {% for area, got, need in gaps[:3] %}{{ area }} ({{ got }}/{{ need }}){% if not loop.last %}, {% endif %}{% endfor %}.
 {% else %}
 Все области набрали норму: уточни самое неясное из последних ответов.
 {% endif %}

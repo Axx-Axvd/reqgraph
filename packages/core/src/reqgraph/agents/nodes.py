@@ -12,7 +12,7 @@ from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, Field
 
 from reqgraph.agents.common import start
-from reqgraph.agents.coverage import closed_areas, coverage_of, empty_answers, facts_by_area, gaps
+from reqgraph.agents.coverage import coverage_of, empty_answers, facts_by_area, queue
 from reqgraph.agents.prompts import load_prompt
 from reqgraph.agents.reviewer import fingerprints
 from reqgraph.agents.runtime import RunContext
@@ -122,11 +122,11 @@ def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
 
 
 def next_gaps(state: RunState) -> list[tuple[str, int, int]]:
-    """The emptiest areas first (T-305): a closed area drops out; an area whose last answer told
-    nothing new, or that was asked SAME_AREA times in a row, goes last and may come back later."""
+    """The areas to ask about, in the order of coverage.queue() (T-305); among those asked
+    before, one whose last answer told nothing new, or that was asked SAME_AREA times in a row,
+    goes last."""
     graph, asked = state["graph"], state["asked_areas"]
-    closed = closed_areas(graph, asked)
-    found = [g for g in gaps(state["coverage"]) if g[0] not in closed]
+    found = queue(state["coverage"], graph, asked)
     empty = empty_answers(graph, asked)
     recent = asked[-SAME_AREA:]
     last: str | None = None
@@ -198,8 +198,8 @@ async def coverage(state: RunState, runtime: Runtime[RunContext]) -> dict[str, A
     counted = coverage_of(state["graph"], state["coverage"].need)
     tracker = ctx.interviewer == "coverage"
     reached = counted.complete and tracker
-    closed = closed_areas(state["graph"], state["asked_areas"])
-    saturated = tracker and not reached and all(g[0] in closed for g in gaps(counted))
+    left = queue(counted, state["graph"], state["asked_areas"])
+    saturated = tracker and not reached and not left
     limit = state["turns"] >= ctx.max_turns
     done = state["interview_done"] or state["stop"] is not None or reached or saturated or limit
     ctx.events.emit(
@@ -207,7 +207,7 @@ async def coverage(state: RunState, runtime: Runtime[RunContext]) -> dict[str, A
         turns=state["turns"],
         got=counted.got,
         need=counted.need,
-        closed=sorted(closed),
+        left=[area for area, _, _ in left],
         done=done,
     )
     if done and not state["interview_done"]:

@@ -81,8 +81,13 @@ def test_an_area_asked_twice_in_a_row_goes_last() -> None:
     state["asked_areas"] = ["scenarios", "scenarios"]
     moved = [g[0] for g in next_gaps(state)]
     assert moved[-1] == "scenarios" and moved[:-1] == first[1:]
-    state["asked_areas"] = ["scenarios", "nfr"]
-    assert [g[0] for g in next_gaps(state)] == first
+    state["asked_areas"] = ["scenarios", "nfr"]  # areas asked before go after those never asked
+    assert [g[0] for g in next_gaps(state)] == [
+        a for a in first if a not in ("scenarios", "nfr")
+    ] + [
+        "scenarios",
+        "nfr",
+    ]
 
 
 def answered(answers: int, draft: dict[str, Any]) -> ArtifactGraph:
@@ -152,3 +157,16 @@ def test_an_area_whose_last_answer_told_nothing_goes_last_and_a_closed_one_drops
     state["asked_areas"] = ["scenarios", "scenarios"]
     assert "scenarios" not in [g[0] for g in next_gaps(state)]
     assert [g[0] for g in next_gaps(state)] == [a for a in first if a != "scenarios"]
+
+
+def test_an_area_the_brief_covered_is_asked_once_before_a_gap_is_asked_again() -> None:
+    from reqgraph.agents.nodes import next_gaps
+    from reqgraph.agents.state import initial_state
+
+    need = {**dict.fromkeys(AREAS, 0), "goals": 1, "nfr": 2}
+    state = initial_state(answered(1, {"requirements": []}), "interview", need=need)
+    state["coverage"] = Coverage(got={**dict.fromkeys(AREAS, 0), "goals": 1}, need=need)
+    state["asked_areas"] = ["nfr"]  # the brief told the goal, nfr was asked and is still short
+    assert [g[0] for g in next_gaps(state)] == ["goals", "nfr"]
+    state["asked_areas"] = ["nfr", "goals"]
+    assert [g[0] for g in next_gaps(state)] == ["nfr"]  # goals was asked and is covered

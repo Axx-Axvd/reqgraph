@@ -195,3 +195,18 @@ async def test_the_interviewer_sees_what_is_known_of_the_area_it_asks_about(
     await run.answer("Хотим, чтобы половина записей шла через сайт за полгода.")
     assert "goals уже спрашивали" in prompts[1]
     assert "Доля онлайн-записей должна вырасти с 0% до 50% за 6 месяцев." in prompts[1]
+
+
+async def test_saturation_waits_for_every_area_to_be_asked_once(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    con = {**DRAFT["requirements"][-1], "assumption": False, "sources": ["TURN-0001"]}
+    analyst = recording([{"requirements": [con]}, {"requirements": []}], [])  # the brief tells it
+    asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
+    models = stub_models() | {"analyst": analyst, "interviewer": recording(asks, [])}
+    ctx = brief_context(models=models, max_turns=10, max_iter=0)
+    run = interview(ctx, brief=BRIEF, need=NO_NEED | {"goals": 1, "constraints": 1})
+    await run.start()
+    await run.answer("Пока не думали.")
+    out = await run.answer("Не знаю.")  # goals is closed; constraints are covered, never asked
+    assert out["__interrupt__"][0].value["turn"] == 3
