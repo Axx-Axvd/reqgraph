@@ -118,7 +118,7 @@ The full method is described in [docs/tech-design/09_eval.md](docs/tech-design/0
 | S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | nearly complete: scenario domains await approval |
 | S4 | 14.12–27.12 | SRS, GOST specification, ReqIF, baseline methods, first run, version 0.5 | planned |
 | S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download | planned |
-| S6 | 25.01–07.02 | full comparison, ablations, expert assessment, live interviews, statistics | planned |
+| S6 | 25.01–07.02 | full comparison, ablations, expert verification on one example, statistics | planned |
 | S7 | 08.02–21.02 | version 1.0, technical report, video, thesis chapters | planned |
 
 The project is ahead of schedule: by the plan, S3 runs from 30 November to 13 December. Implemented so far:

@@ -94,12 +94,14 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-305": ("feature", "agents"),
     "T-306": ("research", "evals"),
     "T-307": ("research", "evals"),
+    "T-308": ("research", "evals"),
     "T-401": ("feature", "exporters"),
     "T-402": ("feature", "exporters"),
     "T-403": ("feature", "exporters"),
     "T-404": ("feature", "checks"),
     "T-405": ("feature", "evals"),
     "T-406": ("infra", "evals"),
+    "T-407": ("feature", "exporters"),
     "T-501": ("feature", "api"),
     "T-502": ("feature", "api"),
     "T-503": ("feature", "api"),
@@ -113,9 +115,11 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-604": ("research", "evals"),
     "T-605": ("research", "evals"),
     "T-606": ("research", "evals"),
+    "T-607": ("research", "evals"),
     "T-701": ("feature", "web"),
     "T-702": ("docs", None),
     "T-703": ("docs", None),
+    "T-704": ("docs", None),
 }
 
 EPIC_DOCS: dict[str, list[str]] = {
@@ -216,7 +220,7 @@ def parse_backlog(text: str) -> tuple[list[Task], dict[str, str]]:
                 tid=tid,
                 title=current["title"],
                 epic=epic_of[tid],
-                sprint=sprint_of[tid],
+                sprint=sprint_of.get(tid, ""),  # no sprint: the product line, after M7
                 acceptance=acc.replace("**[you]**", "[you]"),
                 depends=re.findall(r"T-\d{3}", current.get("dep", "")),
                 status=current.get("status"),
@@ -265,7 +269,7 @@ def render_body(t: Task, repo: str, numbers: dict[str, int]) -> str:
     docs = ["docs/backlog.md", *EPIC_DOCS[t.epic], *TASK_DOCS.get(t.tid, [])]
     lines = [
         MARKER.format(tid=t.tid),
-        f"**{t.tid}** · эпик {t.epic} · веха {t.sprint}",
+        f"**{t.tid}** · эпик {t.epic} · веха {t.sprint or 'вне диплома'}",
         "",
         "## Описание",
         "",
@@ -408,7 +412,7 @@ def sync_issues(gh: GitHub, tasks: list[Task], ms: dict[str, int], update: bool)
             "title": title,
             "body": render_body(t, gh.repo, numbers),
             "labels": t.labels,
-            "milestone": ms[t.sprint],
+            "milestone": ms.get(t.sprint),
         }
         res = gh.write("POST", "issues", payload)
         if res:
@@ -421,7 +425,7 @@ def sync_issues(gh: GitHub, tasks: list[Task], ms: dict[str, int], update: bool)
             "title": f"{t.tid}: {t.title}",
             "body": render_body(t, gh.repo, numbers),
             "labels": t.labels,
-            "milestone": ms[t.sprint],
+            "milestone": ms.get(t.sprint),
         }
         if t.tid in created:
             if t.depends and t.tid in numbers:
