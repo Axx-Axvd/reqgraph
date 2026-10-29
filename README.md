@@ -6,7 +6,7 @@
 
 reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
 
-The project is developed as a thesis. As of 28 October 2026, sprints S0–S2 (the core and the agents) are complete, and S3 (the interview, the simulated client and the metrics) is complete except for the supervisor's approval of the scenario domains. The command line already covers the path from a brief to a checked report. Document export is planned for S4, the web interface for S5, and version 1.0 for 21 February 2027.
+The project is developed as a thesis. As of 29 October 2026, sprints S0–S3 are complete: the core, the agents, the interview with a simulated client and the metrics. The command line already covers the path from a brief to a checked report. Document export is planned for S4, the web interface for S5, and version 1.0 for 21 February 2027.
 
 ## Contents
 
@@ -115,7 +115,7 @@ The full method is described in [docs/tech-design/09_eval.md](docs/tech-design/0
 | S0 | 19.10–01.11.2026 | repository, CI, database, model access layer, model testing | complete |
 | S1 | 02.11–15.11 | graph, process format and BPMN compiler, checks | complete |
 | S2 | 16.11–29.11 | agents and the repair loop, version 0.1 | complete |
-| S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | nearly complete: scenario domains await approval |
+| S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | complete |
 | S4 | 14.12–27.12 | SRS, GOST specification, ReqIF, baseline methods, first run, version 0.5 | planned |
 | S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download | planned |
 | S6 | 25.01–07.02 | full comparison, ablations, expert verification on one example, statistics | planned |
