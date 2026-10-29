@@ -167,7 +167,7 @@ async def test_a_failed_analyst_call_keeps_the_turns_for_the_next_answer(
     assert "Записываются по телефону" in prompts[1] and "Неявок около 10%" in prompts[1]
 
 
-async def test_the_interview_ends_when_every_open_area_told_nothing_twice(
+async def test_the_interview_ends_when_every_open_area_told_nothing(
     brief_context: Callable[..., RunContext],
 ) -> None:
     asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
@@ -175,10 +175,8 @@ async def test_the_interview_ends_when_every_open_area_told_nothing_twice(
     ctx = brief_context(models=models, max_turns=10, max_iter=0)
     run = interview(ctx, need=NO_NEED | {"goals": 1})
     await run.start()
-    out = await run.answer("Пока не думали.")
-    assert out["__interrupt__"][0].value["turn"] == 2  # one empty answer: the area stays open
-    out = await run.answer("Не знаю.")
-    assert "__interrupt__" not in out and out["turns"] == 2
+    out = await run.answer("Пока не думали.")  # nothing new: the only open area is closed
+    assert "__interrupt__" not in out and out["turns"] == 1
     assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["saturated"]
 
 
@@ -207,6 +205,7 @@ async def test_saturation_waits_for_every_area_to_be_asked_once(
     ctx = brief_context(models=models, max_turns=10, max_iter=0)
     run = interview(ctx, brief=BRIEF, need=NO_NEED | {"goals": 1, "constraints": 1})
     await run.start()
-    await run.answer("Пока не думали.")
-    out = await run.answer("Не знаю.")  # goals is closed; constraints are covered, never asked
-    assert out["__interrupt__"][0].value["turn"] == 3
+    out = await run.answer(
+        "Пока не думали."
+    )  # goals is closed; constraints are covered, never asked
+    assert out["__interrupt__"][0].value["turn"] == 2

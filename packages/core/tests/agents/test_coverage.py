@@ -126,11 +126,11 @@ def test_an_answer_yields_what_was_first_told_in_it() -> None:
     assert answer_yields(graph) == [1, 1, 0]  # the third answer told nothing new
 
 
-def test_two_answers_without_news_close_an_area() -> None:
+def test_an_answer_without_news_closes_its_area() -> None:
     graph = answered(3, {"requirements": [nfr("a", "reliability", source="TURN-0006")]})
     assert answer_yields(graph) == [0, 1, 0]
     assert closed_areas(graph, ["nfr", "data", "nfr"]) == {"nfr"}
-    assert closed_areas(graph, ["nfr", "data", "goals"]) == set()
+    assert closed_areas(graph, ["nfr", "data", "goals"]) == {"nfr", "goals"}
     assert closed_areas(graph, [None, "data", None]) == set()  # M1: questions without an area
     # areas of earlier sessions without turns in the graph: the latest questions pair with answers
     assert closed_areas(graph, ["goals", "goals", "nfr", "data", "nfr"]) == {"nfr"}
@@ -145,18 +145,14 @@ def test_facts_by_area_list_what_the_client_told() -> None:
     assert facts["constraints"] == []  # an assumption of the Analyst is not a fact
 
 
-def test_an_area_whose_last_answer_told_nothing_goes_last_and_a_closed_one_drops() -> None:
+def test_an_area_whose_answer_told_nothing_drops_out() -> None:
     from reqgraph.agents.nodes import next_gaps
     from reqgraph.agents.state import initial_state
 
     state = initial_state(answered(2, {"requirements": []}), "interview")
     first = [g[0] for g in next_gaps(state)]
     state["asked_areas"] = ["nfr", "scenarios"]  # both answers told nothing
-    order = [g[0] for g in next_gaps(state)]
-    assert order[-1] == "scenarios" and "nfr" in order
-    state["asked_areas"] = ["scenarios", "scenarios"]
-    assert "scenarios" not in [g[0] for g in next_gaps(state)]
-    assert [g[0] for g in next_gaps(state)] == [a for a in first if a != "scenarios"]
+    assert [g[0] for g in next_gaps(state)] == [a for a in first if a not in ("nfr", "scenarios")]
 
 
 def test_an_area_the_brief_covered_is_asked_once_before_a_gap_is_asked_again() -> None:
@@ -164,8 +160,9 @@ def test_an_area_the_brief_covered_is_asked_once_before_a_gap_is_asked_again() -
     from reqgraph.agents.state import initial_state
 
     need = {**dict.fromkeys(AREAS, 0), "goals": 1, "nfr": 2}
-    state = initial_state(answered(1, {"requirements": []}), "interview", need=need)
-    state["coverage"] = Coverage(got={**dict.fromkeys(AREAS, 0), "goals": 1}, need=need)
+    graph = answered(1, {"requirements": [nfr("a", "reliability", source="TURN-0004")]})
+    state = initial_state(graph, "interview", need=need)
+    state["coverage"] = Coverage(got={**dict.fromkeys(AREAS, 0), "goals": 1, "nfr": 1}, need=need)
     state["asked_areas"] = ["nfr"]  # the brief told the goal, nfr was asked and is still short
     assert [g[0] for g in next_gaps(state)] == ["goals", "nfr"]
     state["asked_areas"] = ["nfr", "goals"]

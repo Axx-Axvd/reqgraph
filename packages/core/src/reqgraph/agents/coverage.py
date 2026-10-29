@@ -6,7 +6,7 @@ it can: a BR is a goal, a CON a constraint, an actor a stakeholder, and the nfr 
 ISO 25010 characteristics (03_agents: «at least 4»). UR and FR count in the area the Analyst tagged.
 
 An area is saturated when the client has nothing more to tell about it (T-305): an answer that
-yields no new requirement sends its area to the end of the queue, the second such answer closes it.
+yields no new requirement closes its area.
 Every area is asked at least once before any is asked again, even one the brief already covered:
 the brief gives the topic, the client knows more about it.
 """
@@ -22,7 +22,7 @@ from reqgraph.graph.nodes import ActorNode, InterviewTurn, Node, NonFunctionalRe
 
 REQUIREMENT_KINDS = ("BR", "UR", "FR", "NFR", "CON")
 KIND_AREA = {"BR": "goals", "CON": "constraints", "ACT": "stakeholders", "NFR": "nfr"}
-CLOSE_AFTER = 2  # answers about an area that told nothing new: the area is closed
+CLOSE_AFTER = 1  # answers about an area that told nothing new: the area is closed
 
 
 def told_by_client(graph: ArtifactGraph) -> set[str]:

@@ -12,7 +12,7 @@ from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, Field
 
 from reqgraph.agents.common import start
-from reqgraph.agents.coverage import coverage_of, empty_answers, facts_by_area, queue
+from reqgraph.agents.coverage import coverage_of, facts_by_area, queue
 from reqgraph.agents.prompts import load_prompt
 from reqgraph.agents.reviewer import fingerprints
 from reqgraph.agents.runtime import RunContext
@@ -122,20 +122,12 @@ def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
 
 
 def next_gaps(state: RunState) -> list[tuple[str, int, int]]:
-    """The areas to ask about, in the order of coverage.queue() (T-305); among those asked
-    before, one whose last answer told nothing new, or that was asked SAME_AREA times in a row,
-    goes last."""
-    graph, asked = state["graph"], state["asked_areas"]
-    found = queue(state["coverage"], graph, asked)
-    empty = empty_answers(graph, asked)
-    recent = asked[-SAME_AREA:]
-    last: str | None = None
-    if empty and empty[-1] is not None:
-        last = empty[-1]
-    elif len(recent) == SAME_AREA and len(set(recent)) == 1:
-        last = recent[0]
-    if last is not None and len(found) > 1:
-        found.sort(key=lambda g: g[0] == last)  # stable: the rest keep their order
+    """The areas to ask about, in the order of coverage.queue() (T-305); an area asked
+    SAME_AREA times in a row goes last."""
+    found = queue(state["coverage"], state["graph"], state["asked_areas"])
+    recent = state["asked_areas"][-SAME_AREA:]
+    if len(recent) == SAME_AREA and len(set(recent)) == 1 and len(found) > 1:
+        found.sort(key=lambda g: g[0] == recent[0])  # stable: the rest keep their order
     return found
 
 
