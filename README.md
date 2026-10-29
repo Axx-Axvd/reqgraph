@@ -6,7 +6,7 @@
 
 reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
 
-The project is developed as a thesis. As of 26 October 2026, sprints S0–S2 (the core and the agents) are complete and S3, the interview and the simulated client, is in progress. The command line already covers the path from a brief to a checked report. Document export is planned for S4, the web interface for S5, and version 1.0 for 21 February 2027.
+The project is developed as a thesis. As of 28 October 2026, sprints S0–S2 (the core and the agents) are complete, and S3 (the interview, the simulated client and the metrics) is complete except for the supervisor's approval of the scenario domains. The command line already covers the path from a brief to a checked report. Document export is planned for S4, the web interface for S5, and version 1.0 for 21 February 2027.
 
 ## Contents
 
@@ -115,17 +115,20 @@ The full method is described in [docs/tech-design/09_eval.md](docs/tech-design/0
 | S0 | 19.10–01.11.2026 | repository, CI, database, model access layer, model testing | complete |
 | S1 | 02.11–15.11 | graph, process format and BPMN compiler, checks | complete |
 | S2 | 16.11–29.11 | agents and the repair loop, version 0.1 | complete |
-| S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | in progress |
+| S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | nearly complete: scenario domains await approval |
 | S4 | 14.12–27.12 | SRS, GOST specification, ReqIF, baseline methods, first run, version 0.5 | planned |
 | S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download | planned |
 | S6 | 25.01–07.02 | full comparison, ablations, expert assessment, live interviews, statistics | planned |
 | S7 | 08.02–21.02 | version 1.0, technical report, video, thesis chapters | planned |
 
-The project is ahead of schedule: S3 is planned to start on 30 November. Implemented so far:
+The project is ahead of schedule: by the plan, S3 runs from 30 November to 13 December. Implemented so far:
 
 - the graph and its storage in project files, the process format with a compiler to BPMN 2.0, data models in DBML, diagram rendering through Kroki, 21 checks and the `reqgraph check` command;
 - the run graph on LangGraph, the Analyst, Modeler, Standards and Reviewer agents, a repair loop that detects repeated errors, the `reqgraph init` and `reqgraph run` commands ([demo](docs/demo/m2.md));
-- `reqgraph interview` with pause and resume, 15 scenarios with hidden requirements. The simulated client and the metrics are under review.
+- `reqgraph interview` with pause and resume, 15 scenarios with hidden requirements, a simulated client with three characters (cooperative, vague, contradictory) that reveals a requirement only when asked about its topic;
+- metrics computed by a script: recall through embeddings and a judge model of another family than the agents, plus ambiguity, validity, soundness and traceability from the checks. The judge agrees with the author's manual labelling with Cohen's kappa 0.858 against the required 0.8 ([report](evals/reports/labels/agreement-results-2026-10-28-free-check-dev03.md)).
+
+First measurements on the tuning scenarios, 12 questions with a cooperative client: the system records most of what the client says, but within 12 questions the client mentions only 25–60% of the hidden requirements, so recall is 23–50% ([results](evals/reports/)). The interviewer is being changed to stop repeating covered topics (T-305).
 
 Tasks with acceptance criteria are listed in [docs/backlog.md](docs/backlog.md); decisions and their rationale are in [docs/adr/](docs/adr/README.md).
 
