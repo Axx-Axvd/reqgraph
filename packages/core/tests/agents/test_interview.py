@@ -165,3 +165,47 @@ async def test_a_failed_analyst_call_keeps_the_turns_for_the_next_answer(
     assert events_of(ctx, "llm_failed")[0]["agent"] == "analyst"
     out = await run.answer("Неявок около 10%.")
     assert "Записываются по телефону" in prompts[1] and "Неявок около 10%" in prompts[1]
+
+
+async def test_the_interview_ends_when_every_open_area_told_nothing(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
+    models = stub_models(analyst={"requirements": []}) | {"interviewer": recording(asks, [])}
+    ctx = brief_context(models=models, max_turns=10, max_iter=0)
+    run = interview(ctx, need=NO_NEED | {"goals": 1})
+    await run.start()
+    out = await run.answer("Пока не думали.")  # nothing new: the only open area is closed
+    assert "__interrupt__" not in out and out["turns"] == 1
+    assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["saturated"]
+
+
+async def test_the_interviewer_sees_what_is_known_of_the_area_it_asks_about(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    prompts: list[str] = []
+    asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
+    models = stub_models(analyst=DRAFT) | {"interviewer": recording(asks, prompts)}
+    ctx = brief_context(models=models, max_turns=2, max_iter=0)
+    run = interview(ctx, need=NO_NEED | {"goals": 2})
+    await run.start()
+    assert "goals ещё не спрашивали" in prompts[0]
+    await run.answer("Хотим, чтобы половина записей шла через сайт за полгода.")
+    assert "goals уже спрашивали" in prompts[1]
+    assert "Доля онлайн-записей должна вырасти с 0% до 50% за 6 месяцев." in prompts[1]
+
+
+async def test_saturation_waits_for_every_area_to_be_asked_once(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    con = {**DRAFT["requirements"][-1], "assumption": False, "sources": ["TURN-0001"]}
+    analyst = recording([{"requirements": [con]}, {"requirements": []}], [])  # the brief tells it
+    asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
+    models = stub_models() | {"analyst": analyst, "interviewer": recording(asks, [])}
+    ctx = brief_context(models=models, max_turns=10, max_iter=0)
+    run = interview(ctx, brief=BRIEF, need=NO_NEED | {"goals": 1, "constraints": 1})
+    await run.start()
+    out = await run.answer(
+        "Пока не думали."
+    )  # goals is closed; constraints are covered, never asked
+    assert out["__interrupt__"][0].value["turn"] == 2

@@ -8,6 +8,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Interviewer without repeats (T-305): an answer that yields no new requirement closes its area; every area gets
+  a question before any is asked again, even one the brief covered; the interviewer sees the facts told about the
+  areas it asks about and starts an area with a broad question; the interview ends as saturated when nothing is left
+  to ask. `reqgraph-evals interview` counts questions whose answer told no hidden requirement anew.
 - Metrics of the experiment (T-304): `evals/reqgraph_evals/metrics/` on pydantic-evals — a case is scenario ×
   character × method × repeat, evaluators score it. Recall: hidden requirements vs requirements found (not
   assumptions) — embeddings pick the top 3 candidates above 0.5, the judge (`prompts/judge/match.md`, another model

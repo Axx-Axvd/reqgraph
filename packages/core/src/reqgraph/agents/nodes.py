@@ -12,7 +12,7 @@ from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, Field
 
 from reqgraph.agents.common import start
-from reqgraph.agents.coverage import coverage_of, gaps
+from reqgraph.agents.coverage import coverage_of, facts_by_area, queue
 from reqgraph.agents.prompts import load_prompt
 from reqgraph.agents.reviewer import fingerprints
 from reqgraph.agents.runtime import RunContext
@@ -29,6 +29,7 @@ from reqgraph.llm.router import BudgetExceeded
 DONE = {"done": True}  # the answer that ends the interview early («/готово» in the CLI)
 RECENT_TURNS = 8  # turns the interviewer sees verbatim
 SAME_AREA = 2  # questions in a row about one area; then the next gap goes first
+FACTS_SHOWN = 8  # told facts of an area the interviewer sees, the latest
 
 
 class ReferenceProject(RuntimeError):
@@ -103,9 +104,14 @@ def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
         if n.assumption
     ]
     name = "interviewer/ask" if ctx.interviewer == "coverage" else "interviewer/ask_free"
+    found = next_gaps(state)
+    areas = [area for area, _, _ in found[:3]]
+    facts = facts_by_area(state["graph"], areas)
     prompt = load_prompt(name).render(
-        gaps=next_gaps(state),
+        gaps=found,
         coverage=state["coverage"],
+        facts={area: facts[area][-FACTS_SHOWN:] for area in areas},
+        asked_before={area for area in state["asked_areas"] if area is not None},
         recent=turns[-RECENT_TURNS:],
         asked=asked,
         assumptions=assumptions[:10],
@@ -116,9 +122,9 @@ def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
 
 
 def next_gaps(state: RunState) -> list[tuple[str, int, int]]:
-    """The emptiest areas first; an area asked SAME_AREA times in a row goes last: the client
-    has not told more about it, so the interview moves on and may come back later."""
-    found = gaps(state["coverage"])
+    """The areas to ask about, in the order of coverage.queue() (T-305); an area asked
+    SAME_AREA times in a row goes last."""
+    found = queue(state["coverage"], state["graph"], state["asked_areas"])
     recent = state["asked_areas"][-SAME_AREA:]
     if len(recent) == SAME_AREA and len(set(recent)) == 1 and len(found) > 1:
         found.sort(key=lambda g: g[0] == recent[0])  # stable: the rest keep their order
@@ -178,15 +184,28 @@ def mode_gate(state: RunState) -> str:
 
 async def coverage(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     """Count the coverage from the graph and decide whether the interview goes on (03_agents):
-    coverage reached (with the tracker), the turn limit, «/готово», or the agents stopped."""
+    coverage reached (with the tracker), every area left closed (T-305), the turn limit,
+    «/готово», or the agents stopped."""
     ctx = start(runtime, "coverage")
     counted = coverage_of(state["graph"], state["coverage"].need)
-    reached = counted.complete and ctx.interviewer == "coverage"
+    tracker = ctx.interviewer == "coverage"
+    reached = counted.complete and tracker
+    left = queue(counted, state["graph"], state["asked_areas"])
+    saturated = tracker and not reached and not left
     limit = state["turns"] >= ctx.max_turns
-    done = state["interview_done"] or state["stop"] is not None or reached or limit
-    ctx.events.emit("coverage", turns=state["turns"], got=counted.got, need=counted.need, done=done)
+    done = state["interview_done"] or state["stop"] is not None or reached or saturated or limit
+    ctx.events.emit(
+        "coverage",
+        turns=state["turns"],
+        got=counted.got,
+        need=counted.need,
+        left=[area for area, _, _ in left],
+        done=done,
+    )
     if done and not state["interview_done"]:
-        reason = "coverage" if reached else "limit" if limit else "stop"
+        reason = (
+            "coverage" if reached else "saturated" if saturated else "limit" if limit else "stop"
+        )
         ctx.events.emit("interview_end", reason=reason, turns=state["turns"])
     return {"coverage": counted, "interview_done": done}
 
