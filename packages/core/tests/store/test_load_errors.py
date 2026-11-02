@@ -110,3 +110,12 @@ def test_stale_trace_file_is_a_warning(mini: Path) -> None:
     )
     project = FileStore(mini).load()
     assert any("edges.yaml" in w for w in project.warnings)
+
+
+def test_standards_of_the_project(mini: Path) -> None:
+    config = "project: {id: mini, name: x, standards: [iso29148, gost34_602, gost19_201]}\n"
+    write_project(mini, {"reqgraph.yaml": config})
+    assert FileStore(mini).load().config.project.standards[-1] == "gost19_201"  # T-407
+    write_project(mini, {"reqgraph.yaml": "project: {id: mini, name: x, standards: [gost19]}\n"})
+    with pytest.raises(StoreError, match=r"reqgraph\.yaml.*standards"):
+        load(mini)

@@ -29,12 +29,15 @@ from reqgraph.standards.content import llm_texts, section_text
 
 TEMPLATE = "iso29148_srs"
 Format = Literal["md", "docx"]
-Document = Literal["srs", "tz"]
-# a document: its structure in standards/ and the name of its files in exports/ (T-402)
+Document = Literal["srs", "tz", "tz19"]
+# a document: its structure in standards/ and the name of its files in exports/ (T-402, T-407)
 DOCUMENTS: dict[str, tuple[str, str]] = {
     "srs": ("iso29148_srs", "srs"),
     "tz": ("gost34_602", "tz_gost34"),
+    "tz19": ("gost19_201", "tz_gost19"),
 }
+# a standard of reqgraph.yaml (project.standards) -> the document it asks for
+BY_STANDARD: dict[str, Document] = {"iso29148": "srs", "gost34_602": "tz", "gost19_201": "tz19"}
 TWIPS_PER_MM = 56.7
 LANDSCAPE_CM = (25.7, 15.5)  # A4 landscape minus 20 mm margins and room for the caption
 PORTRAIT_CM = (17.0, 24.0)  # A4 portrait minus 20 mm margins: a scheme taller than wide
@@ -81,6 +84,12 @@ class SectionView:
     required: bool
     heading: bool = False  # a heading over subsections: no text of its own
     diagrams: list[Diagram] = field(default_factory=list)
+
+    @property
+    def figure(self) -> str:
+        """Figures are numbered within their appendix (`Рисунок А.1`) or section (`Рисунок 4.1`)."""
+        appendix = re.match(r"Приложение (\w+)\.", self.title)
+        return f"{appendix.group(1) if appendix else self.number}."
 
 
 FILE_LABELS = {  # a scheme kept as a model file, by the Kroki kind
@@ -294,12 +303,7 @@ def write_document(
 
 def documents_of(project: Project) -> list[Document]:
     """The documents a project asks for in reqgraph.yaml (project.standards); SRS by default."""
-    found: list[Document] = []
-    for standard in project.config.project.standards:
-        if standard == "iso29148":
-            found.append("srs")
-        elif standard == "gost34_602":
-            found.append("tz")
+    found = [BY_STANDARD[s] for s in project.config.project.standards]
     return found or ["srs"]
 
 
@@ -311,7 +315,8 @@ async def export_documents(
     *,
     offline: bool = False,
 ) -> list[Path]:
-    """Write the documents (SRS, TZ) and their schemes (img/*.svg, drawn once) into `out`."""
+    """Write the documents (SRS, TZ by GOST 34 and 19) and their schemes (img/*.svg, drawn
+    once) into `out`."""
     out.mkdir(parents=True, exist_ok=True)
     diagrams = await draw_schemes(project, out, offline=offline)
     written = [out / d.path for d in diagrams if d.path]

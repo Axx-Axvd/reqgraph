@@ -171,3 +171,41 @@ def test_structure_of_the_system_is_the_c4_model() -> None:
 
     _text, refs = section_text(tz("SEC-TZ-4.1.1"), graph())
     assert refs and all(r.startswith("C4-") for r in refs) and "C4-EXT" not in " ".join(refs)
+
+
+PROGRAM = load_structure("gost19_201")
+
+
+def program(section_id: str) -> Section:
+    return next(s for s in PROGRAM.sections if s.id == section_id)
+
+
+def test_the_program_tz_has_every_section_of_gost_19_201() -> None:
+    numbers = [s.number for s in PROGRAM.sections if s.number]
+    assert [n for n in numbers if "." not in n] == [str(i) for i in range(1, 9)]
+    assert [n for n in numbers if n.startswith("4.")] == [f"4.{i}" for i in range(1, 9)]
+    assert [s.title for s in PROGRAM.sections if not s.number] == [
+        "Приложение А. Модели программы",
+        "Приложение Б. Трассировка требований",
+    ]
+    required = {s.id.removeprefix("SEC-TZ19-") for s in PROGRAM.required}
+    assert required == {"1.1", "1.2", "3.1", "4.1", "8"}
+
+
+def test_every_nfr_of_the_program_tz_lands_once() -> None:
+    from reqgraph.standards.content import section_text
+
+    g = graph()
+    placed = [r for s in PROGRAM.sections for r in section_text(s, g)[1] if r.startswith("NFR-")]
+    assert sorted(placed) == sorted(n.id for n in g.nodes_of("NFR"))
+
+
+def test_compatibility_joins_interfaces_nfr_and_technology() -> None:
+    from reqgraph.standards.content import CONTRACT, section_text
+
+    _text, refs = section_text(program("SEC-TZ19-4.5"), graph())
+    assert any(r.startswith("C4-EXT") for r in refs)
+    _special, found = section_text(program("SEC-TZ19-4.8"), graph())
+    assert "CON-001" in found and any(r.startswith("NFR-") for r in found)
+    stages, _ = section_text(program("SEC-TZ19-7"), graph())
+    assert "CON-003" in stages and stages.endswith(CONTRACT)

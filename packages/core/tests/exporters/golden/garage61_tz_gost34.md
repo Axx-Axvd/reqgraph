@@ -287,17 +287,17 @@
 - **PRC-01** Онлайн-запись частного клиента
 - **PRC-02** Напоминание и отмена записи
 
-![Рисунок Б.1 — PRC-01 · Онлайн-запись частного клиента](img/PRC-01.svg)
+![Рисунок А.1 — PRC-01 · Онлайн-запись частного клиента](img/PRC-01.svg)
 
-![Рисунок Б.2 — PRC-02 · Напоминание и отмена записи](img/PRC-02.svg)
+![Рисунок А.2 — PRC-02 · Напоминание и отмена записи](img/PRC-02.svg)
 
-![Рисунок Б.3 — Модель данных (ER-диаграмма), models/data/erd.dbml](img/dbml-erd.svg)
+![Рисунок А.3 — Модель данных (ER-диаграмма), models/data/erd.dbml](img/dbml-erd.svg)
 
-![Рисунок Б.4 — Диаграмма UML, models/uml/seq_booking.puml](img/plantuml-seq_booking.svg)
+![Рисунок А.4 — Диаграмма UML, models/uml/seq_booking.puml](img/plantuml-seq_booking.svg)
 
-![Рисунок Б.5 — Диаграмма UML, models/uml/use_cases.puml](img/plantuml-use_cases.svg)
+![Рисунок А.5 — Диаграмма UML, models/uml/use_cases.puml](img/plantuml-use_cases.svg)
 
-![Рисунок Б.6 — Архитектура (C4), models/c4/workspace.dsl](img/structurizr-workspace.svg)
+![Рисунок А.6 — Архитектура (C4), models/c4/workspace.dsl](img/structurizr-workspace.svg)
 
 ## Приложение Б. Трассировка требований
 
