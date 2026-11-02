@@ -78,6 +78,7 @@ def models() -> dict[str, Any]:
     return {
         "analyst": TestModel(custom_output_args=ANALYST),
         "modeler": TestModel(custom_output_args=MODELER),
+        "modeler_views": TestModel(custom_output_args={}),  # T-207: no network in tests
     }
 
 

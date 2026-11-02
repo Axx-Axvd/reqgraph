@@ -26,6 +26,7 @@ async def test_row_counts_empty_required_sections() -> None:
     models = {
         "analyst": TestModel(custom_output_args=ANALYST),
         "modeler": TestModel(custom_output_args=MODELER),
+        "modeler_views": TestModel(custom_output_args={}),  # T-207: no network in tests
         "standards": TestModel(custom_output_args=srs),
     }
     row = await run_scenario("dev-01", 1, models=models)

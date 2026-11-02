@@ -1,4 +1,4 @@
-"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler | standards | repair |
+"""Command line: ``reqgraph-evals probe | rescore | analyst | modeler | uml | standards | repair |
 scenarios | interview | metrics | matrix | label | agreement``."""
 
 import asyncio
@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, cast
 
 import typer
 
-from reqgraph_evals import analyst, interview, modeler, probe, repair, standards
+from reqgraph_evals import analyst, interview, modeler, probe, repair, standards, uml
 from reqgraph_evals import scenario as scenario_files
 
 if TYPE_CHECKING:
@@ -101,6 +101,28 @@ def modeler_cmd(
     stem = f"modeler-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
     modeler.write_csv(rows, out / f"{stem}.csv")
     summary = modeler.summary_markdown(rows)
+    (out / f"{stem}.md").write_text(summary, encoding="utf-8")
+    typer.echo(summary)
+    typer.echo(f"-> {out / stem}.csv, {stem}.md")
+
+
+@app.command("uml")
+def uml_cmd(
+    scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
+    repeat: Annotated[int, typer.Option(min=1, help="сколько раз прогнать каждый")] = 1,
+    profile: Annotated[str, typer.Option(help="профиль llm/roles.yaml")] = "free",
+    out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
+    tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+) -> None:
+    """Прогнать Analyst → Modeler на dev-брифах (T-207): сценарии использования и C4 через Kroki."""
+    rows: list[uml.Row] = []
+    for scenario in [s.strip() for s in scenarios.split(",") if s.strip()]:
+        for index in range(1, repeat + 1):
+            typer.echo(f"uml: {scenario} #{index}")
+            rows.append(asyncio.run(uml.run_scenario(scenario, index, profile=profile)))
+    stem = f"modeler-uml-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
+    uml.write_csv(rows, out / f"{stem}.csv")
+    summary = uml.summary_markdown(rows)
     (out / f"{stem}.md").write_text(summary, encoding="utf-8")
     typer.echo(summary)
     typer.echo(f"-> {out / stem}.csv, {stem}.md")
