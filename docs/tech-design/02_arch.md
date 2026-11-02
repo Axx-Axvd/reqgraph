@@ -135,6 +135,6 @@ reqgraph/
 │   ├── harness/  baselines/  metrics/  probe/
 │   └── reports/               # results.csv, графики, отчёт для диплома
 ├── examples/garage61/         # эталонный проект docs-as-code
-├── docs/                      # tech-design.pdf adr/ architecture.md thesis/
+├── docs/                      # tech-design/ adr/ architecture.md thesis/
 └── .github/workflows/         # ci.yml evals.yml migrate.yml keepalive.yml
 ```

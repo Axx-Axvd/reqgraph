@@ -4,7 +4,7 @@
 Мультиагентная система: интервью с заказчиком -> БТ/ПТ/ФТ/НФТ -> модели как код
 (процессы, ERD, UML, C4) -> детерминированные проверки (CI) -> SRS (ISO/IEC/IEEE 29148)
 и ТЗ (ГОСТ 34.602-2020).
-- План по разделам: docs/tech-design/*.md (PDF-версия: docs/tech-design.pdf).
+- План по разделам: docs/tech-design/*.md. PDF-снимок плана от 20.10 и обзоры для диплома хранятся у автора приватно, не в репозитории.
 - Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
