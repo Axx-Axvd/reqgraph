@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- SRS export (T-401): `reqgraph export <project>` writes `exports/srs.md` and `exports/srs.docx` by
+  `standards/iso29148_srs.yaml` — sections with ids, a traceability appendix (FR → UR → BR → model elements),
+  every BPMN scheme on a landscape A4 page of its own (Kroki; `--offline` reads only the cache). DOCX through pandoc
+  (`pypandoc-binary` 1.17, ADR-016) with `exporters/templates/reference.docx` built by
+  `scripts/make_reference_docx.py` (A4, GOST margins, Times New Roman).
 - Requirements retold from the PURE set in the dev references (T-307): dev-01 5 from the microcare SRS, dev-02 4 from
   e-store, dev-03 5 from library, each with `source: PURE:<document>#<section or Req ID>` and a typical / unique
   label; the template and the order for the test references (Claude, at the start of S6) are in the scenarios'
@@ -193,6 +198,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- Document sections (SEC) are kept in `documents/<template>.yaml` of the project (T-401): the Standards text
+  survives saving; TPL-001 builds list sections from the graph and reads only the LLM text from the stored sections.
 - Simulator and judge run on Qwen3.8-27B through OpenRouter (paid) with Groq as the free reserve, and on the same
   model in profile `cheap` instead of Llama 3.3 70B and GLM-5.3 Flash (author's decision of 2026-11-02, after a
   probe of four models in the simulator's select step).
