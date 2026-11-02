@@ -175,6 +175,7 @@ async def test_modeler_fixes_its_dsl_after_the_self_check(
         "type": "agent_end",
         "agent": "modeler",
         "attempts": 2,
+        "views_attempts": 1,  # T-207: the stub views answer is clean at once
         "diff": None,
     }
     assert "PRC-01" in out["graph"].nodes and ERD_FILE in out["files"]

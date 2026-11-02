@@ -16,6 +16,7 @@ from langgraph.runtime import Runtime
 from pydantic import BaseModel, ConfigDict, Field
 
 from reqgraph.agents.common import Attempt, diff_summary, guarded, start
+from reqgraph.agents.modeler_views import is_view_task, views_step
 from reqgraph.agents.prompts import load_prompt
 from reqgraph.agents.runtime import RunContext
 from reqgraph.agents.state import BudgetState, RepairTask, RunState
@@ -26,7 +27,7 @@ from reqgraph.dsl.dbml import Column, DataModel, Relation, Table, entities, pars
 from reqgraph.dsl.process import DslError, parse_process
 from reqgraph.graph.edges import Rel
 from reqgraph.graph.errors import GraphError
-from reqgraph.graph.graph import ApplyResult, ArtifactGraph
+from reqgraph.graph.graph import ApplyResult, ArtifactGraph, GraphDiff
 from reqgraph.graph.ids import IdAllocator
 from reqgraph.graph.nodes import EntityNode, FunctionalReq, NodeKind, ProcessNode, UserReq
 from reqgraph.graph.patch import AddOp, GraphPatch, LinkOp, Op, RemoveOp, UnlinkOp, UpdateOp
@@ -353,7 +354,15 @@ def _problems(findings: list[Finding]) -> list[Finding]:
     return [f for f in findings if f.check_id in SELF_CHECKS and f.severity != "info"]
 
 
+def split_tasks(tasks: list[RepairTask]) -> tuple[list[RepairTask], list[RepairTask]]:
+    """Repair tasks for processes and the ERD, and for use cases and C4 (T-207)."""
+    views = [t for t in tasks if is_view_task(t)]
+    return [t for t in tasks if not is_view_task(t)], views
+
+
 async def modeler(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+    """Processes and the ERD (T-203), then use cases and C4 (T-207, modeler_views.py): two
+    questions to the model, each with its own self-check; repair tasks go to the step they name."""
     ctx = start(runtime, "modeler")
     if state["stop"] is not None:
         return {}
@@ -362,80 +371,137 @@ async def modeler(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
     if state["iteration"] > 0 and not mine:
         ctx.events.emit("skip", agent="modeler", reason="нет задач ремонта")
         return {}
+    model_tasks, view_tasks = split_tasks(mine)
+    first = state["iteration"] == 0
     graph = state["graph"]
     files = ctx.project.files | state["files"]
+    budget: BudgetState = state["budget"]
+    diffs: list[GraphDiff] = []
+    attempts = views_attempts = 0
+    stopped = False
+    if first or model_tasks:
+        outcome = await _models(ctx, state, graph, files, model_tasks, budget)
+        budget, attempts, stopped = outcome.budget, outcome.attempts, outcome.stopped
+        if outcome.result is not None:
+            graph, files = outcome.result.graph, outcome.files
+            diffs.append(outcome.result.diff)
+    if (first or view_tasks) and not stopped and graph.nodes_of("FR"):
+        # use cases and C4 realize FRs: without them there is nothing to draw
+        views = await views_step(ctx, graph, files, view_tasks, budget)
+        budget, views_attempts, stopped = views.budget, views.attempts, views.stopped
+        if views.diff is not None:
+            graph, files = views.graph, views.files
+            diffs.append(views.diff)
+    update_state: dict[str, Any] = {"budget": budget, "tasks": rest}
+    if stopped:
+        ctx.events.emit("stop", reason="budget", node="modeler")
+        update_state["stop"] = "budget"
+    if not diffs:
+        return update_state
+    ctx.events.emit(
+        "agent_end",
+        agent="modeler",
+        attempts=attempts,
+        views_attempts=views_attempts,
+        diff=diff_summary(_merged(diffs)),
+    )
+    changed = {r: t for r, t in files.items() if ctx.project.files.get(r) != t}
+    return update_state | {"graph": graph, "files": state["files"] | changed}
+
+
+def _merged(diffs: list[GraphDiff]) -> GraphDiff:
+    """The diffs of both questions as one: what the Modeler changed in this round."""
+    changed: dict[str, dict[str, tuple[Any, Any]]] = {}
+    for diff in diffs:
+        changed |= diff.changed
+    return GraphDiff(
+        added=[i for d in diffs for i in d.added],
+        removed=[i for d in diffs for i in d.removed],
+        changed=changed,
+        linked=[e for d in diffs for e in d.linked],
+        unlinked=[e for d in diffs for e in d.unlinked],
+    )
+
+
+@dataclass
+class _Outcome:
+    result: ApplyResult | None
+    files: dict[str, str]
+    budget: BudgetState
+    attempts: int
+    stopped: bool = False  # the budget ran out
+
+
+async def _models(
+    ctx: RunContext,
+    state: RunState,
+    graph: ArtifactGraph,
+    files: dict[str, str],
+    mine: list[RepairTask],
+    budget: BudgetState,
+) -> _Outcome:
+    """Processes and the ERD: at most MAX_ATTEMPTS answers, the best applied attempt wins."""
     prompt = render(state, files, mine)
     template = load_prompt("modeler/model")
     checks = [c for c in all_checks() if c.id in SELF_CHECKS]
-    budget: BudgetState = state["budget"]
     tries: list[_Try] = []
     text = prompt
-    try:
-        for number in range(1, MAX_ATTEMPTS + 1):
+    stopped = False
+    for number in range(1, MAX_ATTEMPTS + 1):
+        try:
             draft, budget = await ctx.ask("modeler", text, ModelerDraft, budget, template=template)
-            update = to_models(draft, graph, files)
-            current = _Try(
-                number,
-                draft,
-                guarded(update.patch, graph, "modeler", mine, update.dropped),
-                files | update.files,
+        except BudgetExceeded:
+            stopped = True
+            break
+        update = to_models(draft, graph, files)
+        current = _Try(
+            number,
+            draft,
+            guarded(update.patch, graph, "modeler", mine, update.dropped),
+            files | update.files,
+        )
+        try:
+            current.result = graph.apply(current.attempt.patch, actor="agent")
+        except GraphError as exc:
+            current.problems = [str(exc)]
+            current.errors = 1
+        if current.result is not None and set(update.ids.values()) - set(
+            current.result.graph.nodes
+        ):
+            # an add was dropped by the guard: the ids to_models() predicted no longer hold
+            current.problems = [*current.attempt.dropped, "id моделей разошлись после отсева"]
+            current.errors = len(current.problems)
+            current.result = None
+        if current.result is not None:
+            report = await run_checks(
+                candidate(ctx, current.result.graph, current.files), checks, offline=True
             )
-            try:
-                current.result = graph.apply(current.attempt.patch, actor="agent")
-            except GraphError as exc:
-                current.problems = [str(exc)]
-                current.errors = 1
-            if current.result is not None and set(update.ids.values()) - set(
-                current.result.graph.nodes
-            ):
-                # an add was dropped by the guard: the ids to_models() predicted no longer hold
-                current.problems = [*current.attempt.dropped, "id моделей разошлись после отсева"]
-                current.errors = len(current.problems)
-                current.result = None
-            if current.result is not None:
-                report = await run_checks(
-                    candidate(ctx, current.result.graph, current.files), checks, offline=True
-                )
-                found = _problems(report.findings)
-                current.problems = current.attempt.dropped + [
-                    f"{f.check_id}: {f.message}" for f in found
-                ]
-                current.errors = len(current.attempt.dropped) + sum(
-                    f.severity == "error" for f in found
-                )
-            tries.append(current)
-            ctx.events.emit(
-                "self_check", agent="modeler", attempt=number, problems=current.problems
+            found = _problems(report.findings)
+            current.problems = current.attempt.dropped + [
+                f"{f.check_id}: {f.message}" for f in found
+            ]
+            current.errors = len(current.attempt.dropped) + sum(
+                f.severity == "error" for f in found
             )
-            if not current.problems:
-                break
-            if number < MAX_ATTEMPTS:
-                text = (
-                    prompt
-                    + "\n\n"
-                    + load_prompt("modeler/retry").render(
-                        answer=draft.model_dump_json(exclude_defaults=True),
-                        problems=current.problems,
-                    )
+        tries.append(current)
+        ctx.events.emit("self_check", agent="modeler", attempt=number, problems=current.problems)
+        if not current.problems:
+            break
+        if number < MAX_ATTEMPTS:
+            text = (
+                prompt
+                + "\n\n"
+                + load_prompt("modeler/retry").render(
+                    answer=draft.model_dump_json(exclude_defaults=True),
+                    problems=current.problems,
                 )
-    except BudgetExceeded:
-        ctx.events.emit("stop", reason="budget", node="modeler")
-        if not any(t.result is not None for t in tries):
-            return {"stop": "budget", "tasks": rest, "budget": budget}
-        stop: dict[str, Any] = {"stop": "budget"}
-    else:
-        stop = {}
-    update_state: dict[str, Any] = {"budget": budget, "tasks": rest} | stop
+            )
     applied = [t for t in tries if t.result is not None]
     if not applied:
-        ctx.events.emit("patch_rejected", agent="modeler", error="; ".join(tries[-1].problems))
-        return update_state
+        if tries:
+            ctx.events.emit("patch_rejected", agent="modeler", error="; ".join(tries[-1].problems))
+        return _Outcome(None, files, budget, len(tries), stopped)
     best = min(applied, key=lambda t: (t.errors, len(t.problems), -t.number))
-    assert best.result is not None
     if best.problems:
         ctx.events.emit("dropped", agent="modeler", reasons=best.problems)
-    ctx.events.emit(
-        "agent_end", agent="modeler", attempts=len(tries), diff=diff_summary(best.result.diff)
-    )
-    changed = {r: t for r, t in best.files.items() if ctx.project.files.get(r) != t}
-    return update_state | {"graph": best.result.graph, "files": state["files"] | changed}
+    return _Outcome(best.result, best.files, budget, len(tries), stopped)

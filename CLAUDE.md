@@ -42,6 +42,7 @@
 - uv run reqgraph-evals groups [сценарии] [--check]   # разметка «типовое / уникальное» (T-308): t / u / ? / q, ответ сразу в hidden.yaml
 - uv run reqgraph-evals analyst --repeat 3   # Analyst на 3 dev-брифах: валидность патча, доля нарушений ISO-001/003 (нужна сеть)
 - uv run reqgraph-evals modeler --repeat 3  # Analyst → Modeler на 3 dev-брифах: SCH-002 за ≤ 3 ответа, доля без SND-001 (нужна сеть)
+- uv run reqgraph-evals uml --repeat 3      # Modeler: сценарии использования и C4 на 3 dev-брифах, SCH-004/005 через Kroki, сироты, роли без UC (нужна сеть)
 - uv run reqgraph-evals standards --repeat 3  # Analyst → Modeler → Standards: доля заполненных разделов SRS (нужна сеть)
 - uv run reqgraph-evals repair --repeat 3 [--reviewer template]  # весь конвейер с ремонтом: сходится или needs_human (нужна сеть)
 - uv run pytest packages/core/tests/agents/test_analyst_live.py packages/core/tests/agents/test_modeler_live.py packages/core/tests/agents/test_standards_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты агентов после правки промпта

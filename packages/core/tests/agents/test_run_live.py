@@ -36,6 +36,8 @@ def test_run_from_a_dev_brief_to_a_report(tmp_path: Path) -> None:
     assert {"analyst", "modeler", "standards"} <= set(summary["models"])
     assert (root / "reports" / "ci-report.md").is_file()
     assert (root / "models" / "data" / "erd.dbml").is_file()
+    assert (root / "models" / "uml" / "use_cases.puml").is_file()  # T-207
+    assert (root / "models" / "c4" / "workspace.dsl").is_file()
     report = json.loads((root / "reports" / "ci-report.json").read_text(encoding="utf-8"))
     schema_errors = [
         f

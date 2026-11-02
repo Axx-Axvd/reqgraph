@@ -15,7 +15,7 @@ from reqgraph.agents.state import BudgetState, RepairTask, RunState, initial_sta
 from reqgraph.graph import ArtifactGraph, GraphPatch
 from reqgraph.graph.store import FileStore
 
-from .conftest import GARAGE61, QUESTION, events_of, stub_models, visited
+from .conftest import GARAGE61, QUESTION, events_of, garage61_models, stub_models, visited
 
 pytestmark = pytest.mark.anyio
 
@@ -59,7 +59,8 @@ async def test_brief_goes_through_the_pipeline_to_a_clean_report(
     ctx = context()
     out = await run(ctx, initial_state(ctx.project.graph, "brief"))
     assert visited(ctx) == ["intake", *PIPELINE, "export", "persist"]
-    assert [e["role"] for e in events_of(ctx, "llm_call")] == ["analyst", "modeler", "standards"]
+    roles = [e["role"] for e in events_of(ctx, "llm_call")]
+    assert roles == ["analyst", "modeler", "modeler_views", "standards"]  # T-207: two questions
     assert out["ci"].ok and out["iteration"] == 0 and out["stop"] is None
     assert events_of(ctx, "run_end")[0]["errors"] == 0
 
@@ -211,7 +212,7 @@ async def test_agent_patch_gets_ids_from_code(context: Callable[..., RunContext]
             }
         ]
     }
-    ctx = context(models=stub_models(analyst=add))
+    ctx = context(models=garage61_models(analyst=add))
     out = await run(ctx, initial_state(ctx.project.graph, "brief"))
     (added,) = {i for i in out["graph"].nodes if not i.startswith("SEC-")} - set(
         ctx.project.graph.nodes

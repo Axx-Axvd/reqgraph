@@ -1,4 +1,5 @@
-"""Real Analyst and Modeler answers (free profile), replayed from a cassette offline (T-203).
+"""Real Analyst and Modeler answers (free profile), replayed from a cassette offline (T-203):
+processes and the ERD, then use cases and C4 (T-207).
 
 Re-record after a deliberate change of a prompt or of a draft schema (needs network and a key):
     uv run pytest packages/core/tests/agents/test_modeler_live.py \\
@@ -29,3 +30,6 @@ async def test_live_modeler_answer_builds_clean_models(
     assert graph.nodes_of("PRC") and graph.nodes_of("ENT")
     found = {f.check_id for f in out["ci"].findings if f.severity == "error"}
     assert not found & {"SCH-001", "SCH-002", "SCH-003", "SND-001", "TRC-002", "TRC-004"}
+    assert 1 <= end["views_attempts"] <= 3  # T-207: the second question
+    assert graph.nodes_of("UC") and [n for n in graph.nodes_of("C4") if n.id != "C4-SYS"]
+    assert {"models/uml/use_cases.puml", "models/c4/workspace.dsl"} <= set(out["files"])

@@ -143,6 +143,7 @@
 
 - **Критерий приёмки:** на 3 dev-брифах (free, 3 повтора) SCH-004 и SCH-005 чисты после ≤ 3 ответов в 100% прогонов; Modeler заполняет анкету, тексты `models/uml/use_cases.puml` и `models/c4/workspace.dsl` и id UC-xx, C4-… выдаёт код (как DBML в T-203); каждый UC и элемент C4 связан хотя бы с одним ФТ (realized_by), новых сирот TRC-003 нет; у каждого актёра есть хотя бы один UC; C4 — уровни контекста (люди, система, внешние системы из области integrations) и контейнеров; схемы рисует Kroki; отчёт `evals/reports/modeler-uml-*.md`. Диаграммы последовательности — v1.x (меры по риску R5: в диплом — процессы и ERD, UML и C4 — в продукт)
 - **Зависит от:** T-203, T-104, T-106
+- **Статус:** сделано 02.11 (ветка feat/T-207): второй вопрос Modeler (`agents/modeler_views.py`, `prompts/modeler/views.md`, роль `modeler_views`) — анкета сценариев и C4, тексты PlantUML и Structurizr, id и связи realized_by выдаёт код (`dsl/plantuml.py`, `dsl/c4.py`); самопроверка до 3 ответов: SCH-004, SCH-005, TRC-003 среди UC и C4, сценарий у каждой роли, наличие C4; `reqgraph-evals uml` на 3 dev-брифах × 3 повтора (free, Gemini 3.5 Flash-Lite): порог выполнен в 9 из 9 прогонов, 12 ответов на 9 прогонов, $0 (`evals/reports/modeler-uml-2026-11-02-free.md`); кассеты Modeler и сквозного прогона dev-01 перезаписаны
 
 ## E3 · Интервью и данные
 

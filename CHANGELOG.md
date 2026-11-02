@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Modeler draws use cases and C4 (T-207): a second question to the model fills a form (use cases with their
+  role, FRs and extends / includes; the system, its containers, external systems and relationships); code writes
+  `models/uml/use_cases.puml` and `models/c4/workspace.dsl` (`dsl/plantuml.py`, `dsl/c4.py`: read and build both
+  in the conventions of garage61), issues UC and C4 ids and the realized_by links. Self-check of at most 3 answers:
+  SCH-004, SCH-005 (Kroki), TRC-003 among UC and C4, a use case for every role, a C4 model; repair tasks on UC and
+  C4 go to this question. Role `modeler_views` in `llm/roles.yaml` (the Modeler's ladder);
+  `reqgraph-evals uml` measures it on the dev briefs. The live Modeler and dev-01 run cassettes are re-recorded.
 - TZ for a program by GOST 19.201-78 (T-407): `reqgraph export --doc tz19` (or `gost19_201` in
   `project.standards`) writes `exports/tz_gost19.md|docx` from the same graph and schemes; the structure
   `standards/gost19_201.yaml` has the eight sections of the standard with their contents as subsections and

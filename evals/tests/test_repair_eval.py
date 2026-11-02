@@ -41,6 +41,7 @@ async def test_stub_agents_that_never_fix_stop_with_needs_human(reviewer: str) -
     models = {
         "analyst": first_then_nothing(ANALYST),  # repair rounds change nothing
         "modeler": TestModel(custom_output_args=MODELER),  # T02 is never reached: SND-001 stays
+        "modeler_views": TestModel(custom_output_args={}),  # T-207: no network in tests
         "standards": TestModel(custom_output_args=srs),
         "reviewer": TestModel(custom_output_args={"tasks": []}),
     }
