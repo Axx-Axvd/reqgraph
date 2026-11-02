@@ -76,22 +76,32 @@ async def apply_with_retry(
     graph: ArtifactGraph,
     first: Attempt,
     retry: Callable[[str], Awaitable[Attempt]],
+    cost: Callable[[Attempt], int] | None = None,
 ) -> ApplyResult | None:
     """Apply a clean first answer. Otherwise ask once more with the reasons (dropped items or the
-    error of apply()); from the second answer whatever passed the guard is applied, the rest is
-    logged."""
+    error of apply()). With `cost`, the cheaper of the two answers that apply wins, the second on
+    a tie (T-311: a retry can come back worse than the first answer); without it, the second."""
+    first_result: ApplyResult | None = None
     if not first.dropped:
-        result, error = _apply(graph, first)
-        if result is not None:
-            return result
+        first_result, error = _apply(graph, first)
+        if first_result is not None:
+            return first_result
         reasons = [error or ""]
     else:
         reasons = first.dropped
+        if cost is not None:
+            first_result, _ = _apply(graph, first)
     ctx.events.emit("patch_retry", agent=owner, reasons=reasons)
     second = await retry("\n".join(reasons))
+    result, error = _apply(graph, second)
+    worse = result is None or (cost is not None and cost(first) < cost(second))
+    if cost is not None and first_result is not None and worse:
+        ctx.events.emit("kept_first", agent=owner, first=cost(first), second=cost(second))
+        if first.dropped:
+            ctx.events.emit("dropped", agent=owner, reasons=first.dropped)
+        return first_result
     if second.dropped:
         ctx.events.emit("dropped", agent=owner, reasons=second.dropped)
-    result, error = _apply(graph, second)
     if error is not None:
         ctx.events.emit("patch_rejected", agent=owner, error=error)
     return result

@@ -239,3 +239,19 @@ async def test_an_fr_without_acceptance_criteria_is_asked_again(
     ]
     (fr,) = [n for n in out["graph"].nodes.values() if n.kind == "FR"]
     assert fr.acceptance
+
+
+async def test_a_worse_retry_keeps_the_first_answer(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-311: the retry of an answer without acceptance criteria came back without any FR (dev-02,
+    H2); losing an FR costs more than missing criteria, so the first answer is applied."""
+    bare = json.loads(json.dumps(DRAFT))
+    bare["requirements"][2]["acceptance"] = []
+    no_fr = json.loads(json.dumps(DRAFT))
+    del no_fr["requirements"][2]
+    ctx = brief_context(models=stub_models() | {"analyst": scripted(bare, no_fr)}, max_iter=0)
+    out = await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
+    (kept,) = events_of(ctx, "kept_first")
+    assert kept["first"] < kept["second"]
+    assert [n.kind for n in out["graph"].nodes.values()].count("FR") == 1

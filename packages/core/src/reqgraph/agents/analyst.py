@@ -263,6 +263,9 @@ def render(state: RunState, tasks: list[RepairTask]) -> str:
     )
 
 
+LOST_FR = "ни одно ФТ не уточняет это ПТ"
+
+
 def without_frs(draft: AnalystDraft, graph: ArtifactGraph) -> list[str]:
     """UR of the answer that no FR refines (T-311): a free model sometimes writes the system's
     actions only into the UR's scenario, and nothing downstream asks for them — the Modeler has no
@@ -274,7 +277,7 @@ def without_frs(draft: AnalystDraft, graph: ArtifactGraph) -> list[str]:
         if e.rel is Rel.REFINES and getattr(graph.get(e.src), "kind", None) == "FR"
     }
     return [
-        f"{item.ref} «{item.title}»: ни одно ФТ не уточняет это ПТ — добавь его в refines тех FR, "
+        f"{item.ref} «{item.title}»: {LOST_FR} — добавь его в refines тех FR, "
         "которые уже описывают нужные действия системы (у FR может быть несколько родителей), "
         "а недостающие действия из его сценария запиши новыми FR; одно и то же действие для "
         "разных ролей — одно FR"
@@ -291,6 +294,13 @@ def without_acceptance(draft: AnalystDraft) -> list[str]:
         for item in draft.requirements
         if item.kind == "FR" and not item.acceptance
     ]
+
+
+def cost(attempt: Attempt) -> int:
+    """How bad an answer is (T-311): a UR without FRs is lost content nobody restores later, so it
+    weighs three times an item dropped or an FR without acceptance criteria (ISO-003 catches those
+    and the repair loop fixes them)."""
+    return sum(3 if LOST_FR in reason else 1 for reason in attempt.dropped)
 
 
 async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
@@ -325,7 +335,7 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
         return await ask(prompt + "\n\n" + load_prompt("analyst/retry").render(error=reasons))
 
     try:
-        result = await apply_with_retry(ctx, "analyst", graph, await ask(prompt), retry)
+        result = await apply_with_retry(ctx, "analyst", graph, await ask(prompt), retry, cost)
     except BudgetExceeded:
         ctx.events.emit("stop", reason="budget", node="analyst")
         return {"stop": "budget", "tasks": rest, "budget": budget[0]}
