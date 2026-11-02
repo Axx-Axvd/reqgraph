@@ -82,6 +82,8 @@ def test_at_most_ten_tasks_per_round() -> None:
         ("SEC-SRS-B", "modeler"),  # no entities and processes
         ("SEC-SRS-D", "analyst"),  # no acceptance criteria
         ("SEC-SRS-A", "standards"),  # the glossary is the Standards' own text
+        ("SEC-TZ-4.3.2", "modeler"),  # TPL-002: the TZ lists entities for the information support
+        ("SEC-TZ-7", "analyst"),  # the TZ acceptance section is the FRs' acceptance criteria
     ],
 )
 def test_empty_section_goes_to_the_owner_of_its_nodes(section: str, owner: str) -> None:

@@ -66,3 +66,31 @@ def test_list_sections_come_from_the_graph_not_from_stored_text() -> None:
     llm = frozenset(s.id for s in STRUCTURE.sections if s.llm_field is None)
     graph, project = with_sections(empty=llm)  # stored list texts are empty, the graph is not
     assert SrsSections().run(graph, CheckContext(project)) == []
+
+
+TZ = load_structure("gost34_602")
+
+
+def test_tz_sections_share_the_standards_text_of_the_srs() -> None:
+    """TPL-002 (T-402): the TZ takes the Standards text from the SRS sections."""
+    from reqgraph.checks.template import TzSections
+
+    graph, project = with_sections()
+    assert TzSections().run(graph, CheckContext(project)) == []
+    graph, project = with_sections(empty=frozenset({"SEC-SRS-1.1"}))  # purpose is empty
+    found = TzSections().run(graph, CheckContext(project))
+    assert [f.node_ids for f in found] == [["SEC-TZ-2.1"]] and found[0].owner == "standards"
+    assert "Назначение системы" in found[0].message
+
+
+def test_tz_check_is_skipped_without_sections_or_without_the_standard() -> None:
+    from reqgraph.checks.template import TzSections
+
+    project = FileStore(GARAGE61).load()
+    with pytest.raises(CheckSkipped, match="ещё не собраны"):
+        TzSections().run(project.graph, CheckContext(project))
+    graph, project = with_sections()
+    info = project.config.project.model_copy(update={"standards": ["iso29148"]})
+    config = project.config.model_copy(update={"project": info})
+    with pytest.raises(CheckSkipped, match="gost34_602"):
+        TzSections().run(graph, CheckContext(replace(project, config=config)))

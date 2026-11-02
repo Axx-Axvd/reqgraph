@@ -77,7 +77,7 @@ A run on a bakery brief:
 | Interview | from memory; exceptions and quality requirements are missed | the next question is chosen by gaps in coverage |
 | Origin of a requirement | cannot be traced after a week | every requirement links to the client's answer |
 | Diagrams | drawn separately, drift from the text | stored as code, linked to requirements, checked |
-| Text from a language model | not checked | 21 checks without AI; errors go back to the agents |
+| Text from a language model | not checked | 22 checks without AI; errors go back to the agents |
 | SRS and GOST specification | filled in twice by hand | one graph, two documents |
 | First draft | about a day | target: about an hour |
 
