@@ -34,4 +34,4 @@ async def test_row_counts_empty_required_sections() -> None:
     # empty: glossary (the stub repeats itself) and actors (the stub Analyst wrote none);
     # NFR sections are not required in the structure after Wiegers (T-408)
     assert row.empty_required == 2 and row.filled_share == 0.8
-    assert "заполнено: 8 (80%)" in summary_markdown([row]) and ": нет." in summary_markdown([row])
+    assert "заполнено: 8 (80%)" in summary_markdown([row]) and ": да." in summary_markdown([row])
