@@ -62,11 +62,11 @@ def test_a_second_labeller_is_compared_on_a_seeded_sample(tmp_path: Path) -> Non
         return "t" if items[item_id] == "typical" else "u"
 
     result = groups.check_groups(["dev-01"], same, out=tmp_path, echo=shown.append)
-    assert result["checked"] == 5 and result["agreement"] == 1.0  # 20% of 25
+    assert result["checked"] == 6 and result["agreement"] == 1.0  # 20% of 30
     assert not any("typical" in s or "unique" in s for s in shown)  # the first labels are hidden
     again = groups.check_groups(["dev-01"], answers(), out=tmp_path, echo=shown.append)
-    assert again["checked"] == 5  # all done: nothing is asked, the file is read back
-    assert groups.check_path(tmp_path).is_file() and len(set(seen)) == 5
+    assert again["checked"] == 6  # all done: nothing is asked, the file is read back
+    assert groups.check_path(tmp_path).is_file() and len(set(seen)) == 6
 
 
 def test_the_command_labels_and_says_what_is_left(tmp_path: Path) -> None:
@@ -78,4 +78,4 @@ def test_the_command_labels_and_says_what_is_left(tmp_path: Path) -> None:
     result = CliRunner().invoke(app, args, input="t\nu\nq\n")
     assert result.exit_code == 0, result.output
     assert "размечено: типовых 1, уникальных 1" in result.output
-    assert "осталось без метки: 23" in result.output
+    assert "осталось без метки: 28" in result.output

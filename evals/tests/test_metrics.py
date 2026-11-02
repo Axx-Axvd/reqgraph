@@ -306,8 +306,8 @@ async def test_the_harness_scores_a_saved_run(tmp_path: Path) -> None:
     (result,) = results
     assert result.error == "" and result.run == "dev-01-cooperative-M2-r1"
     assert result.models == row.models  # a quality score never overwrites the run's record
-    assert result.hidden == 20 and result.requirements >= 1 and 0 <= result.recall <= 1
-    assert (result.hidden_typical, result.hidden_unique) == (15, 5)  # T-308 labels of dev-01
+    assert result.hidden == 25 and result.requirements >= 1 and 0 <= result.recall <= 1
+    assert (result.hidden_typical, result.hidden_unique) == (20, 5)  # T-308 labels of dev-01
     assert result.matched_typical + result.matched_unique == result.matched
     assert result.judge_model.startswith("function/") and result.embedding_model
     assert result.llm_calls > row.llm_calls  # the judge's calls are counted too
