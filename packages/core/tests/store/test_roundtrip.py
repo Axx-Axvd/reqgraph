@@ -170,3 +170,44 @@ def test_canonical_text_is_idempotent() -> None:
         others = [n for n in graph.nodes.values() if n.kind != kind]
         rebuilt = graph.from_parts(others + nodes, graph.edges)
         assert render_requirements(kind, rebuilt) == text
+
+
+def test_section_texts_survive_save_and_load(tmp_path: Path) -> None:
+    """T-401: the Standards text (SEC nodes) is kept in documents/<template>.yaml."""
+    project = FileStore(GARAGE61).load()
+    graph = project.graph.apply(
+        patch(
+            {
+                "op": "add",
+                "kind": "SEC",
+                "tmp_id": "s1",
+                "fields": {
+                    "id": "SEC-SRS-1.1",
+                    "template": "iso29148_srs",
+                    "text": "Система записи в автосервис.\nДля клиентов и мастеров.",
+                },
+            },
+            {
+                "op": "add",
+                "kind": "SEC",
+                "tmp_id": "s2",
+                "fields": {
+                    "id": "SEC-SRS-1.4",
+                    "template": "iso29148_srs",
+                    "text": "- ТО — обслуживание",
+                },
+            },
+        )
+    )
+    out = tmp_path / "out"
+    written = FileStore(out).save(project.with_graph(graph.graph))
+    assert out / "documents" / "iso29148_srs.yaml" in written
+    back = FileStore(out).load()
+    sections = {n.id: n for n in back.graph.nodes_of(NodeKind.SEC)}
+    assert sections["SEC-SRS-1.1"].text == "Система записи в автосервис.\nДля клиентов и мастеров."  # type: ignore[union-attr]
+    assert sections["SEC-SRS-1.4"].template == "iso29148_srs"  # type: ignore[union-attr]
+    again = tmp_path / "again"
+    FileStore(again).save(back)
+    assert (again / "documents" / "iso29148_srs.yaml").read_bytes() == (
+        out / "documents" / "iso29148_srs.yaml"
+    ).read_bytes()

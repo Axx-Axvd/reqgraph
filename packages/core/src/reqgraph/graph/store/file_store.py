@@ -11,7 +11,7 @@ from pathlib import Path
 from reqgraph.graph.edges import Edge
 from reqgraph.graph.errors import GraphError
 from reqgraph.graph.graph import ArtifactGraph
-from reqgraph.graph.nodes import Node, NodeKind, ProcessNode
+from reqgraph.graph.nodes import Node, NodeKind, ProcessNode, SectionNode
 from reqgraph.graph.store import formats as fmt
 from reqgraph.graph.store.errors import StoreError
 from reqgraph.graph.store.project import Project
@@ -108,6 +108,11 @@ class FileStore:
             for node in scanned:
                 found.append((node, rel))
                 layout[node.id] = rel
+        for rel in self._files_under(fmt.DOCUMENTS_DIR):
+            if rel.endswith(".yaml"):
+                text = read(rel)
+                assert text is not None
+                found += [(n, rel) for n in fmt.parse_sections(text, rel)]
         trace = read(fmt.EDGES_FILE)
         ids_text = read(fmt.IDS_FILE)
         high_water = fmt.parse_ids(ids_text) if ids_text is not None else {}
@@ -178,6 +183,16 @@ class FileStore:
             old = fmt.parse_process(raw, rel) if raw is not None else None
             same = old is not None and (old.dsl, old.name) == (node.dsl, node.name)
             keep_or(rel, same, fmt.render_process(node))
+
+        sections = [n for n in graph.nodes_of(NodeKind.SEC) if isinstance(n, SectionNode)]
+        for template in sorted({n.template for n in sections}):
+            rel = fmt.section_path(template)
+            raw = files.get(rel)
+            texts_now = {n.id: n.text for n in sections if n.template == template}
+            same = raw is not None and texts_now == {
+                n.id: n.text for n in fmt.parse_sections(raw, rel) if isinstance(n, SectionNode)
+            }
+            keep_or(rel, same, fmt.render_sections(graph, template))
 
         raw = files.get(fmt.EDGES_FILE)
         keep_or(

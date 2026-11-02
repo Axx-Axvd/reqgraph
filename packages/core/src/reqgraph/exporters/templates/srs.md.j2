@@ -1,0 +1,53 @@
+{#- SRS (T-401, ADR-016): Markdown for people and for pandoc. Variables: title, project, sections,
+    trace, diagrams, docx (true — the Markdown for pandoc: raw OpenXML page breaks around schemes). -#}
+# {{ title }}
+
+**{{ project.name }}**
+{% if project.description %}
+
+{{ project.description }}
+{% endif %}
+{% for s in sections %}
+
+{{ "#" * s.level }} {{ s.number }} {{ s.title }}
+{% if s.text %}
+
+{{ s.text }}
+{% elif s.required %}
+
+*Раздел не заполнен.*
+{% endif %}
+{% if s.diagrams %}
+{% for d in s.diagrams %}
+{% if docx and loop.first %}
+
+```{=openxml}
+{{ portrait_break }}
+```
+{% endif %}
+
+{% if d.path %}
+![Рисунок {{ d.number }} — {{ d.id }} · {{ d.name }}]({{ d.path }}){% if docx %}{width={{ d.width_cm }}cm height={{ d.height_cm }}cm}{% endif %}
+
+{% else %}
+*Рисунок {{ d.number }} — {{ d.id }} · {{ d.name }}: схема не отрисована ({{ d.note }}).*
+{% endif %}
+{% if docx %}
+
+```{=openxml}
+{{ landscape_break }}
+```
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+## Приложение А. Трассировка требований
+
+Функциональные требования, пользовательские требования и бизнес-цели, из которых они выросли, и элементы моделей, которые их реализуют.
+
+| ФТ | Пользовательские требования | Бизнес-цели | Реализовано в моделях |
+|---|---|---|---|
+{% for r in trace %}
+| {{ r.fr }} {{ r.title }} | {{ r.urs | join(", ") or "—" }} | {{ r.brs | join(", ") or "—" }} | {{ r.models | join(", ") or "—" }} |
+{% endfor %}

@@ -132,3 +132,19 @@ def test_default_cache_folders(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) 
     monkeypatch.setattr(sys, "platform", "win32")
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
     assert cache_dir() == tmp_path / "local" / "reqgraph" / "kroki"
+
+
+def test_offline_render_reads_only_the_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """T-401: export without network takes schemes from the cache, never asks Kroki."""
+    monkeypatch.setenv("REQGRAPH_CACHE_DIR", str(tmp_path))
+    miss = asyncio.run(render_svg("bpmn", "<definitions/>", offline=True))
+    assert miss.offline and miss.svg is None and "--offline" in (miss.error or "")
+    import hashlib
+
+    digest = hashlib.sha256(b"bpmn\n<definitions/>").hexdigest()
+    (tmp_path / "kroki" / "bpmn").mkdir(parents=True)
+    (tmp_path / "kroki" / "bpmn" / f"{digest}.svg").write_text("<svg/>", encoding="utf-8")
+    hit = asyncio.run(render_svg("bpmn", "<definitions/>", offline=True))
+    assert hit.svg == "<svg/>" and hit.cached

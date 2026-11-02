@@ -59,3 +59,10 @@ def test_skipped_when_the_project_does_not_need_an_srs() -> None:
     config = project.config.model_copy(update={"project": info})
     with pytest.raises(CheckSkipped, match="iso29148"):
         SrsSections().run(graph, CheckContext(replace(project, config=config)))
+
+
+def test_list_sections_come_from_the_graph_not_from_stored_text() -> None:
+    """T-401: a loaded project keeps only the Standards text; lists are rebuilt from the graph."""
+    llm = frozenset(s.id for s in STRUCTURE.sections if s.llm_field is None)
+    graph, project = with_sections(empty=llm)  # stored list texts are empty, the graph is not
+    assert SrsSections().run(graph, CheckContext(project)) == []

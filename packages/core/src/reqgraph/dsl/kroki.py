@@ -80,14 +80,17 @@ def _post(url: str, source: str) -> RenderResult:
         return RenderResult(offline=True, error=f"Kroki недоступен ({url}): {exc}")
 
 
-async def render_svg(kind: str, source: str) -> RenderResult:
-    """SVG of a diagram; `kind` is dbml, plantuml, structurizr or bpmn."""
+async def render_svg(kind: str, source: str, *, offline: bool = False) -> RenderResult:
+    """SVG of a diagram; `kind` is dbml, plantuml, structurizr or bpmn. `offline` — only the cache
+    (the offline stand, export without network)."""
     if kind not in KINDS:
         raise ValueError(f"Kroki: вид диаграммы «{kind}» не поддерживается, есть {sorted(KINDS)}")
     digest = hashlib.sha256(f"{kind}\n{source}".encode()).hexdigest()
     cached = cache_dir() / kind / f"{digest}.svg"
     if cached.is_file():
         return RenderResult(svg=cached.read_bytes().decode("utf-8"), cached=True)
+    if offline:
+        return RenderResult(offline=True, error="нет в кэше Kroki, а сеть выключена (--offline)")
     result = await asyncio.to_thread(_post, f"{kroki_url()}/{kind}/svg", source)
     if result.svg is not None:
         cached.parent.mkdir(parents=True, exist_ok=True)

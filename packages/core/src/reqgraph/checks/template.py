@@ -7,7 +7,8 @@ from reqgraph.checks.base import BaseCheck, CheckContext, CheckSkipped, Finding
 from reqgraph.checks.registry import register
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.nodes import SectionNode
-from reqgraph.standards import load_structure
+from reqgraph.standards import Section, load_structure
+from reqgraph.standards.content import code_content
 
 
 @register
@@ -29,6 +30,13 @@ class SrsSections(BaseCheck):
                 "разделы SRS ещё не собраны: их пишет Standards в прогоне, файлы — экспорт (S4)"
             )
         structure = load_structure("iso29148_srs")
+
+        def text(section: Section) -> str:
+            built = code_content(section, graph)  # lists: from the graph as it is now (T-401)
+            if built is not None:
+                return built[0]
+            return sections[section.id].text if section.id in sections else ""
+
         return [
             self.finding(
                 "error",
@@ -38,5 +46,5 @@ class SrsSections(BaseCheck):
                 f"нет узлов для него ({section.fill})",
             )
             for section in structure.required
-            if section.id not in sections or not sections[section.id].text.strip()
+            if not text(section).strip()
         ]

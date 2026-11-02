@@ -22,9 +22,11 @@
 - uv run reqgraph --version
 - uv run reqgraph schemas           # JSON Schema из Pydantic в schemas/ (GraphPatch, ArtifactGraph, ProjectConfig, ProcessDSL, CIReport)
 - uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>   # DSL процесса -> BPMN 2.0 (Camunda Modeler, bpmn-js)
-- REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl   # пересоздать golden BPMN после намеренной правки компилятора
+- REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl packages/core/tests/exporters   # пересоздать golden BPMN и SRS после намеренной правки компилятора или шаблона
 - uv run reqgraph render <файл.dbml|.puml|.dsl|.bpmn> -o <схема.svg>   # SVG через Kroki (KROKI_URL), с кэшем
 - uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # 21 проверка, отчёт в reports/; код 1 при ошибках
+- uv run reqgraph export <проект> [--format md,docx] [--out <папка>] [--offline]   # SRS: exports/srs.md, srs.docx (pandoc), схемы BPMN на альбомных листах
+- uv run python scripts/make_reference_docx.py   # пересобрать стили Word (exporters/templates/reference.docx)
 - uv run reqgraph init <папка> --name <название> --brief <бриф.md> [--id] [--profile]   # новый проект: reqgraph.yaml и brief.md
 - uv run reqgraph run <папка> [--brief] [--budget-usd] [--max-iter] [--reviewer llm|template] [--offline] [--no-write] [--json]   # бриф → агенты → проверки → ремонт (нужна сеть); код 0 / 1 ошибки остались / 2 не запустился
 - uv run pytest packages/core/tests/agents/test_run_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету сквозного прогона dev-01

@@ -19,15 +19,14 @@ from reqgraph.graph.edges import Rel
 from reqgraph.graph.errors import GraphError
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.nodes import (
-    FunctionalReq,
     InterviewTurn,
-    Node,
     NodeKind,
     SectionNode,
 )
 from reqgraph.graph.patch import AddOp, GraphPatch, LinkOp, Op, UpdateOp
 from reqgraph.llm.router import BudgetExceeded
 from reqgraph.standards import DocumentStructure, Section, load_structure
+from reqgraph.standards.content import code_content, line
 
 TEMPLATE = "iso29148_srs"
 
@@ -47,12 +46,6 @@ class StandardsDraft(_Draft):
     glossary: list[GlossaryTerm] = Field(default_factory=list, description="5–15 терминов")
 
 
-def _line(node: Node) -> str:
-    title = getattr(node, "title", None) or getattr(node, "name", "")
-    text = getattr(node, "statement", None) or getattr(node, "description", None) or ""
-    return f"- {node.id} {title}" + (f": {text}" if text else "")
-
-
 def _content(
     section: Section, graph: ArtifactGraph, draft: StandardsDraft
 ) -> tuple[str, list[str]]:
@@ -63,15 +56,9 @@ def _content(
         return "\n".join(f"- {t.term} — {t.definition}" for t in draft.glossary if t.term), []
     if section.llm_field is not None:
         return str(getattr(draft, section.llm_field)).strip(), []
-    if section.fill == "acceptance":
-        checked = [n for n in graph.nodes_of("FR") if isinstance(n, FunctionalReq) and n.acceptance]
-        lines = [f"- {n.id}: " + "; ".join(n.acceptance) for n in checked]
-        return "\n".join(lines), [n.id for n in checked]
-    if section.fill == "assumptions":
-        nodes: list[Node] = [n for n in graph.nodes.values() if n.assumption]
-    else:
-        nodes = [n for kind in section.node_kinds for n in graph.nodes_of(kind)]
-    return "\n".join(_line(n) for n in nodes), [n.id for n in nodes]
+    built = code_content(section, graph)
+    assert built is not None
+    return built
 
 
 def build_sections(
@@ -128,13 +115,13 @@ def render(state: RunState, tasks: list[RepairTask]) -> str:
         n for n in graph.nodes_of("TURN") if isinstance(n, InterviewTurn) and n.role == "client"
     ]
     requirements = [
-        _line(n) for kind in ("BR", "UR", "FR", "NFR", "CON") for n in graph.nodes_of(kind)
+        line(n) for kind in ("BR", "UR", "FR", "NFR", "CON") for n in graph.nodes_of(kind)
     ]
     return load_prompt("standards/srs").render(
         turns=turns,
         requirements=requirements,
-        actors=[_line(n) for n in graph.nodes_of("ACT")],
-        entities=[_line(n) for n in graph.nodes_of("ENT")],
+        actors=[line(n) for n in graph.nodes_of("ACT")],
+        entities=[line(n) for n in graph.nodes_of("ENT")],
         tasks=tasks,
     )
 

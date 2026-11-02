@@ -211,6 +211,7 @@
 
 - **Критерий приёмки:** структура разделов, ссылки на id, таблица трассировки; стили из reference.docx; каждая BPMN-схема — целиком на отдельной альбомной странице
 - **Зависит от:** T-204
+- **Статус:** сделано 02.11 (ветка feat/T-401): `reqgraph export` — `exports/srs.md` и `srs.docx` (pandoc, `pypandoc-binary` 1.17, стили из `exporters/templates/reference.docx`: А4, поля по ГОСТ 7.32, Times New Roman 12); разделы по `standards/iso29148_srs.yaml` с id, приложение А — трассировка ФТ → ПТ → БТ → модели; каждая BPMN-схема (Kroki, без сети — из кэша) — на своём альбомном листе во всю ширину; текст Standards теперь хранится в `documents/iso29148_srs.yaml`; **[you]** открыть `srs.docx` в Word и оценить вид
 
 ### T-402 — exporters/tz_gost: Markdown + DOCX через pandoc по standards/gost34_602.yaml
 
