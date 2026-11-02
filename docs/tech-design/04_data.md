@@ -139,7 +139,7 @@ garage61/
 ├── trace/edges.yaml           # все рёбра графа
 ├── interview/                 # transcript.jsonl coverage.json
 ├── reports/                   # ci-report.json ci-report.md (пишет `reqgraph check`)
-└── exports/                   # SRS_ISO29148.docx TZ_GOST34_602.docx req.reqif
+└── exports/                   # srs.md|docx, tz_gost34.md|docx, img/*.svg (reqgraph export); req.reqif — T-403
 ```
 
 <sub>FileStore (`reqgraph.graph.store`, T-102) читает и пишет эту папку (CLI, тесты, git). Модели данных, сценариев и C4 читает по умолчанию простой сканер; команды передают настоящие разборщики `dsl/` — `FileStore(root, readers=reqgraph.dsl.readers.model_readers())` (pydbml для DBML, T-104). SVG всех схем — через Kroki (`KROKI_URL`, по умолчанию kroki.io; кэш в `~/.cache/reqgraph/kroki` или `REQGRAPH_CACHE_DIR`), `uv run reqgraph render <файл> -o <схема.svg>`. SupabaseStore хранит тот же граф целиком в `graph_revisions.graph` (jsonb) — проект 100-300 требований занимает сотни килобайт, поэтому 500 МБ бесплатной базы хватает на тысячи ревизий; старые ревизии и чекпоинты чистит ежедневная задача.</sub>
@@ -157,7 +157,7 @@ garage61/
 | `trace/ids.yaml` | «высшие отметки» счётчиков id | только если удалённые номера выше существующих |
 | `documents/<шаблон>.yaml` | SEC — тексты разделов документа `{id раздела: текст}`, шаблон — имя файла (T-401) | если тексты не изменились — как был; связный текст пишет Standards, разделы-списки выгрузка пересобирает из графа |
 
-Не пишутся: связи `rendered_in` — их пересоздаёт экспорт. Не трогаются: `README.md`, `REVIEW.md`, `reports/`, `exports/` (туда пишет `reqgraph export`: `srs.md`, `srs.docx`, `img/*.svg`), `interview/coverage.json`.
+Не пишутся: связи `rendered_in` — их пересоздаёт экспорт. Не трогаются: `README.md`, `REVIEW.md`, `reports/`, `exports/` (туда пишет `reqgraph export`: `srs.md`, `srs.docx`, `tz_gost34.md`, `tz_gost34.docx`, `img/*.svg`), `interview/coverage.json`.
 
 ## Схема Supabase
 
