@@ -98,6 +98,9 @@ def test_docx_has_headings_the_table_and_a_landscape_page_per_scheme(
     assert "Функциональные требования" in xml and "Трассировка требований" in xml
     assert "<w:tbl>" in xml
     assert xml.count('w:orient="landscape"') == 2 and len(media) == 2
+    assert xml.count('w:h="16838" />') == 1  # one portrait break: no empty page between schemes
+    full = round(srs.LANDSCAPE_CM[0] * srs.EMU_PER_CM)
+    assert xml.count(f'<wp:extent cx="{full}"') == 2  # the whole landscape width, not the portrait
     assert "Times New Roman" in zipfile.ZipFile(tmp_path / "srs.docx").read(
         "word/styles.xml"
     ).decode("utf-8")
@@ -120,3 +123,16 @@ def test_scheme_size_keeps_proportions_on_a_landscape_page() -> None:
     tall = srs._size('<svg width="400" height="800">')
     assert wide[0] == srs.LANDSCAPE_CM[0] and wide[1] < srs.LANDSCAPE_CM[1]
     assert tall[1] == srs.LANDSCAPE_CM[1] and tall[0] < srs.LANDSCAPE_CM[0]
+
+
+def test_cli_exports_into_the_chosen_folder(tmp_path: Path, kroki: list[str]) -> None:
+    from reqgraph.cli import app
+    from typer.testing import CliRunner
+
+    result = CliRunner().invoke(app, ["export", str(GARAGE61), "--out", str(tmp_path), "--offline"])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "srs.md").is_file() and (tmp_path / "srs.docx").is_file()
+    exported = [p.name for p in (GARAGE61 / "exports").iterdir()]
+    assert exported == [".gitkeep"]  # the reference project is not touched
+    bad = CliRunner().invoke(app, ["export", str(GARAGE61), "--format", "pdf"])
+    assert bad.exit_code == 2 and "md, docx" in bad.output

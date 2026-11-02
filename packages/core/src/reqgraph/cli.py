@@ -140,6 +140,42 @@ def check(
     raise typer.Exit(0 if report.ok else 1)
 
 
+@app.command("export")
+def export(
+    path: Annotated[Path, typer.Argument(help="Project folder (with reqgraph.yaml).")],
+    formats: Annotated[
+        str, typer.Option("--format", help="md, docx or both, comma-separated.")
+    ] = "md,docx",
+    out: Annotated[
+        Path | None,
+        typer.Option("--out", "-o", help="Folder to write (default: <project>/exports)."),
+    ] = None,
+    offline: Annotated[
+        bool, typer.Option("--offline", help="Draw schemes only from the Kroki cache.")
+    ] = False,
+) -> None:
+    """Write the SRS (ISO/IEC/IEEE 29148 structure of the project) as Markdown and DOCX."""
+    import asyncio
+
+    from reqgraph.exporters.srs import export_srs
+    from reqgraph.graph.store import FileStore, StoreError
+
+    chosen = [f.strip() for f in formats.split(",") if f.strip()]
+    unknown = [f for f in chosen if f not in ("md", "docx")]
+    if unknown or not chosen:
+        typer.echo(f"--format: нужно md, docx или оба, а не {formats!r}", err=True)
+        raise typer.Exit(2)
+    try:
+        project = FileStore(path).load()
+    except StoreError as exc:
+        typer.echo(f"проект не прочитан: {exc}", err=True)
+        raise typer.Exit(2) from None
+    target = out or path / "exports"
+    written = asyncio.run(export_srs(project, target, chosen, offline=offline))  # type: ignore[arg-type]
+    for file in written:
+        typer.echo(f"записано: {file}")
+
+
 @app.command("init")
 def init(
     path: Annotated[Path, typer.Argument(help="New project folder.")],

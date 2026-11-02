@@ -19,7 +19,7 @@
 {% endif %}
 {% if s.diagrams %}
 {% for d in s.diagrams %}
-{% if docx %}
+{% if docx and loop.first %}
 
 ```{=openxml}
 {{ portrait_break }}

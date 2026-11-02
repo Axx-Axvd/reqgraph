@@ -8,6 +8,7 @@ landscape A4 page of its own: raw OpenXML section breaks around the picture.
 """
 
 import re
+import zipfile
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import cache
@@ -206,6 +207,36 @@ def render_markdown(
     return re.sub(r"\n{3,}", "\n\n", text).rstrip("\n") + "\n"
 
 
+EMU_PER_CM = 360_000
+
+
+def widen_schemes(docx: Path, diagrams: Sequence[Diagram]) -> None:
+    """pandoc fits every picture to the text width of the portrait page; a scheme gets back its
+    landscape size. The pictures of the SRS are the schemes, in the same order."""
+    sizes = [d for d in diagrams if d.path]
+    with zipfile.ZipFile(docx) as source:
+        items = [(i, source.read(i.filename)) for i in source.infolist()]
+    drawings = iter(sizes)
+
+    def resize(match: re.Match[str]) -> str:
+        diagram = next(drawings, None)
+        if diagram is None:
+            return match.group(0)
+        cx, cy = round(diagram.width_cm * EMU_PER_CM), round(diagram.height_cm * EMU_PER_CM)
+        block = re.sub(
+            r'<wp:extent cx="\d+" cy="\d+"', f'<wp:extent cx="{cx}" cy="{cy}"', match.group(0)
+        )
+        return re.sub(r'<a:ext cx="\d+" cy="\d+"', f'<a:ext cx="{cx}" cy="{cy}"', block)
+
+    with zipfile.ZipFile(docx, "w", zipfile.ZIP_DEFLATED) as target:
+        for info, data in items:
+            if info.filename == "word/document.xml":
+                data = re.sub(
+                    r"<w:drawing>.*?</w:drawing>", resize, data.decode("utf-8"), flags=re.S
+                ).encode("utf-8")
+            target.writestr(info, data)
+
+
 def to_docx(markdown: str, out: Path, resources: Path) -> Path:
     import pypandoc  # lazy: ~35 MB of pandoc, only for the export (CLAUDE.md, Render Free)
 
@@ -241,7 +272,7 @@ async def export_srs(
         path.write_text(render_markdown(project, diagrams), encoding="utf-8", newline="\n")
         written.append(path)
     if "docx" in formats:
-        written.append(
-            to_docx(render_markdown(project, diagrams, docx=True), out / "srs.docx", out)
-        )
+        docx = to_docx(render_markdown(project, diagrams, docx=True), out / "srs.docx", out)
+        widen_schemes(docx, diagrams)
+        written.append(docx)
     return written
