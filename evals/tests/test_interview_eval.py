@@ -33,7 +33,12 @@ def simulator(ids: list[str]) -> FunctionModel:
 
 
 def agents() -> dict[str, Any]:
-    srs = {"purpose": "П.", "scope": "О.", "glossary": [{"term": "a", "definition": "b"}]}
+    srs = {
+        "purpose": "П.",
+        "scope": "О.",
+        "perspective": "Н.",
+        "glossary": [{"term": "a", "definition": "b"}],
+    }
     return {
         "*": TestModel(custom_output_args={"ops": []}),
         "analyst": TestModel(custom_output_args={"requirements": []}),

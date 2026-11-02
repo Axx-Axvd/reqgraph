@@ -77,10 +77,11 @@ def test_at_most_ten_tasks_per_round() -> None:
 @pytest.mark.parametrize(
     ("section", "owner"),
     [
-        ("SEC-SRS-3.3", "analyst"),  # «Требования к качеству» is empty: no NFR in the graph
-        ("SEC-SRS-3.5", "modeler"),  # no entities
-        ("SEC-SRS-4", "analyst"),  # no acceptance criteria
-        ("SEC-SRS-1.4", "standards"),  # the glossary is the Standards' own text
+        ("SEC-SRS-5.1", "analyst"),  # «Производительность» is empty: no such NFR in the graph
+        ("SEC-SRS-3", "analyst"),  # no user requirements: no system features
+        ("SEC-SRS-B", "modeler"),  # no entities and processes
+        ("SEC-SRS-D", "analyst"),  # no acceptance criteria
+        ("SEC-SRS-A", "standards"),  # the glossary is the Standards' own text
     ],
 )
 def test_empty_section_goes_to_the_owner_of_its_nodes(section: str, owner: str) -> None:
@@ -144,7 +145,7 @@ async def test_template_reviewer_makes_no_llm_call(context: Callable[..., RunCon
 
 
 def test_empty_section_task_says_which_nodes_are_missing() -> None:
-    (group,) = group_findings(report(finding("TPL-001", ["SEC-SRS-3.3"], owner="standards")))
+    (group,) = group_findings(report(finding("TPL-001", ["SEC-SRS-5.1"], owner="standards")))
     assert group.owner == "analyst"
     assert "нет нефункциональных требований (NFR)" in group.template()
     assert "assumption: true" in group.template()

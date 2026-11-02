@@ -6,4 +6,4 @@
 {% endfor %}
 </problems>
 
-Верни ответ целиком: purpose, scope и glossary, все три заполнены.
+Верни ответ целиком: все поля схемы; purpose, scope, perspective и glossary обязательно заполнены.

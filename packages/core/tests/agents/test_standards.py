@@ -38,14 +38,15 @@ def test_sections_are_built_from_the_graph() -> None:
     result = graph.apply(build_sections(graph, StandardsDraft.model_validate(SRS)), actor="agent")
     new = result.graph
     assert {s.id for s in load_structure("iso29148_srs").sections} <= set(new.nodes)
-    fr = section(new, "SEC-SRS-3.2")
-    assert fr.text.startswith("- FR-001 Напоминание: За 24 часа") and fr.refs == ["FR-001"]
-    assert ("FR-001", "SEC-SRS-3.2") in {
+    features = section(new, "SEC-SRS-3")  # T-408: system features
+    assert "- FR-001 Напоминание: За 24 часа" in features.text and "FR-001" in features.refs
+    assert ("FR-001", "SEC-SRS-3") in {
         (e.src, e.dst) for e in new.edges if e.rel.value == "rendered_in"
     }
-    assert section(new, "SEC-SRS-1.4").text == "- Запись — забронированное время у мастера"
-    assert "SMS уходит" in section(new, "SEC-SRS-4").text  # acceptance criteria
-    assert "CON-001" in section(new, "SEC-SRS-5").text  # the assumption
+    assert section(new, "SEC-SRS-A").text == "- Запись — забронированное время у мастера"
+    assert section(new, "SEC-SRS-2.1").text.startswith("Новая система")  # product perspective
+    assert "SMS уходит" in section(new, "SEC-SRS-D").text  # acceptance criteria
+    assert "CON-001" in section(new, "SEC-SRS-2.7").text  # the assumption
 
 
 def test_rebuilding_with_the_same_graph_changes_nothing() -> None:
@@ -72,10 +73,11 @@ async def test_empty_answer_is_asked_again_and_tpl001_reports_what_stays_empty(
     assert retry["reasons"][0].startswith("scope")
     found = SrsSections().run(out["graph"], CheckContext(ctx.project.with_graph(out["graph"])))
     assert {f.node_ids[0] for f in found} == {
-        "SEC-SRS-1.2",
-        "SEC-SRS-1.4",
-        "SEC-SRS-3.5",
-    }  # no ENT yet
+        "SEC-SRS-1.4",  # project scope
+        "SEC-SRS-2.1",  # product perspective
+        "SEC-SRS-A",  # glossary
+        "SEC-SRS-B",  # analysis models: no ENT yet
+    }
 
 
 async def test_prompt_carries_requirements_and_client_turns(
@@ -102,7 +104,7 @@ def test_rebuild_without_a_draft_keeps_the_llm_texts_and_lists_new_nodes() -> No
     nfr = {"op": "update", "id": "NFR-001", "fields": {"title": "Доставка всех SMS"}}
     graph = graph.apply(GraphPatch.model_validate({"ops": [nfr]}), actor="agent").graph
     patch = build_sections(graph, None)
-    assert {op.id for op in patch.ops} == {"SEC-SRS-3.3"}  # type: ignore[union-attr]
+    assert {op.id for op in patch.ops} == {"SEC-SRS-5.3"}  # type: ignore[union-attr]
     rebuilt = graph.apply(patch, actor="agent").graph
-    assert "Доставка всех SMS" in section(rebuilt, "SEC-SRS-3.3").text
-    assert section(rebuilt, "SEC-SRS-1.4").text == section(graph, "SEC-SRS-1.4").text
+    assert "Доставка всех SMS" in section(rebuilt, "SEC-SRS-5.3").text
+    assert section(rebuilt, "SEC-SRS-A").text == section(graph, "SEC-SRS-A").text

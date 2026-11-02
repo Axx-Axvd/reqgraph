@@ -28,6 +28,8 @@ async def test_live_standards_answer_fills_the_srs(
     (call,) = [e for e in events_of(ctx, "llm_call") if e["role"] == "standards"][:1]
     assert call["prompt"] == "standards/srs"
     empty = {f.node_ids[0] for f in out["ci"].findings if f.check_id == "TPL-001"}
-    assert empty <= {"SEC-SRS-1.3"}  # the stub Analyst has an actor; the LLM fills the rest
-    glossary = out["graph"].nodes["SEC-SRS-1.4"]
+    assert empty <= {"SEC-SRS-2.3"}  # the stub Analyst has an actor; the LLM fills the rest
+    glossary = out["graph"].nodes["SEC-SRS-A"]
     assert isinstance(glossary, SectionNode) and glossary.text.count("\n") >= 2
+    perspective = out["graph"].nodes["SEC-SRS-2.1"]  # T-408: a required text of the new structure
+    assert isinstance(perspective, SectionNode) and perspective.text.strip()
