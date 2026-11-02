@@ -323,6 +323,48 @@ def matrix_cmd(
     _metrics_out(results, pairs, out, stem)
 
 
+@app.command("groups")
+def groups_cmd(
+    scenarios: Annotated[
+        str, typer.Argument(help="сценарии через запятую; test — все test-сценарии")
+    ] = "test",
+    check: Annotated[
+        bool,
+        typer.Option(help="вторая разметка: выборка уже размеченных, метки скрыты, затем каппа"),
+    ] = False,
+    share: Annotated[float, typer.Option(min=0.01, max=1.0, help="доля для --check")] = 0.2,
+    out: Annotated[Path, typer.Option(help="папка отчётов (для --check)")] = REPORTS,
+    root: Annotated[Path, typer.Option(hidden=True)] = scenario_files.SCENARIOS,
+) -> None:
+    """Разметка скрытых требований: t — типовое, u — уникальное (T-308, правило — README
+    сценариев); ответ сразу записывается в hidden.yaml, q — закончить, потом можно продолжить."""
+    from reqgraph_evals import groups
+
+    ids = (
+        scenario_files.scenario_ids(split="test")
+        if scenarios == "test"
+        else [s.strip() for s in scenarios.split(",") if s.strip()]
+    )
+    if check:
+        result = groups.check_groups(ids, input, out=out, share=share, root=root, echo=typer.echo)
+        typer.echo(
+            f"проверено {result['checked']}: совпадение {result['agreement']:.0%}, "
+            f"каппа {result['kappa']} -> {groups.check_path(out)}"
+        )
+        return
+    done = groups.label_groups(ids, input, root=root, echo=typer.echo)
+    typer.echo(f"размечено: типовых {done['typical']}, уникальных {done['unique']}")
+    left = sum(
+        r.group is None
+        for i in ids
+        for r in scenario_files.load_scenario(i, root, final=True).hidden.requirements
+    )
+    if left:
+        typer.echo(f"осталось без метки: {left} — продолжить той же командой")
+    elif any(i.startswith("test") for i in ids):
+        typer.echo("всё размечено: uv run reqgraph-evals scenarios --seal, затем коммит")
+
+
 @app.command("label")
 def label_cmd(
     pairs: Annotated[Path, typer.Argument(help="labels/pairs-*.csv", exists=True, dir_okay=False)],

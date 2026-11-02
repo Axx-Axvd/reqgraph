@@ -78,6 +78,29 @@ async def test_recall_counts_judged_matches_told_by_the_client() -> None:
     assert {p.found_id for p in result.pairs if p.judge} == {"FR-001", "FR-002"}
 
 
+def test_recall_by_group_counts_typical_and_unique_apart() -> None:
+    """T-308: the share found of each group, over hidden requirements outside the brief."""
+    from reqgraph_evals.metrics.recall import by_group
+
+    reference = [
+        hidden(1, "Отмена записи не позднее чем за 3 часа.", group="unique"),
+        hidden(2, "SMS за сутки до приёма.", group="typical"),
+        hidden(3, "Врач видит своё расписание.", group="typical"),
+        hidden(4, "Пациент записывается онлайн.", in_brief=True, group="typical"),
+    ]
+    got = by_group(reference, {"H-002": "FR-001"})
+    assert got == {
+        "hidden_typical": 2,
+        "hidden_unique": 1,
+        "matched_typical": 1,
+        "matched_unique": 0,
+        "recall_typical": 0.5,
+        "recall_unique": 0.0,
+    }
+    unlabelled = [r.model_copy(update={"group": None}) for r in reference]
+    assert by_group(unlabelled, {"H-002": "FR-001"}) == {}  # a test reference before the labels
+
+
 async def test_a_requirement_split_in_two_is_found_by_both_parts() -> None:
     reference = [
         hidden(1, "Отмена записи за 3 часа, врач получает SMS."),
@@ -284,6 +307,8 @@ async def test_the_harness_scores_a_saved_run(tmp_path: Path) -> None:
     assert result.error == "" and result.run == "dev-01-cooperative-M2-r1"
     assert result.models == row.models  # a quality score never overwrites the run's record
     assert result.hidden == 20 and result.requirements >= 1 and 0 <= result.recall <= 1
+    assert (result.hidden_typical, result.hidden_unique) == (15, 5)  # T-308 labels of dev-01
+    assert result.matched_typical + result.matched_unique == result.matched
     assert result.judge_model.startswith("function/") and result.embedding_model
     assert result.llm_calls > row.llm_calls  # the judge's calls are counted too
     assert pairs and {"run", "hidden_id", "found_id", "judge"} <= set(pairs[0])

@@ -107,3 +107,19 @@ def test_cli_checks_without_printing_test_texts() -> None:
     assert "dev-01: S, требований 25" in result.output and "test-12: L" in result.output
     test_brief = (sc.SCENARIOS / "test-01" / "brief.md").read_text(encoding="utf-8")
     assert test_brief.splitlines()[2][:40] not in result.output
+
+
+def test_groups_are_all_or_nothing_and_dev_is_labelled() -> None:
+    """T-308: typical / unique labels — dev by Claude, test by the author before the seal."""
+    base = sc.load_scenario("dev-01")
+    assert all(r.group in ("typical", "unique") for r in base.hidden.requirements)
+    items = [r.model_copy(update={"group": None}) for r in base.hidden.requirements]
+    found = sc.problems(make(hidden=sc.Hidden(requirements=items)))
+    assert any("typical или unique" in p and "H-001" in p for p in found)
+    test_info = base.info.model_copy(update={"id": "test-99", "split": "test"})
+    assert sc.problems(make(info=test_info, hidden=sc.Hidden(requirements=items))) == []
+    half = [items[0].model_copy(update={"group": "typical"}), *items[1:]]
+    found = sc.problems(make(info=test_info, hidden=sc.Hidden(requirements=half)))
+    assert any("H-002" in p for p in found)  # started labelling: every one needs a group
+    with pytest.raises(ValueError):
+        type(items[0]).model_validate({**items[0].model_dump(), "group": "common"})

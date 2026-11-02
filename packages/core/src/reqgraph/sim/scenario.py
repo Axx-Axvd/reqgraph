@@ -48,6 +48,9 @@ class HiddenRequirement(_Strict):
     priority: Literal["must", "should", "could"] = "should"
     in_brief: bool = False  # already in the brief: part of the reference, not hidden
     source: str = Field(default="own", pattern=r"^(own|PURE:.+)$")
+    # T-308: typical (any system of the class has it, written from a template) or unique (a rule of
+    # this business); the rule is in evals/scenarios/README.md. The simulator does not see it.
+    group: Literal["typical", "unique"] | None = None
 
     @field_validator("id")
     @classmethod
