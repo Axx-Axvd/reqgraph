@@ -153,11 +153,15 @@ def export(
     offline: Annotated[
         bool, typer.Option("--offline", help="Draw schemes only from the Kroki cache.")
     ] = False,
+    docs: Annotated[
+        str,
+        typer.Option("--doc", help="srs, tz or both; default: project.standards of reqgraph.yaml."),
+    ] = "",
 ) -> None:
-    """Write the SRS (ISO/IEC/IEEE 29148 structure of the project) as Markdown and DOCX."""
+    """Write the SRS and the TZ by GOST 34.602 as Markdown and DOCX (T-401, T-402)."""
     import asyncio
 
-    from reqgraph.exporters.srs import export_srs
+    from reqgraph.exporters.srs import documents_of, export_documents
     from reqgraph.graph.store import FileStore, StoreError
 
     chosen = [f.strip() for f in formats.split(",") if f.strip()]
@@ -170,8 +174,14 @@ def export(
     except StoreError as exc:
         typer.echo(f"проект не прочитан: {exc}", err=True)
         raise typer.Exit(2) from None
+    wanted = [d.strip() for d in docs.split(",") if d.strip()] or documents_of(project)
+    if any(d not in ("srs", "tz") for d in wanted):
+        typer.echo(f"--doc: нужно srs, tz или оба, а не {docs!r}", err=True)
+        raise typer.Exit(2)
     target = out or path / "exports"
-    written = asyncio.run(export_srs(project, target, chosen, offline=offline))  # type: ignore[arg-type]
+    written = asyncio.run(
+        export_documents(project, target, wanted, chosen, offline=offline)  # type: ignore[arg-type]
+    )
     for file in written:
         typer.echo(f"записано: {file}")
 

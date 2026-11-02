@@ -24,10 +24,12 @@ LlmField = Literal[
     "glossary",
 ]
 LLM_FIELDS: tuple[str, ...] = LlmField.__args__  # type: ignore[attr-defined]
-_FILL = (
-    r"^(none|acceptance|assumptions|features|interfaces|models|issues|trace"
-    rf"|llm:({'|'.join(LLM_FIELDS)})|nodes:[A-Z0-9,]+|nfr:[a-z_,]+)$"
+_PART = (
+    r"(none|acceptance|assumptions|features|interfaces|models|issues|trace"
+    r"|project|contract|not_applicable|c4|sources|language"  # T-402: the TZ by GOST 34.602
+    rf"|llm:({'|'.join(LLM_FIELDS)})|nodes:[A-Z0-9,]+|nfr:[a-z_,]+|con:[a-z_,]+)"
 )
+_FILL = rf"^{_PART}(\+{_PART})*$"  # parts joined by `+` are rendered one after another
 
 
 class Section(BaseModel):
@@ -38,6 +40,18 @@ class Section(BaseModel):
     title_en: str | None = None  # the original name of the section (T-408)
     fill: str = Field(pattern=_FILL)
     required: bool = False
+
+    @property
+    def parts(self) -> list["Section"]:
+        """A section of several fills (`nfr:security+con:law`) as one section per fill."""
+        if "+" not in self.fill:
+            return [self]
+        return [self.model_copy(update={"fill": part}) for part in self.fill.split("+")]
+
+    @property
+    def constraint_topics(self) -> list[str]:
+        """Topics of a `con:` section: deadline, budget, law, tech."""
+        return self.fill.removeprefix("con:").split(",") if self.fill.startswith("con:") else []
 
     @property
     def node_kinds(self) -> list[str]:

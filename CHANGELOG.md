@@ -8,6 +8,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- TZ by GOST 34.602-2020 (T-402): `reqgraph export` writes `exports/tz_gost34.md|docx` next to the SRS from the same
+  graph (`--doc srs,tz`, by default `project.standards`); the structure `standards/gost34_602.yaml` has every
+  section of the standard (names only, to be checked by the author); NFR, constraints, C4 elements and functions go
+  to the GOST sections, the Standards text comes from the SRS sections, contract sections and sections that do
+  not apply say so. TPL-002 checks its required sections (T-404); TPL-001 and TPL-002 share one check.
 - SRS export (T-401): `reqgraph export <project>` writes `exports/srs.md` and `exports/srs.docx` by
   `standards/iso29148_srs.yaml` — sections with ids, a traceability appendix (FR → UR → BR → model elements),
   every BPMN scheme on a landscape A4 page of its own (Kroki; `--offline` reads only the cache). DOCX through pandoc

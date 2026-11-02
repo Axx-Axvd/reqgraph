@@ -68,6 +68,15 @@ def stuck(history: Sequence[Sequence[str]]) -> bool:
     return bool(last[-1]) and all(set(h) == set(last[-1]) for h in last)
 
 
+def _section(section_id: str) -> Section | None:
+    """A section of the SRS or of the TZ by its id (TPL-001, TPL-002)."""
+    for template in ("iso29148_srs", "gost34_602"):
+        for section in load_structure(template).sections:
+            if section.id == section_id:
+                return section
+    return None
+
+
 def _kinds(section: Section) -> list[str]:
     """Node kinds a section is listed from (T-408: features, NFR by characteristic, models)."""
     if section.fill == "features":
@@ -81,13 +90,12 @@ def _kinds(section: Section) -> list[str]:
 
 def owner_of(finding: Finding) -> Owner:
     """TPL-001 on a section built from graph nodes belongs to the owner of those nodes."""
-    if finding.check_id != "TPL-001" or not finding.node_ids:
+    if finding.check_id not in ("TPL-001", "TPL-002") or not finding.node_ids:
         return finding.owner
-    sections = {s.id: s for s in load_structure("iso29148_srs").sections}
-    section = sections.get(finding.node_ids[0])
+    section = _section(finding.node_ids[0])
     if section is None:
         return finding.owner
-    if section.fill in ("acceptance", "assumptions"):
+    if section.fill in ("acceptance", "assumptions") or section.constraint_topics:
         return "analyst"
     kinds = set(_kinds(section))
     if kinds and kinds <= _ANALYST_KINDS:
@@ -112,9 +120,9 @@ _KIND_NAMES = {
 def explain(finding: Finding) -> str:
     """The message and hint; an empty section listed from the graph says which nodes are missing."""
     text = finding.message + (f" — {finding.hint}" if finding.hint else "")
-    if finding.check_id != "TPL-001" or not finding.node_ids:
+    if finding.check_id not in ("TPL-001", "TPL-002") or not finding.node_ids:
         return text
-    section = {s.id: s for s in load_structure("iso29148_srs").sections}.get(finding.node_ids[0])
+    section = _section(finding.node_ids[0])
     if section is None or not (_kinds(section) or section.fill == "acceptance"):
         return text
     missing = (

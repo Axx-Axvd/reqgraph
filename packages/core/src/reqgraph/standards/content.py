@@ -3,6 +3,9 @@ system features, NFR by characteristic, interfaces, models, open issues, accepta
 assumptions and the traceability table. The Standards agent, TPL-001 and the exporters share it,
 so a section reads the same in the run, in the check and in the document."""
 
+import re
+from collections.abc import Mapping, Sequence
+
 from reqgraph.graph.edges import Rel
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.nodes import (
@@ -11,10 +14,24 @@ from reqgraph.graph.nodes import (
     FunctionalReq,
     Node,
     NonFunctionalReq,
+    SectionNode,
     UserReq,
 )
-from reqgraph.standards import Section
+from reqgraph.standards import Section, load_structure
 
+CONTRACT = "Заполняется заказчиком при заключении договора."
+NOT_APPLICABLE = "Требования не предъявляются."
+LANGUAGES = {"ru": "русском", "en": "английском"}
+# T-402: a constraint goes to a section of the TZ by its topic
+TOPICS = {
+    "deadline": re.compile(r"срок|запуск|не позднее|\bдо \d|\d{4} год", re.I),
+    "budget": re.compile(r"бюджет|стоимост|руб|финанс", re.I),
+    "law": re.compile(r"ФЗ|закон|персональн|лиценз", re.I),
+    "tech": re.compile(
+        r"технолог|платформ|1С|python|linux|windows|браузер|postgres|облак|сервер", re.I
+    ),
+}
+SRS_TEMPLATE = "iso29148_srs"
 PRIORITY = {"must": "обязательно", "should": "желательно", "could": "можно", "wont": "не сейчас"}
 _REQUIREMENTS = ("BR", "UR", "FR", "NFR", "CON")
 
@@ -145,10 +162,94 @@ def _trace(graph: ArtifactGraph) -> tuple[str, list[str]]:
     return "\n".join(lines), [r[0] for r in rows]
 
 
+def _c4(graph: ArtifactGraph) -> tuple[str, list[str]]:
+    nodes = [n for n in graph.nodes_of("C4") if isinstance(n, C4Node) and n.c4_kind != "external"]
+    lines = []
+    for node in nodes:
+        kind = "система" if node.c4_kind == "system" else "контейнер"
+        tech = f", {node.technology}" if node.technology else ""
+        lines.append(f"- {node.id} {node.name} ({kind}{tech})")
+    return "\n".join(lines), [n.id for n in nodes]
+
+
+def _constraints(section: Section, graph: ArtifactGraph) -> tuple[str, list[str]]:
+    patterns = [TOPICS[t] for t in section.constraint_topics]
+    nodes = [
+        n
+        for n in graph.nodes_of("CON")
+        if any(
+            p.search(f"{getattr(n, 'title', '')} {getattr(n, 'statement', '')}") for p in patterns
+        )
+    ]
+    return "\n".join(line(n) for n in nodes), [n.id for n in nodes]
+
+
+def _origins(graph: ArtifactGraph) -> tuple[str, list[str]]:
+    lines = ["- Бриф заказчика (brief.md)."]
+    turns = graph.nodes_of("TURN")
+    if turns:
+        lines.append(f"- Стенограмма интервью с заказчиком ({len(turns)} реплик).")
+    lines.append("- Спецификация требований к программному обеспечению (SRS) этого проекта.")
+    return "\n".join(lines), []
+
+
+def llm_texts(graph: ArtifactGraph) -> dict[str, str]:
+    """The Standards text by its field (purpose, glossary…) from the stored SRS sections: the TZ
+    and any other document take the same text (T-402)."""
+    stored = {n.id: n for n in graph.nodes_of("SEC") if isinstance(n, SectionNode)}
+    texts = {}
+    for section in load_structure(SRS_TEMPLATE).sections:
+        if section.llm_field is not None and section.id in stored:
+            texts[section.llm_field] = stored[section.id].text.strip()
+    return texts
+
+
+def section_text(
+    section: Section,
+    graph: ArtifactGraph,
+    llm: Mapping[str, str] | None = None,
+    *,
+    project_name: str = "",
+    project_id: str = "",
+    langs: Sequence[str] = (),
+) -> tuple[str, list[str]]:
+    """Text and node refs of any section: built by code, the Standards text by its field, the
+    project's own data; a section of several fills (`a+b`) — its parts one after another."""
+    texts: list[str] = []
+    refs: list[str] = []
+    for part in section.parts:
+        if part.fill == "project":
+            text = f"{project_name} (условное обозначение — {project_id})." if project_name else ""
+        elif part.fill == "language":
+            names = ", ".join(LANGUAGES.get(code, code) for code in langs) or "русском"
+            text = f"Интерфейс системы, сообщения и документация — на {names} языке."
+        elif part.llm_field is not None:
+            text = (llm or {}).get(part.llm_field, "")
+        else:
+            built = code_content(part, graph)
+            text, found = built if built is not None else ("", [])
+            refs += found
+        if text.strip():
+            texts.append(text.strip())
+    return "\n\n".join(texts), refs
+
+
 def code_content(section: Section, graph: ArtifactGraph) -> tuple[str, list[str]] | None:
     """Text and node refs of a section the code builds; None for a heading or an LLM section."""
-    if section.fill == "none" or section.llm_field is not None:
+    if "+" in section.fill:
         return None
+    if section.fill in ("none", "project", "language") or section.llm_field is not None:
+        return None
+    if section.fill == "contract":
+        return CONTRACT, []
+    if section.fill == "not_applicable":
+        return NOT_APPLICABLE, []
+    if section.fill == "c4":
+        return _c4(graph)
+    if section.fill == "sources":
+        return _origins(graph)
+    if section.constraint_topics:
+        return _constraints(section, graph)
     if section.fill == "features":
         return _features(section, graph)
     if section.fill == "interfaces":

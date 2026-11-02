@@ -157,3 +157,44 @@ def test_cli_exports_into_the_chosen_folder(tmp_path: Path, kroki: list[str]) ->
     assert exported == [".gitkeep"]  # the reference project is not touched
     bad = CliRunner().invoke(app, ["export", str(GARAGE61), "--format", "pdf"])
     assert bad.exit_code == 2 and "md, docx" in bad.output
+
+
+def test_tz_of_garage61_matches_the_golden_file(tmp_path: Path, kroki: list[str]) -> None:
+    """T-402: the TZ by GOST 34.602 from the same graph, schemes drawn once for both documents."""
+    written = asyncio.run(srs.export_documents(garage61(), tmp_path, ["srs", "tz"], ["md"]))
+    assert tmp_path / "tz_gost34.md" in written and tmp_path / "srs.md" in written
+    assert len(kroki) == 6  # not 12: the schemes are shared
+    text = (tmp_path / "tz_gost34.md").read_text(encoding="utf-8")
+    golden = GOLDEN / "garage61_tz_gost34.md"
+    if os.environ.get("REQGRAPH_UPDATE_GOLDEN") == "1":
+        golden.write_text(text, encoding="utf-8", newline="\n")
+    assert golden.read_text(encoding="utf-8") == text, "REQGRAPH_UPDATE_GOLDEN=1"
+    assert text.startswith("# Техническое задание на создание автоматизированной системы")
+    assert "### 1.1 Полное наименование системы и её условное обозначение" in text
+    assert "Гараж 61: онлайн-запись в автосервис (условное обозначение — garage61)." in text
+    assert "#### 4.1.9 Требования к защите информации" in text and "**CON-001**" in text
+    assert "### 4.2 Требования к функциям (задачам), выполняемым системой" in text
+    assert "Заполняется заказчиком при заключении договора." in text
+    assert "Требования не предъявляются." in text
+    assert "## Приложение А. Модели системы" in text and "](img/PRC-01.svg)" in text
+
+
+def test_tz_docx_puts_every_bpmn_on_a_landscape_page(tmp_path: Path, kroki: list[str]) -> None:
+    asyncio.run(srs.export_documents(garage61(), tmp_path, ["tz"], ["docx"]))
+    with zipfile.ZipFile(tmp_path / "tz_gost34.docx") as docx:
+        xml = docx.read("word/document.xml").decode("utf-8")
+    assert xml.count('w:orient="landscape"') == 6 and "Источники разработки" in xml
+
+
+def test_cli_exports_the_documents_the_project_asks_for(tmp_path: Path, kroki: list[str]) -> None:
+    from reqgraph.cli import app
+    from typer.testing import CliRunner
+
+    args = ["export", str(GARAGE61), "--out", str(tmp_path), "--format", "md"]
+    result = CliRunner().invoke(app, args)  # garage61: standards [iso29148, gost34_602]
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "srs.md").is_file() and (tmp_path / "tz_gost34.md").is_file()
+    only = CliRunner().invoke(app, [*args, "--out", str(tmp_path / "tz"), "--doc", "tz"])
+    assert only.exit_code == 0 and not (tmp_path / "tz" / "srs.md").exists()
+    bad = CliRunner().invoke(app, [*args, "--doc", "gost19"])
+    assert bad.exit_code == 2 and "srs, tz" in bad.output

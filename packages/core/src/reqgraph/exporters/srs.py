@@ -22,14 +22,19 @@ import jinja2
 from reqgraph.dsl.bpmn_compile import compile_bpmn
 from reqgraph.dsl.kroki import KIND_BY_SUFFIX, render_svg
 from reqgraph.dsl.process import parse_process
-from reqgraph.graph.graph import ArtifactGraph
-from reqgraph.graph.nodes import NodeKind, ProcessNode, SectionNode
+from reqgraph.graph.nodes import NodeKind, ProcessNode
 from reqgraph.graph.store.project import Project
-from reqgraph.standards import DocumentStructure, Section, load_structure
-from reqgraph.standards.content import code_content
+from reqgraph.standards import DocumentStructure, load_structure
+from reqgraph.standards.content import llm_texts, section_text
 
 TEMPLATE = "iso29148_srs"
 Format = Literal["md", "docx"]
+Document = Literal["srs", "tz"]
+# a document: its structure in standards/ and the name of its files in exports/ (T-402)
+DOCUMENTS: dict[str, tuple[str, str]] = {
+    "srs": ("iso29148_srs", "srs"),
+    "tz": ("gost34_602", "tz_gost34"),
+}
 TWIPS_PER_MM = 56.7
 LANDSCAPE_CM = (25.7, 15.5)  # A4 landscape minus 20 mm margins and room for the caption
 PORTRAIT_CM = (17.0, 24.0)  # A4 portrait minus 20 mm margins: a scheme taller than wide
@@ -109,32 +114,28 @@ def _bold_ids(text: str) -> str:
 
 
 def sections(
-    graph: ArtifactGraph, structure: DocumentStructure, diagrams: Sequence[Diagram] = ()
+    project: Project, structure: DocumentStructure, diagrams: Sequence[Diagram] = ()
 ) -> list[SectionView]:
-    stored = {n.id: n for n in graph.nodes_of(NodeKind.SEC) if isinstance(n, SectionNode)}
+    graph, info = project.graph, project.config.project
+    llm = llm_texts(graph)
     views = []
     for section in structure.sections:
+        text, _ = section_text(
+            section, graph, llm, project_name=info.name, project_id=info.id, langs=info.langs
+        )
         views.append(
             SectionView(
                 id=section.id,
                 number=section.number,
                 title=section.title,
                 level=section.level,
-                text=_text(section, graph, stored),
+                text=_bold_ids(text),
                 required=section.required,
                 heading=section.fill == "none",
                 diagrams=list(diagrams) if section.fill == "models" else [],
             )
         )
     return views
-
-
-def _text(section: Section, graph: ArtifactGraph, stored: dict[str, SectionNode]) -> str:
-    built = code_content(section, graph)
-    if built is not None:
-        return _bold_ids(built[0])
-    node = stored.get(section.id)
-    return node.text.strip() if node is not None else ""
 
 
 def _ratio(svg: str) -> float | None:
@@ -198,16 +199,20 @@ async def draw_schemes(project: Project, out: Path, *, offline: bool) -> list[Di
 
 
 def render_markdown(
-    project: Project, diagrams: Sequence[Diagram] = (), *, docx: bool = False
+    project: Project,
+    diagrams: Sequence[Diagram] = (),
+    *,
+    docx: bool = False,
+    document: Document = "srs",
 ) -> str:
-    structure = load_structure(TEMPLATE)
+    structure = load_structure(DOCUMENTS[document][0])
     text = (
         _environment()
-        .get_template("srs.md.j2")
+        .get_template("document.md.j2")
         .render(
             title=structure.title,
             project=project.config.project,
-            sections=sections(project.graph, structure, diagrams),
+            sections=sections(project, structure, diagrams),
             docx=docx,
             portrait_break=PORTRAIT_BREAK,
         )
@@ -264,6 +269,57 @@ def to_docx(markdown: str, out: Path, resources: Path) -> Path:
     return out
 
 
+def write_document(
+    project: Project,
+    out: Path,
+    document: Document,
+    diagrams: Sequence[Diagram],
+    formats: Sequence[Format] = ("md", "docx"),
+) -> list[Path]:
+    """Write <name>.md and/or <name>.docx of one document; the schemes are drawn already."""
+    name = DOCUMENTS[document][1]
+    written = []
+    if "md" in formats:
+        path = out / f"{name}.md"
+        markdown = render_markdown(project, diagrams, document=document)
+        path.write_text(markdown, encoding="utf-8", newline="\n")
+        written.append(path)
+    if "docx" in formats:
+        markdown = render_markdown(project, diagrams, docx=True, document=document)
+        docx = to_docx(markdown, out / f"{name}.docx", out)
+        widen_schemes(docx, diagrams)
+        written.append(docx)
+    return written
+
+
+def documents_of(project: Project) -> list[Document]:
+    """The documents a project asks for in reqgraph.yaml (project.standards); SRS by default."""
+    found: list[Document] = []
+    for standard in project.config.project.standards:
+        if standard == "iso29148":
+            found.append("srs")
+        elif standard == "gost34_602":
+            found.append("tz")
+    return found or ["srs"]
+
+
+async def export_documents(
+    project: Project,
+    out: Path,
+    documents: Sequence[Document] | None = None,
+    formats: Sequence[Format] = ("md", "docx"),
+    *,
+    offline: bool = False,
+) -> list[Path]:
+    """Write the documents (SRS, TZ) and their schemes (img/*.svg, drawn once) into `out`."""
+    out.mkdir(parents=True, exist_ok=True)
+    diagrams = await draw_schemes(project, out, offline=offline)
+    written = [out / d.path for d in diagrams if d.path]
+    for document in documents or documents_of(project):
+        written += write_document(project, out, document, diagrams, formats)
+    return written
+
+
 async def export_srs(
     project: Project,
     out: Path,
@@ -272,15 +328,4 @@ async def export_srs(
     offline: bool = False,
 ) -> list[Path]:
     """Write srs.md and/or srs.docx (and img/*.svg) into `out`; returns the written files."""
-    out.mkdir(parents=True, exist_ok=True)
-    diagrams = await draw_schemes(project, out, offline=offline)
-    written = [out / d.path for d in diagrams if d.path]
-    if "md" in formats:
-        path = out / "srs.md"
-        path.write_text(render_markdown(project, diagrams), encoding="utf-8", newline="\n")
-        written.append(path)
-    if "docx" in formats:
-        docx = to_docx(render_markdown(project, diagrams, docx=True), out / "srs.docx", out)
-        widen_schemes(docx, diagrams)
-        written.append(docx)
-    return written
+    return await export_documents(project, out, ["srs"], formats, offline=offline)
