@@ -263,6 +263,24 @@ def render(state: RunState, tasks: list[RepairTask]) -> str:
     )
 
 
+def without_frs(draft: AnalystDraft, graph: ArtifactGraph) -> list[str]:
+    """UR of the answer that no FR refines (T-311): a free model sometimes writes the system's
+    actions only into the UR's scenario, and nothing downstream asks for them — the Modeler has no
+    FR to model, the documents no function. The Analyst asks once more with these reasons."""
+    refined = {r for item in draft.requirements if item.kind == "FR" for r in item.refines}
+    refined |= {
+        e.dst
+        for e in graph.edges
+        if e.rel is Rel.REFINES and getattr(graph.get(e.src), "kind", None) == "FR"
+    }
+    return [
+        f"{item.ref} «{item.title}»: ни одно ФТ не уточняет это ПТ — запиши действия системы "
+        "из его сценария отдельными FR с refines на него"
+        for item in draft.requirements
+        if item.kind == "UR" and item.ref not in refined
+    ]
+
+
 async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     ctx = start(runtime, "analyst")
     if state["stop"] is not None:
@@ -288,7 +306,8 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
             "analyst", text, AnalystDraft, budget[0], template=load_prompt("analyst/extract")
         )
         conversion = to_patch(draft, graph)
-        return guarded(conversion.patch, graph, "analyst", mine, conversion.dropped)
+        problems = [*conversion.dropped, *without_frs(draft, graph)]
+        return guarded(conversion.patch, graph, "analyst", mine, problems)
 
     async def retry(reasons: str) -> Attempt:
         return await ask(prompt + "\n\n" + load_prompt("analyst/retry").render(error=reasons))

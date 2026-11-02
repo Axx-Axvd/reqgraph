@@ -114,6 +114,46 @@ async def test_dropped_items_are_retried_once_with_the_reasons(
     assert any(n.kind == "NFR" for n in out["graph"].nodes.values())
 
 
+async def test_a_user_requirement_without_frs_is_asked_again(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-311: the actions of a UR went into its scenario and no FR refines it — the answer is
+    asked once more with that reason (dev-02: 2 FRs instead of 8-11 in one of five repeats)."""
+    lean = json.loads(json.dumps(DRAFT))
+    lean["requirements"].append(
+        {
+            "ref": "ur_cancel",
+            "kind": "UR",
+            "title": "Отмена записи",
+            "statement": "Пациент отменяет запись на сайте.",
+            "actor": "patient",
+            "scenario": ["открывает запись", "отменяет её"],
+            "refines": ["br_online"],
+            "sources": ["TURN-0002"],
+        }
+    )
+    full = json.loads(json.dumps(lean))
+    full["requirements"].append(
+        {
+            "ref": "fr_cancel",
+            "kind": "FR",
+            "title": "Отмена записи",
+            "statement": "Система должна отменять запись по запросу пациента.",
+            "acceptance": ["запись получает статус «отменена»"],
+            "refines": ["ur_cancel"],
+            "sources": ["TURN-0002"],
+        }
+    )
+    ctx = brief_context(models=stub_models() | {"analyst": scripted(lean, full)}, max_iter=0)
+    out = await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
+    (retry,) = events_of(ctx, "patch_retry")
+    assert retry["reasons"] == [
+        "ur_cancel «Отмена записи»: ни одно ФТ не уточняет это ПТ — запиши действия системы "
+        "из его сценария отдельными FR с refines на него"
+    ]
+    assert len([n for n in out["graph"].nodes.values() if n.kind == "FR"]) == 2
+
+
 async def test_still_dropped_after_the_retry_is_logged_and_the_rest_applied(
     brief_context: Callable[..., RunContext],
 ) -> None:
