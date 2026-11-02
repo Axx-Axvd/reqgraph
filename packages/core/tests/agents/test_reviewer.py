@@ -84,10 +84,14 @@ def test_at_most_ten_tasks_per_round() -> None:
         ("SEC-SRS-A", "standards"),  # the glossary is the Standards' own text
         ("SEC-TZ-4.3.2", "modeler"),  # TPL-002: the TZ lists entities for the information support
         ("SEC-TZ-7", "analyst"),  # the TZ acceptance section is the FRs' acceptance criteria
+        ("SEC-TZ19-4.1", "analyst"),  # TPL-003: the program's functions are URs and FRs
+        ("SEC-TZ19-A", "modeler"),  # the program's models
+        ("SEC-TZ19-3.1", "standards"),  # the purpose is the Standards' own text
     ],
 )
 def test_empty_section_goes_to_the_owner_of_its_nodes(section: str, owner: str) -> None:
-    assert owner_of(finding("TPL-001", [section], owner="standards")) == owner
+    check = "TPL-003" if section.startswith("SEC-TZ19") else "TPL-001"
+    assert owner_of(finding(check, [section], owner="standards")) == owner
 
 
 def test_llm_words_the_tasks_and_skipped_groups_keep_the_template() -> None:

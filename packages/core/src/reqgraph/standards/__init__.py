@@ -1,5 +1,5 @@
 """Document structures (standards/*.yaml): own section lists, names only — no text of ISO or GOST
-(ADR-012). The Standards agent fills them, TPL-001/002 check them, exporters render them."""
+(ADR-012). The Standards agent fills them, TPL-001/002/003 check them, exporters render them."""
 
 from functools import cache
 from importlib.resources import files
@@ -24,6 +24,8 @@ LlmField = Literal[
     "glossary",
 ]
 LLM_FIELDS: tuple[str, ...] = LlmField.__args__  # type: ignore[attr-defined]
+# every document structure: the SRS (T-408), the TZ by GOST 34.602 (T-402) and 19.201 (T-407)
+STRUCTURES = ("iso29148_srs", "gost34_602", "gost19_201")
 _PART = (
     r"(none|acceptance|assumptions|features|interfaces|models|issues|trace"
     r"|project|contract|not_applicable|c4|sources|language"  # T-402: the TZ by GOST 34.602
