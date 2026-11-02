@@ -147,10 +147,9 @@ async def test_a_user_requirement_without_frs_is_asked_again(
     ctx = brief_context(models=stub_models() | {"analyst": scripted(lean, full)}, max_iter=0)
     out = await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
     (retry,) = events_of(ctx, "patch_retry")
-    assert retry["reasons"] == [
-        "ur_cancel «Отмена записи»: ни одно ФТ не уточняет это ПТ — запиши действия системы "
-        "из его сценария отдельными FR с refines на него"
-    ]
+    (reason,) = retry["reasons"]
+    assert reason.startswith("ur_cancel «Отмена записи»: ни одно ФТ не уточняет это ПТ")
+    assert "несколько родителей" in reason  # one FR for several roles, not a copy per role
     assert len([n for n in out["graph"].nodes.values() if n.kind == "FR"]) == 2
 
 
@@ -224,3 +223,19 @@ def test_an_edit_keeps_the_fields_the_model_did_not_send() -> None:
     edit = {"requirements": [{"ref": fr_id, "kind": "FR", "title": "SMS", "statement": "x"}]}
     (op,) = to_patch(AnalystDraft.model_validate(edit), result.graph).patch.ops
     assert op.fields == {"title": "SMS", "statement": "x"}  # type: ignore[union-attr]
+
+
+async def test_an_fr_without_acceptance_criteria_is_asked_again(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-311: the prompt asks for acceptance criteria; an answer without them is asked again."""
+    bare = json.loads(json.dumps(DRAFT))
+    bare["requirements"][2]["acceptance"] = []
+    ctx = brief_context(models=stub_models() | {"analyst": scripted(bare, DRAFT)}, max_iter=0)
+    out = await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
+    (retry,) = events_of(ctx, "patch_retry")
+    assert retry["reasons"] == [
+        "fr_remind «Напоминание»: нет критериев приёмки — добавь 1–3 проверяемых в acceptance"
+    ]
+    (fr,) = [n for n in out["graph"].nodes.values() if n.kind == "FR"]
+    assert fr.acceptance

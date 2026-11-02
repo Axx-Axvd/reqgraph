@@ -64,7 +64,10 @@ def test_dev_briefs_exist() -> None:
 
 async def test_row_counts_requirements_and_violations() -> None:
     row = await run_scenario("dev-01", 1, models=MODELS, brief_recall=False)
-    assert row.error == "" and row.applied and row.llm_calls == 1
+    assert (
+        row.error == "" and row.applied and row.llm_calls == 2
+    )  # T-311: no acceptance, asked again
+    assert row.retried and "нет критериев приёмки" in row.dropped_reasons
     assert (row.requirements, row.actors) == (3, 1)
     assert (row.iso001, row.iso003, row.violating) == (1, 1, 1)
     assert row.violation_share == pytest.approx(0.333)
