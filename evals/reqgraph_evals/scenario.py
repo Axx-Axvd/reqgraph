@@ -94,7 +94,18 @@ def problems(scenario: Scenario) -> list[str]:
     if share > MAX_IN_BRIEF:
         found.append(f"в брифе уже {share:.0%} эталона, допустимо до {MAX_IN_BRIEF:.0%}")
     found += _unmarked_in_brief(scenario)
+    found += _ungrouped(scenario)
     return found
+
+
+def _ungrouped(scenario: Scenario) -> list[str]:
+    """T-308: dev references are labelled typical / unique by Claude; a test one by the author
+    before the seal — all of its requirements or none (then recall by group is not counted)."""
+    items = scenario.hidden.requirements
+    missing = [r.id for r in items if r.group is None]
+    if not missing or (scenario.info.split == "test" and len(missing) == len(items)):
+        return []
+    return [f"нет group (typical или unique, правило — README сценариев): {', '.join(missing)}"]
 
 
 def _unmarked_in_brief(scenario: Scenario, threshold: float = 85.0) -> list[str]:
