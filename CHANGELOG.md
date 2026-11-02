@@ -14,6 +14,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   recall of each group, the interview report what the client told of each group.
   `reqgraph-evals groups` asks the labels one by one in the terminal and writes each answer at once; `--check`
   asks a second labeller on a seeded 20% sample with the first labels hidden and gives Cohen's kappa.
+  The test references are labelled by Claude at the start of S6, before the first run of the matrix
+  (author's decision of 2026-11-02).
 - Simulator select step without repeats (T-309): the choice sees the hidden list split into untold (grouped by
   area) and told, and the brief counts as told; a broad question about an area may reveal up to three untold
   items; code keeps a repeat only when nothing new is picked. `python -m reqgraph_evals.simprobe` replays the
