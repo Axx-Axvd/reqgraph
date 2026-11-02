@@ -103,8 +103,8 @@ async def run_scenario(
     row.externals = sum(n.c4_kind == "external" for n in c4)
     row.has_uml, row.has_c4 = uml_file(files) in files, c4_file(files) in files
     row.attempts = sum(e["type"] == "views_check" for e in events.events)
-    checks = [e for e in events.events if e["type"] == "views_check"]
-    row.dropped = min((len(e["problems"]) for e in checks), default=0)
+    answers = [e for e in events.events if e["type"] == "views_check"]
+    row.dropped = min((len(e["problems"]) for e in answers), default=0)
     row.roles_without_uc = sum("у роли нет" in p for p in view_problems(graph, files))
     for check_id in ("SCH-004", "SCH-005"):
         found = [f for f in report.findings if f.check_id == check_id]
