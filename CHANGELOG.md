@@ -8,6 +8,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Typical and unique hidden requirements (T-308): an optional `group` of a hidden requirement, the labelling
+  rule in `evals/scenarios/README.md` (written before the labels), the dev references labelled; the scenario check
+  wants every dev requirement labelled and a test reference all or none. `results-*.csv` gets hidden, matched and
+  recall of each group, the interview report what the client told of each group.
 - Simulator select step without repeats (T-309): the choice sees the hidden list split into untold (grouped by
   area) and told, and the brief counts as told; a broad question about an area may reveal up to three untold
   items; code keeps a repeat only when nothing new is picked. `python -m reqgraph_evals.simprobe` replays the
