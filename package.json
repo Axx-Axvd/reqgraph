@@ -11,6 +11,6 @@
     "db:test": "supabase test db"
   },
   "devDependencies": {
-    "supabase": "2.121.0"
+    "supabase": "2.122.0"
   }
 }
