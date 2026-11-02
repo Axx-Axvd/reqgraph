@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from reqgraph.llm.config import ConfigError, load_roles
+from reqgraph.llm.config import ConfigError, Step, load_roles
 
 ROLES = ["interviewer", "analyst", "modeler", "standards", "reviewer", "stakeholder", "judge"]
 
@@ -135,3 +135,19 @@ def test_every_profile_has_an_embedding_model(profile: str) -> None:
     assert step.provider in load_roles().providers
     with pytest.raises(ConfigError, match="эмбеддингов"):
         load_roles().embedding("nope")
+
+
+@pytest.mark.parametrize("profile", ["free", "cheap"])
+def test_simulator_and_judge_run_on_paid_qwen_27b(profile: str) -> None:
+    """Author's decision 02.11 (T-309): Qwen3.8-27B through OpenRouter, Groq as the free reserve."""
+    cfg = load_roles()
+    for role in EXAMINER_ROLES:
+        assert cfg.ladder(role, profile)[0].id == "openrouter/qwen/qwen3.8-27b"
+
+
+def test_own_price_list_covers_paid_models_unknown_to_genai_prices() -> None:
+    cfg = load_roles()
+    qwen = Step.parse("openrouter/qwen/qwen3.8-27b")
+    assert cfg.price(qwen, 1_000_000, 1_000_000) == pytest.approx(0.15 + 1.875)
+    assert cfg.price(qwen, 2000, 400) == pytest.approx((2000 * 0.15 + 400 * 1.875) / 1e6)
+    assert cfg.price(Step.parse("groq/qwen/qwen3.8-27b"), 10, 10) is None

@@ -31,7 +31,7 @@ def anyio_backend() -> str:
     ("role", "model_id", "provider"),
     [
         ("reviewer", None, "groq"),
-        ("stakeholder", None, "groq"),  # Qwen on Groq: another family than the agents
+        ("stakeholder", "groq/qwen/qwen3.8-27b", "groq"),  # the free reserve of Qwen on Groq
         ("analyst", None, "gemini"),  # long-context role starts on Gemini
         ("analyst", "openrouter/nvidia/nemotron-3.5-super-vl:free", "openrouter"),
     ],

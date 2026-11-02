@@ -66,6 +66,15 @@ class RoleSettings(BaseModel):
     temperature: float | None = Field(default=None, ge=0, le=2)
 
 
+class Price(BaseModel):
+    """USD per million tokens, from the provider's price page."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    input: float = Field(ge=0)
+    output: float = Field(ge=0)
+
+
 class Budget(BaseModel):
     run_usd: float = Field(gt=0)
     run_tokens: int = Field(gt=0)
@@ -78,6 +87,7 @@ class RolesConfig(BaseModel):
     role_settings: dict[str, RoleSettings] = {}
     embeddings: dict[str, str] = {}  # profile -> "provider/model" (recall of T-304)
     budget: Budget = Budget(run_usd=0.5, run_tokens=800_000)
+    prices: dict[str, Price] = {}  # "provider/model" -> price; models genai-prices does not list
 
     @model_validator(mode="after")
     def _known_providers(self) -> "RolesConfig":
@@ -128,6 +138,13 @@ class RolesConfig(BaseModel):
         if step.provider not in self.providers:
             raise ConfigError(f"embeddings.{name}: неизвестный провайдер «{step.provider}»")
         return step
+
+    def price(self, step: Step, input_tokens: int, output_tokens: int) -> float | None:
+        """Cost of a call by the own price list; None if the model is not in it."""
+        own = self.prices.get(step.id)
+        if own is None:
+            return None
+        return (input_tokens * own.input + output_tokens * own.output) / 1_000_000
 
     def is_free(self, step: Step) -> bool:
         """Free tier provider, or an OpenRouter model whose id ends with ":free"."""

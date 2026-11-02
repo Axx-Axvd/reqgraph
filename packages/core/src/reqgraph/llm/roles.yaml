@@ -35,12 +35,14 @@ profiles:
     # The Modeler reads every UR and FR too (T-203): the same long-context ladder.
     modeler: [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
     # Simulator and judge: another model family than every agent (CLAUDE.md, checked by a test).
-    stakeholder: [groq/qwen/qwen3.8-27b]
-    judge: [groq/qwen/qwen3.8-27b]
+    # Paid Qwen3.8-27B first (author's decision 2026-11-02): it best picked the hidden requirements
+    # a question is about (evals/reports/simprobe-2026-11-02.md); Groq's free tier is the reserve.
+    stakeholder: [openrouter/qwen/qwen3.8-27b, groq/qwen/qwen3.8-27b]
+    judge: [openrouter/qwen/qwen3.8-27b, groq/qwen/qwen3.8-27b]
   cheap:                             # experiments (January-February): one model for all methods, Gemini as reserve
     "*": [openrouter/deepseek/deepseek-v4-flash, gemini/gemini-3.5-flash-lite]
-    stakeholder: [openrouter/meta-llama/llama-3.3-70b-instruct]
-    judge: [openrouter/z-ai/glm-5.3-flash]
+    stakeholder: [openrouter/qwen/qwen3.8-27b]   # was Llama 3.3 70B and GLM-5.3 Flash: weaker in
+    judge: [openrouter/qwen/qwen3.8-27b]         # the probe of 2026-11-02 (52% and 37% against 74%)
   local:                             # offline stand and smoke tests
     "*": [ollama/qwen3:4b]
 
@@ -59,6 +61,10 @@ embeddings:                          # recall: matching found requirements to th
   free: gemini/gemini-embedding-001  # Google AI Studio, free; 3072 numbers per text
   cheap: gemini/gemini-embedding-001
   local: ollama/nomic-embed-text
+
+prices:                              # USD per 1M tokens, openrouter.ai 2026-11-02; genai-prices lacks them
+  openrouter/qwen/qwen3.8-27b: {input: 0.15, output: 1.875}
+  openrouter/deepseek/deepseek-v4-flash: {input: 0.091, output: 0.182}
 
 budget:                              # per run; REQGRAPH_RUN_BUDGET_USD overrides run_usd
   run_usd: 0.50

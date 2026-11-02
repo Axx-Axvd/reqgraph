@@ -129,9 +129,12 @@ async def test_analyst_reads_long_interviews_on_gemini_first(fake_models: dict[s
     assert stats.provider == "gemini"
 
 
-def test_no_model_fits_is_an_error() -> None:
+def test_no_model_fits_is_an_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = load_roles()
+    cfg.profiles["free"]["stakeholder"] = ["groq/qwen/qwen3.8-27b"]  # Groq only
+    monkeypatch.setattr(router, "_CONFIG", cfg)
     with pytest.raises(ValueError, match="не помещается"):
-        model_for("stakeholder", "free", prompt_chars=10**7)  # Groq only, and the prompt is huge
+        model_for("stakeholder", "free", prompt_chars=10**7)  # and the prompt is huge
 
 
 async def test_budget_stops_the_run(fake_models: dict[str, Model]) -> None:
@@ -154,12 +157,25 @@ async def test_paid_model_cost_is_counted(
     fake_models: dict[str, Model], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(router, "_list_price", lambda response: 0.0125)
+    monkeypatch.setattr(router._config(), "prices", {})  # the price comes from genai-prices
     budget = RunBudget(usd=0.01, tokens=10**6)
     _, stats = await structured("analyst", "x", Requirement, profile="cheap", budget=budget)
     assert stats.cost_usd == pytest.approx(0.0125)
     assert stats.list_cost_usd == pytest.approx(0.0125)
     with pytest.raises(BudgetExceeded):
         await structured("analyst", "x", Requirement, profile="cheap", budget=budget)
+
+
+async def test_own_price_is_used_when_genai_prices_lacks_the_model(
+    fake_models: dict[str, Model], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Qwen3.8-27B is not in genai-prices: the cost comes from roles.yaml, not a silent zero."""
+    monkeypatch.setattr(router, "_list_price", lambda response: None)
+    _, stats = await structured("stakeholder", "x", Requirement, profile="cheap")
+    assert stats.model == "qwen/qwen3.8-27b"
+    expected = (stats.input_tokens * 0.15 + stats.output_tokens * 1.875) / 1e6
+    assert stats.cost_usd == pytest.approx(expected) and stats.cost_usd > 0
+    assert stats.list_cost_usd == pytest.approx(expected)
 
 
 async def test_free_model_keeps_list_price_separately(
@@ -240,9 +256,9 @@ async def test_a_rate_limited_ladder_waits_and_asks_again(
         waits.append(seconds)
 
     monkeypatch.setattr("reqgraph.llm.router.asyncio.sleep", no_sleep)
-    for step in load_roles().ladder("stakeholder", "free"):  # one model: no fallback to try
+    for step in load_roles().ladder("stakeholder", "cheap"):  # one model: no fallback to try
         fake_models[step.id] = FunctionModel(flaky, model_name=step.model)
-    out, stats = await structured("stakeholder", "п", Requirement, profile="free")
+    out, stats = await structured("stakeholder", "п", Requirement, profile="cheap")
     assert out.priority == 1 and waits == [7, 7] and stats.latency_ms < 7000
 
 
@@ -253,14 +269,14 @@ async def test_other_errors_and_too_many_429_are_not_waited_out(
         return None
 
     monkeypatch.setattr("reqgraph.llm.router.asyncio.sleep", no_sleep)
-    for step in load_roles().ladder("stakeholder", "free"):
+    for step in load_roles().ladder("stakeholder", "cheap"):  # one model
         fake_models[step.id] = failing_model(step.model, 500)
     with pytest.raises(ModelHTTPError):
-        await structured("stakeholder", "п", Requirement, profile="free")
-    for step in load_roles().ladder("stakeholder", "free"):
+        await structured("stakeholder", "п", Requirement, profile="cheap")
+    for step in load_roles().ladder("stakeholder", "cheap"):
         fake_models[step.id] = failing_model(step.model, 429)
     with pytest.raises(ModelHTTPError):
-        await structured("stakeholder", "п", Requirement, profile="free")
+        await structured("stakeholder", "п", Requirement, profile="cheap")
     assert router.rate_limited(FallbackExceptionGroup("x", [ModelHTTPError(429, "a")])) == 20.0
     assert router.rate_limited(ModelHTTPError(429, "a", retry_after=3600)) is None  # a daily limit
     mixed = FallbackExceptionGroup("x", [ModelHTTPError(429, "a"), ModelHTTPError(500, "b")])
