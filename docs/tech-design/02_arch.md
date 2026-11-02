@@ -74,7 +74,7 @@ flowchart TB
 | `LLM` | pydantic-ai-slim[openai], genai-prices | структурный вывод в Pydantic, ретраи, FallbackModel, лимиты, цена вызова (ADR-013) |
 | `Модели как код` | lxml (BPMN XSD), pm4py (soundness, ленивый импорт, ADR-014), pydbml, urllib -> Kroki | компиляция, валидация, soundness, SVG (BPMN — bpmn-js, остальное — Kroki) |
 | `Текст и правила` | pymorphy3, rapidfuzz, PyYAML | лемматизация для ISO-правил, нечёткое сопоставление сущностей |
-| `Экспорт` | Jinja2, pypandoc-binary (pandoc), reqif | Markdown → DOCX по reference.docx (ADR-016), ReqIF 1.2 |
+| `Экспорт` | Jinja2, pypandoc-binary (pandoc), reqif | Markdown → DOCX по reference.docx (ADR-016), ReqIF 1.2 (`exporters/reqif.py`, T-403: профиль StrictDoc, текст — XHTML) |
 | `API` | FastAPI, uvicorn, pydantic-settings, PyJWT | REST, проверка JWT Supabase |
 | `CLI` | typer, rich | reqgraph init / interview / run / check / export / probe |
 | `Frontend` | Next.js (App Router, TS), Tailwind, shadcn/ui, TanStack Query, supabase-js, bpmn-js, @xyflow/react | интервью, граф, BPMN, отчёт CI |
@@ -105,7 +105,7 @@ reqgraph/
 │   │   ├── coverage.py        # трекер покрытия интервью
 │   │   └── prompts/           # *.md, по одному на агента и задачу
 │   ├── llm/                   # router.py (pydantic-ai) roles.yaml
-│   ├── exporters/             # srs.py tz_gost.py reqif.py markdown.py
+│   ├── exporters/             # srs.py (SRS и оба ТЗ) reqif.py
 │   │   └── templates/         # document.md.j2 (SRS и оба ТЗ) reference.docx
 │   ├── sim/                   # stakeholder.py judge.py
 │   ├── standards/             # iso29148_srs.yaml gost34_602.yaml gost19_201.yaml content.py
