@@ -19,6 +19,7 @@ from reqgraph.graph.nodes import (
     Node,
     NodeKind,
     ProcessNode,
+    SectionNode,
     node_from_dict,
     validation_text,
 )
@@ -60,6 +61,11 @@ PROCESS_DIR = "models/processes"
 PROCESS_SUFFIX = ".process.json"
 EDGES_FILE = "trace/edges.yaml"
 IDS_FILE = "trace/ids.yaml"
+DOCUMENTS_DIR = "documents"  # documents/<template>.yaml: texts of document sections (T-401)
+DOCUMENTS_HEADER = (
+    "# Тексты разделов документа на момент последней записи: связный текст пишет Standards.\n"
+    "# Разделы-списки (требования, акторы, сущности) выгрузка пересобирает из графа.\n"
+)
 EDGES_HEADER = (
     "# СГЕНЕРИРОВАНО из requirements/*.yaml — не править руками.\n"
     "# Канонический источник рёбер — поля refines / realized_by / derived_from "
@@ -71,7 +77,7 @@ IDS_HEADER = (
 )
 
 # Relations stored in the source node, in the order they are written. `rendered_in` is not stored:
-# document sections are rebuilt by the exporters.
+# the exporters link sections to nodes anew.
 EDGE_KEYS: tuple[Rel, ...] = (
     Rel.REFINES,
     Rel.DERIVED_FROM,
@@ -322,3 +328,51 @@ def parse_ids(text: str, path: str = IDS_FILE) -> dict[str, int]:
 
 def render_ids(high_water: dict[str, int]) -> str:
     return IDS_HEADER + "".join(f"{k}: {v}\n" for k, v in sorted(high_water.items()))
+
+
+# --- documents/<template>.yaml ---------------------------------------------------------------
+
+
+class _Literal(str):
+    """A multi-line text written as a YAML block: easy to read and to edit by hand."""
+
+
+def _literal(dumper: yaml.SafeDumper, value: _Literal) -> yaml.ScalarNode:
+    return dumper.represent_scalar("tag:yaml.org,2002:str", value, style="|")
+
+
+class _Dumper(yaml.SafeDumper):
+    pass
+
+
+_Dumper.add_representer(_Literal, _literal)
+
+
+def section_path(template: str) -> str:
+    return f"{DOCUMENTS_DIR}/{template}.yaml"
+
+
+def parse_sections(text: str, path: str) -> list[Node]:
+    """Sections of one document: {SEC-id: text}; the template is the file name."""
+    template = path.rsplit("/", 1)[-1].removesuffix(".yaml")
+    try:
+        data = yaml.safe_load(text) or {}
+    except yaml.YAMLError as exc:
+        raise StoreError(f"{path}: не YAML ({exc})") from None
+    if not isinstance(data, dict):
+        raise StoreError(f"{path}: ожидается словарь «id раздела: текст»")
+    return [
+        _node({"kind": "SEC", "id": key, "template": template, "text": str(value or "")}, path)
+        for key, value in data.items()
+    ]
+
+
+def render_sections(graph: ArtifactGraph, template: str) -> str:
+    sections = [
+        n
+        for n in graph.nodes_of(NodeKind.SEC)
+        if isinstance(n, SectionNode) and n.template == template
+    ]
+    data = {n.id: _Literal(n.text) if "\n" in n.text else n.text for n in sections}
+    body = yaml.dump(data, Dumper=_Dumper, allow_unicode=True, sort_keys=False, width=100)
+    return DOCUMENTS_HEADER + body
