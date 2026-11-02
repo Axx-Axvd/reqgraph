@@ -14,6 +14,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from reqgraph.llm import router
+from reqgraph.llm.config import ModelOptions, Step
 from reqgraph.llm.router import structured
 from reqgraph.sim.stakeholder import MAX_ITEMS, Selection, load_prompt
 
@@ -37,6 +39,26 @@ CASES: list[tuple[str, int, set[str]]] = [
     ("dev-02", 9, {"H-039", "H-040"}),  # a miss in v3: terms and budget
     ("dev-02", 11, set()),  # a late courier: nothing new in the list
 ]
+
+
+# T-310: OpenRouter's reasoning switch for the measured model; None — the provider's default
+REASONING: dict[str, dict[str, Any] | None] = {
+    "on": None,
+    "low": {"reasoning": {"effort": "low"}},
+    "off": {"reasoning": {"enabled": False}},
+}
+
+
+def set_reasoning(models: list[str], mode: str) -> None:
+    """Put the reasoning mode into the loaded roles.yaml for these models (this process only)."""
+    cfg = router._config()
+    extra = REASONING[mode]
+    for model in models:
+        key = Step.parse(model).id
+        if extra is None:
+            cfg.model_settings.pop(key, None)
+        else:
+            cfg.model_settings[key] = ModelOptions(extra_body=extra)
 
 
 def parse(md: str) -> dict[int, tuple[str, str, list[str]]]:
@@ -98,8 +120,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--models", default="openrouter/qwen/qwen3.8-27b")
     parser.add_argument("--repeat", type=int, default=2)
+    parser.add_argument("--reasoning", choices=sorted(REASONING), default=None)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
+    if args.reasoning:
+        set_reasoning(args.models.split(","), args.reasoning)
     rows = asyncio.run(run(args.models.split(","), args.repeat))
     args.out.write_text(json.dumps(rows, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 

@@ -151,3 +151,21 @@ def test_own_price_list_covers_paid_models_unknown_to_genai_prices() -> None:
     assert cfg.price(qwen, 1_000_000, 1_000_000) == pytest.approx(0.15 + 1.875)
     assert cfg.price(qwen, 2000, 400) == pytest.approx((2000 * 0.15 + 400 * 1.875) / 1e6)
     assert cfg.price(Step.parse("groq/qwen/qwen3.8-27b"), 10, 10) is None
+
+
+def test_model_settings_give_extra_body_to_one_model() -> None:
+    """T-310: a provider's request parameters (OpenRouter `reasoning`) per model, not in code."""
+    from reqgraph.llm.config import RolesConfig
+
+    data = load_roles().model_dump()
+    data["model_settings"] = {
+        "openrouter/qwen/qwen3.8-27b": {"extra_body": {"reasoning": {"enabled": False}}}
+    }
+    cfg = RolesConfig.model_validate(data)
+    assert cfg.extra_body(Step.parse("openrouter/qwen/qwen3.8-27b")) == {
+        "reasoning": {"enabled": False}
+    }
+    assert cfg.extra_body(Step.parse("groq/qwen/qwen3.8-27b")) is None
+    data["model_settings"] = {"nowhere/model": {"extra_body": {}}}
+    with pytest.raises(ValueError, match="nowhere"):
+        RolesConfig.model_validate(data)

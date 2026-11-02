@@ -187,6 +187,19 @@ async def test_free_model_keeps_list_price_separately(
     assert stats.list_cost_usd == pytest.approx(0.002)
 
 
+def test_extra_body_reaches_the_model_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    from reqgraph.llm.config import ModelOptions
+
+    cfg = load_roles()
+    low = ModelOptions(extra_body={"reasoning": {"effort": "low"}})
+    cfg.model_settings = {"openrouter/qwen/qwen3.8-27b": low}
+    monkeypatch.setattr(router, "_CONFIG", cfg)
+    paid = router._build_model(Step.parse("openrouter/qwen/qwen3.8-27b"))
+    free = router._build_model(Step.parse("groq/qwen/qwen3.8-27b"))
+    assert (paid.settings or {}).get("extra_body") == {"reasoning": {"effort": "low"}}
+    assert "extra_body" not in (free.settings or {})
+
+
 async def test_on_call_hook_receives_stats(fake_models: dict[str, Model]) -> None:
     seen: list[router.CallStats] = []
     await structured("reviewer", "x", Requirement, profile="free", on_call=seen.append)

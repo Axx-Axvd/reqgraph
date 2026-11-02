@@ -3,7 +3,7 @@
 import os
 from functools import cached_property
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -75,6 +75,14 @@ class Price(BaseModel):
     output: float = Field(ge=0)
 
 
+class ModelOptions(BaseModel):
+    """Request parameters of one model at its provider (T-310), e.g. OpenRouter's `reasoning`."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    extra_body: dict[str, Any] | None = None
+
+
 class Budget(BaseModel):
     run_usd: float = Field(gt=0)
     run_tokens: int = Field(gt=0)
@@ -88,6 +96,7 @@ class RolesConfig(BaseModel):
     embeddings: dict[str, str] = {}  # profile -> "provider/model" (recall of T-304)
     budget: Budget = Budget(run_usd=0.5, run_tokens=800_000)
     prices: dict[str, Price] = {}  # "provider/model" -> price; models genai-prices does not list
+    model_settings: dict[str, ModelOptions] = {}  # "provider/model" -> request parameters
 
     @model_validator(mode="after")
     def _known_providers(self) -> "RolesConfig":
@@ -99,6 +108,12 @@ class RolesConfig(BaseModel):
                         raise ConfigError(
                             f"{profile}.{role}: неизвестный провайдер «{step.provider}» в «{raw}»"
                         )
+        for raw in self.model_settings:
+            step = Step.parse(raw)
+            if step.provider not in self.providers:
+                raise ConfigError(
+                    f"model_settings: неизвестный провайдер «{step.provider}» в «{raw}»"
+                )
         return self
 
     @cached_property
@@ -138,6 +153,11 @@ class RolesConfig(BaseModel):
         if step.provider not in self.providers:
             raise ConfigError(f"embeddings.{name}: неизвестный провайдер «{step.provider}»")
         return step
+
+    def extra_body(self, step: Step) -> dict[str, Any] | None:
+        """Extra request parameters of a model (T-310); None if roles.yaml sets none."""
+        own = self.model_settings.get(step.id)
+        return own.extra_body if own is not None else None
 
     def price(self, step: Step, input_tokens: int, output_tokens: int) -> float | None:
         """Cost of a call by the own price list; None if the model is not in it."""
