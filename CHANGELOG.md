@@ -8,6 +8,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Requirements retold from the PURE set in the dev references (T-307): dev-01 5 from the microcare SRS, dev-02 4 from
+  e-store, dev-03 5 from library, each with `source: PURE:<document>#<section or Req ID>` and a typical / unique
+  label; the template and the order for the test references (Claude, at the start of S6) are in the scenarios'
+  README. The dev references grew (25, 32 and 49 hidden requirements outside the brief).
 - Per-model request parameters in `roles.yaml` (`model_settings`, T-310), sent as `extra_body`. The simulator and
   the judge (Qwen3.8-27B on OpenRouter) run without reasoning: in a measurement of three modes the simulator named
   as many hidden requirements and the judge agreed with the author's labels as well, at 1/6-1/7 of the cost.
