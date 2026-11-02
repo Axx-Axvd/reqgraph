@@ -20,6 +20,7 @@ dependencies = [
     "jinja2==3.1.6",
     "langgraph-checkpoint-sqlite==3.1.2",
     "pypandoc-binary==1.17",  # SRS and TZ to DOCX (ADR-016); pandoc runs as a separate program
+    "reqif==0.1.0",  # ReqIF 1.2 export (T-403), by the StrictDoc authors; imported lazily
 ]
 
 [project.scripts]

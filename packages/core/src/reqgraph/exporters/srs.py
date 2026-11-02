@@ -301,6 +301,11 @@ def write_document(
     return written
 
 
+def exports_of(project: Project) -> list[str]:
+    """What `reqgraph export` writes by default: the documents of the project and ReqIF (T-403)."""
+    return [*documents_of(project), "reqif"]
+
+
 def documents_of(project: Project) -> list[Document]:
     """The documents a project asks for in reqgraph.yaml (project.standards); SRS by default."""
     found = [BY_STANDARD[s] for s in project.config.project.standards]

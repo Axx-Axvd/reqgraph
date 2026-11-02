@@ -8,6 +8,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- ReqIF export (T-403): `reqgraph export` writes `exports/req.reqif` with the documents (`--doc reqif` alone needs
+  no schemes and no pandoc). Sections by kind; every BR/UR/FR/NFR/CON with id, name, statement, status, priority,
+  acceptance, metric, scenario, goal, realized_by, depends_on, conflicts_with; refines is the Parent relation.
+  Text is XHTML: StrictDoc 0.30.4 breaks UTF-8 Cyrillic in plain strings. Valid by the ReqIF 1.2 XSD; StrictDoc
+  imports garage61 and a dev-01 run without errors. New dependency `reqif` 0.1.0 (Apache-2.0, by the StrictDoc
+  authors; pulls `openpyxl` and `xmlschema`), imported lazily.
 - Modeler draws use cases and C4 (T-207): a second question to the model fills a form (use cases with their
   role, FRs and extends / includes; the system, its containers, external systems and relationships); code writes
   `models/uml/use_cases.puml` and `models/c4/workspace.dsl` (`dsl/plantuml.py`, `dsl/c4.py`: read and build both

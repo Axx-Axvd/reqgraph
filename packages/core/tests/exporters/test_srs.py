@@ -195,10 +195,11 @@ def test_cli_exports_the_documents_the_project_asks_for(tmp_path: Path, kroki: l
     result = CliRunner().invoke(app, args)  # garage61: standards [iso29148, gost34_602]
     assert result.exit_code == 0, result.output
     assert (tmp_path / "srs.md").is_file() and (tmp_path / "tz_gost34.md").is_file()
+    assert (tmp_path / "req.reqif").is_file()  # T-403: ReqIF goes with the documents
     only = CliRunner().invoke(app, [*args, "--out", str(tmp_path / "tz"), "--doc", "tz"])
     assert only.exit_code == 0 and not (tmp_path / "tz" / "srs.md").exists()
     bad = CliRunner().invoke(app, [*args, "--doc", "gost19"])
-    assert bad.exit_code == 2 and "srs, tz, tz19" in bad.output
+    assert bad.exit_code == 2 and "srs, tz, tz19, reqif" in bad.output
     program = CliRunner().invoke(app, [*args, "--out", str(tmp_path / "p"), "--doc", "tz19"])
     assert program.exit_code == 0 and (tmp_path / "p" / "tz_gost19.md").is_file()
 

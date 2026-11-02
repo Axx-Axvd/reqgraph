@@ -155,13 +155,17 @@ def export(
     ] = False,
     docs: Annotated[
         str,
-        typer.Option("--doc", help="srs, tz, tz19, comma-separated; default: project.standards."),
+        typer.Option(
+            "--doc", help="srs, tz, tz19, reqif, comma-separated; default: standards + reqif."
+        ),
     ] = "",
 ) -> None:
-    """Write the SRS and the TZ by GOST 34.602 and 19.201 as Markdown and DOCX (T-401, T-407)."""
+    """Write the SRS and the TZ by GOST 34.602 and 19.201 as Markdown and DOCX, and the
+    requirements as ReqIF (T-401, T-407, T-403)."""
     import asyncio
 
-    from reqgraph.exporters.srs import DOCUMENTS, documents_of, export_documents
+    from reqgraph.exporters.reqif import write_reqif
+    from reqgraph.exporters.srs import DOCUMENTS, export_documents, exports_of
     from reqgraph.graph.store import FileStore, StoreError
 
     chosen = [f.strip() for f in formats.split(",") if f.strip()]
@@ -174,14 +178,21 @@ def export(
     except StoreError as exc:
         typer.echo(f"проект не прочитан: {exc}", err=True)
         raise typer.Exit(2) from None
-    wanted = [d.strip() for d in docs.split(",") if d.strip()] or documents_of(project)
-    if any(d not in DOCUMENTS for d in wanted):
-        typer.echo(f"--doc: нужно одно или несколько из srs, tz, tz19, а не {docs!r}", err=True)
+    wanted = [d.strip() for d in docs.split(",") if d.strip()] or exports_of(project)
+    if any(d not in DOCUMENTS and d != "reqif" for d in wanted):
+        typer.echo(
+            f"--doc: нужно одно или несколько из srs, tz, tz19, reqif, а не {docs!r}", err=True
+        )
         raise typer.Exit(2)
     target = out or path / "exports"
-    written = asyncio.run(
-        export_documents(project, target, wanted, chosen, offline=offline)  # type: ignore[arg-type]
-    )
+    documents = [d for d in wanted if d != "reqif"]
+    written = []
+    if documents:
+        written += asyncio.run(
+            export_documents(project, target, documents, chosen, offline=offline)  # type: ignore[arg-type]
+        )
+    if "reqif" in wanted:
+        written.append(write_reqif(project, target))  # no schemes, no pandoc
     for file in written:
         typer.echo(f"записано: {file}")
 
