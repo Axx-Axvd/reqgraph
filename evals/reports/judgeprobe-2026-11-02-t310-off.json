@@ -1,0 +1,463 @@
+{
+ "model": "openrouter/qwen/qwen3.8-27b",
+ "reasoning": "off",
+ "all": {
+  "references": 43,
+  "errors": 0,
+  "kappa": 0.815,
+  "agreement": 0.907,
+  "kappa_3": 0.734,
+  "output_tokens": 3597,
+  "cost_usd": 0.013787
+ },
+ "pairs-results-2026-10-28-free-check-dev03": {
+  "references": 28,
+  "errors": 0,
+  "kappa": 0.858,
+  "agreement": 0.929,
+  "kappa_3": 0.764,
+  "output_tokens": 2332,
+  "cost_usd": 0.008957
+ },
+ "pairs-results-2026-10-27-free-v8-levels": {
+  "references": 15,
+  "errors": 0,
+  "kappa": 0.727,
+  "agreement": 0.867,
+  "kappa_3": 0.674,
+  "output_tokens": 1265,
+  "cost_usd": 0.00483
+ },
+ "rows": [
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-002",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1067,
+   "output_tokens": 78,
+   "cost_usd": 0.00030629999999999996
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-003",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1115,
+   "output_tokens": 88,
+   "cost_usd": 0.00033225
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-006",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1078,
+   "output_tokens": 95,
+   "cost_usd": 0.000339825
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-007",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1067,
+   "output_tokens": 77,
+   "cost_usd": 0.00030442499999999993
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-008",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1085,
+   "output_tokens": 75,
+   "cost_usd": 0.000303375
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-009",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1058,
+   "output_tokens": 82,
+   "cost_usd": 0.00031245
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-013",
+   "human": "partial",
+   "judge": "partial",
+   "input_tokens": 1086,
+   "output_tokens": 89,
+   "cost_usd": 0.000329775
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-014",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1090,
+   "output_tokens": 84,
+   "cost_usd": 0.000321
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-015",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1117,
+   "output_tokens": 74,
+   "cost_usd": 0.00030629999999999996
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-016",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1109,
+   "output_tokens": 79,
+   "cost_usd": 0.00031447500000000004
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-018",
+   "human": "partial",
+   "judge": "none",
+   "input_tokens": 1090,
+   "output_tokens": 89,
+   "cost_usd": 0.000330375
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-027",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1081,
+   "output_tokens": 104,
+   "cost_usd": 0.00035715
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-028",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1094,
+   "output_tokens": 80,
+   "cost_usd": 0.00031410000000000005
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-033",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1089,
+   "output_tokens": 91,
+   "cost_usd": 0.000333975
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-035",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1113,
+   "output_tokens": 79,
+   "cost_usd": 0.000315075
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-036",
+   "human": "none",
+   "judge": "partial",
+   "input_tokens": 1097,
+   "output_tokens": 87,
+   "cost_usd": 0.00032767499999999993
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-038",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1092,
+   "output_tokens": 83,
+   "cost_usd": 0.00031942499999999997
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-040",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1084,
+   "output_tokens": 75,
+   "cost_usd": 0.000303225
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-041",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1110,
+   "output_tokens": 77,
+   "cost_usd": 0.000310875
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-043",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1102,
+   "output_tokens": 78,
+   "cost_usd": 0.00031154999999999996
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-044",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1114,
+   "output_tokens": 80,
+   "cost_usd": 0.0003171
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-047",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1117,
+   "output_tokens": 81,
+   "cost_usd": 0.00031942499999999997
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-048",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1091,
+   "output_tokens": 77,
+   "cost_usd": 0.00030802499999999997
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-049",
+   "human": "full",
+   "judge": "partial",
+   "input_tokens": 1072,
+   "output_tokens": 96,
+   "cost_usd": 0.00034079999999999994
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-052",
+   "human": "full",
+   "judge": "partial",
+   "input_tokens": 1089,
+   "output_tokens": 85,
+   "cost_usd": 0.000322725
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-054",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1088,
+   "output_tokens": 88,
+   "cost_usd": 0.0003282
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-057",
+   "human": "partial",
+   "judge": "partial",
+   "input_tokens": 1095,
+   "output_tokens": 90,
+   "cost_usd": 0.000333
+  },
+  {
+   "set": "pairs-results-2026-10-28-free-check-dev03",
+   "run": "dev-03-cooperative-M2-r1",
+   "hidden_id": "H-058",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1073,
+   "output_tokens": 71,
+   "cost_usd": 0.000294075
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-cooperative-M2-r1",
+   "hidden_id": "H-004",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1073,
+   "output_tokens": 92,
+   "cost_usd": 0.00033345
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-cooperative-M2-r1",
+   "hidden_id": "H-005",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1053,
+   "output_tokens": 87,
+   "cost_usd": 0.000321075
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-cooperative-M2-r1",
+   "hidden_id": "H-012",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1107,
+   "output_tokens": 84,
+   "cost_usd": 0.00032355
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-cooperative-M2-r1",
+   "hidden_id": "H-014",
+   "human": "partial",
+   "judge": "none",
+   "input_tokens": 1115,
+   "output_tokens": 93,
+   "cost_usd": 0.000341625
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-cooperative-M2-r1",
+   "hidden_id": "H-015",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1097,
+   "output_tokens": 83,
+   "cost_usd": 0.00032017499999999996
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-cooperative-M2-r1",
+   "hidden_id": "H-018",
+   "human": "full",
+   "judge": "partial",
+   "input_tokens": 1111,
+   "output_tokens": 91,
+   "cost_usd": 0.000337275
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-contradictory-M2-r1",
+   "hidden_id": "H-004",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1082,
+   "output_tokens": 83,
+   "cost_usd": 0.00031792499999999994
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-contradictory-M2-r1",
+   "hidden_id": "H-007",
+   "human": "full",
+   "judge": "none",
+   "input_tokens": 1090,
+   "output_tokens": 69,
+   "cost_usd": 0.000292875
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-contradictory-M2-r1",
+   "hidden_id": "H-008",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1114,
+   "output_tokens": 75,
+   "cost_usd": 0.000307725
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-contradictory-M2-r1",
+   "hidden_id": "H-011",
+   "human": "full",
+   "judge": "full",
+   "input_tokens": 1106,
+   "output_tokens": 90,
+   "cost_usd": 0.00033465
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-vague-M2-r1",
+   "hidden_id": "H-005",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1059,
+   "output_tokens": 79,
+   "cost_usd": 0.000306975
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-vague-M2-r1",
+   "hidden_id": "H-018",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1107,
+   "output_tokens": 93,
+   "cost_usd": 0.00034042499999999994
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-vague-M2-r1",
+   "hidden_id": "H-019",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1125,
+   "output_tokens": 80,
+   "cost_usd": 0.00031875
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-vague-M2-r1",
+   "hidden_id": "H-024",
+   "human": "none",
+   "judge": "none",
+   "input_tokens": 1064,
+   "output_tokens": 81,
+   "cost_usd": 0.000311475
+  },
+  {
+   "set": "pairs-results-2026-10-27-free-v8-levels",
+   "run": "dev-01-vague-M2-r1",
+   "hidden_id": "H-025",
+   "human": "partial",
+   "judge": "partial",
+   "input_tokens": 1087,
+   "output_tokens": 85,
+   "cost_usd": 0.00032242499999999994
+  }
+ ]
+}

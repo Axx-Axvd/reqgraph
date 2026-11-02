@@ -1,0 +1,326 @@
+[
+ {
+  "case": "dev-01 Q1",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-022",
+   "H-023",
+   "H-024"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.0008514749999999999,
+  "input_tokens": 1964,
+  "output_tokens": 297
+ },
+ {
+  "case": "dev-01 Q1",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-022",
+   "H-023",
+   "H-024"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.000697725,
+  "input_tokens": 1964,
+  "output_tokens": 215
+ },
+ {
+  "case": "dev-01 Q3",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-015",
+   "H-016",
+   "H-017"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.0013422750000000002,
+  "input_tokens": 2036,
+  "output_tokens": 553
+ },
+ {
+  "case": "dev-01 Q3",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-015",
+   "H-016",
+   "H-017"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.0014379,
+  "input_tokens": 2036,
+  "output_tokens": 604
+ },
+ {
+  "case": "dev-01 Q6",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-018",
+   "H-019",
+   "H-020"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.00152325,
+  "input_tokens": 1980,
+  "output_tokens": 654
+ },
+ {
+  "case": "dev-01 Q6",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-018",
+   "H-019",
+   "H-020"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.00123075,
+  "input_tokens": 1980,
+  "output_tokens": 498
+ },
+ {
+  "case": "dev-01 Q7",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-007",
+   "H-010"
+  ],
+  "found": 2,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.003251625,
+  "input_tokens": 2015,
+  "output_tokens": 1573
+ },
+ {
+  "case": "dev-01 Q7",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-007",
+   "H-010"
+  ],
+  "found": 2,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.005681625,
+  "input_tokens": 2015,
+  "output_tokens": 2869
+ },
+ {
+  "case": "dev-01 Q8",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [],
+  "found": 0,
+  "expected": 0,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.002298,
+  "input_tokens": 1995,
+  "output_tokens": 1066
+ },
+ {
+  "case": "dev-01 Q8",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [],
+  "found": 0,
+  "expected": 0,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.002082375,
+  "input_tokens": 1995,
+  "output_tokens": 951
+ },
+ {
+  "case": "dev-02 Q5",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-001",
+   "H-002",
+   "H-003"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.0008920499999999999,
+  "input_tokens": 2547,
+  "output_tokens": 272
+ },
+ {
+  "case": "dev-02 Q5",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-001",
+   "H-002",
+   "H-003"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.001257675,
+  "input_tokens": 2547,
+  "output_tokens": 467
+ },
+ {
+  "case": "dev-02 Q7",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-011",
+   "H-012",
+   "H-013"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.001524375,
+  "input_tokens": 2550,
+  "output_tokens": 609
+ },
+ {
+  "case": "dev-02 Q7",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-011",
+   "H-012",
+   "H-013"
+  ],
+  "found": 3,
+  "expected": 3,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.001389375,
+  "input_tokens": 2550,
+  "output_tokens": 537
+ },
+ {
+  "case": "dev-02 Q8",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-030",
+   "H-031",
+   "H-011"
+  ],
+  "found": 2,
+  "expected": 3,
+  "wrong": 1,
+  "repeat": 0,
+  "cost_usd": 0.0030334499999999996,
+  "input_tokens": 2548,
+  "output_tokens": 1414
+ },
+ {
+  "case": "dev-02 Q8",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-030",
+   "H-031",
+   "H-011"
+  ],
+  "found": 2,
+  "expected": 3,
+  "wrong": 1,
+  "repeat": 0,
+  "cost_usd": 0.0041322,
+  "input_tokens": 2548,
+  "output_tokens": 2000
+ },
+ {
+  "case": "dev-02 Q9",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-040",
+   "H-038"
+  ],
+  "found": 1,
+  "expected": 2,
+  "wrong": 1,
+  "repeat": 0,
+  "cost_usd": 0.0030179250000000003,
+  "input_tokens": 2557,
+  "output_tokens": 1405
+ },
+ {
+  "case": "dev-02 Q9",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-040"
+  ],
+  "found": 1,
+  "expected": 2,
+  "wrong": 0,
+  "repeat": 0,
+  "cost_usd": 0.0054048,
+  "input_tokens": 2557,
+  "output_tokens": 2678
+ },
+ {
+  "case": "dev-02 Q11",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 0,
+  "ids": [
+   "H-012",
+   "H-013"
+  ],
+  "found": 0,
+  "expected": 0,
+  "wrong": 2,
+  "repeat": 0,
+  "cost_usd": 0.005869575,
+  "input_tokens": 2543,
+  "output_tokens": 2927
+ },
+ {
+  "case": "dev-02 Q11",
+  "model": "openrouter/qwen/qwen3.8-27b",
+  "rep": 1,
+  "ids": [
+   "H-020"
+  ],
+  "found": 0,
+  "expected": 0,
+  "wrong": 0,
+  "repeat": 1,
+  "cost_usd": 0.0047145749999999995,
+  "input_tokens": 2543,
+  "output_tokens": 2311
+ }
+]

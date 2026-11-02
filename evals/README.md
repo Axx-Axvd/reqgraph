@@ -42,6 +42,15 @@ uv run python -m reqgraph_evals.simprobe --models openrouter/qwen/qwen3.8-27b,gr
 
 Повторяет шаг выбора симулятора на 10 вопросах из диалогов T-305 v3 (`reports/dialogs/interview-2026-10-29-free-coverage-t305-12-v3*`) с тем же промптом и тем же правилом кода, что `Stakeholder.answer`. Для каждого вопроса заданы требования, которые хороший выбор называет; в отчёте на вызов — выбранные id, сколько из ожидаемых названо, сколько лишних нерассказанных (подсказка без вопроса), сколько повторов, токены и $. Нужна сеть.
 
+## Режим рассуждений симулятора и судьи (T-310)
+
+```bash
+uv run python -m reqgraph_evals.simprobe --reasoning off --out reports/simprobe-<дата>-off.json   # on | low | off
+uv run python -m reqgraph_evals.judgeprobe --reasoning off --out reports/judgeprobe-<дата>-off.json
+```
+
+`--reasoning` подставляет параметр OpenRouter `reasoning` для измеряемой модели только на время прогона (`on` — без параметра, как у провайдера по умолчанию; `low` — короткие рассуждения; `off` — без рассуждений); постоянная настройка — `model_settings` в `roles.yaml`. `judgeprobe` заново решает эталоны, размеченные автором (`labels/*check-dev03*`, `labels/*v8-levels*`), с теми же кандидатами и промптом судьи и считает каппу с человеком, токены и $. Нужна сеть.
+
 ## Метрики и results.csv (T-304)
 
 ```bash

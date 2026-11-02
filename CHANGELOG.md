@@ -8,6 +8,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Per-model request parameters in `roles.yaml` (`model_settings`, T-310), sent as `extra_body`. The simulator and
+  the judge (Qwen3.8-27B on OpenRouter) run without reasoning: in a measurement of three modes the simulator named
+  as many hidden requirements and the judge agreed with the author's labels as well, at 1/6-1/7 of the cost.
+  `simprobe --reasoning` and the new `judgeprobe` (the judge again on the author's labelled references) measure it.
 - Typical and unique hidden requirements (T-308): an optional `group` of a hidden requirement, the labelling
   rule in `evals/scenarios/README.md` (written before the labels), the dev references labelled; the scenario check
   wants every dev requirement labelled and a test reference all or none. `results-*.csv` gets hidden, matched and
