@@ -47,11 +47,13 @@ class Client:
         self.details = details
         self.mistakes = mistakes  # does the model name the wrong number it is asked for
         self.replies: list[str] = []  # the reply prompts
+        self.selects: list[str] = []  # the select prompts
 
     def model(self) -> FunctionModel:
         def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
             prompt = str(messages[-1].parts[-1].content)  # type: ignore[union-attr]
             if "только выбрать" in prompt:
+                self.selects.append(prompt)
                 ids = self.picks.pop(0) if self.picks else []
                 data: dict[str, Any] = {"ids": ids, "details": self.details}
             else:
@@ -139,6 +141,41 @@ async def test_asked_again_the_client_repeats_instead_of_forgetting() -> None:
     assert [t.mode for t in again.told] == ["repeat"] and again.revealed == []
     told = reply_part(client.replies[1])
     assert "уже шла речь" in told and "3 часа" in told
+
+
+def section(prompt: str, title: str) -> str:
+    return prompt.split(title)[1].split("# ")[0]
+
+
+async def test_the_choice_sees_what_is_told_apart_from_what_is_not() -> None:
+    client = Client(["H-001"], [])
+    sim = Stakeholder(SCENARIO, model=client.model())
+    await sim.answer("Когда можно отменить запись?")
+    await sim.answer("Что ещё важно?")
+    untold = section(client.selects[1], "# Ещё не рассказано")
+    told = section(client.selects[1], "# Уже рассказано")
+    assert "H-001" in told and "H-001" not in untold
+    assert all(i in untold and i not in told for i in ("H-002", "H-003", "H-004"))
+
+
+async def test_on_a_topic_the_untold_go_first_and_repeats_are_dropped() -> None:
+    client = Client(["H-001"], ["H-001", "H-002"], ["H-001", "H-002", "H-003", "H-004"])
+    sim = Stakeholder(SCENARIO, model=client.model())
+    await sim.answer("Когда можно отменить запись?")
+    second = await sim.answer("Как вы работаете с записью?")
+    assert [(t.id, t.mode) for t in second.told] == [("H-002", "tell")]
+    third = await sim.answer("Расскажите обо всём остальном.")
+    assert [t.id for t in third.told] == ["H-003", "H-004"]  # H-001 and H-002 are told already
+
+
+async def test_what_the_brief_says_counts_as_told() -> None:
+    """dev-02 T-305: on «опишите основные сценарии» the choice named the brief's steps, not news."""
+    client = Client(["H-005", "H-002"])
+    sim = Stakeholder(SCENARIO, model=client.model())
+    answer = await sim.answer("Опишите, как проходит запись.")
+    assert "H-005" in section(client.selects[0], "# Уже рассказано")
+    assert "H-005" not in section(client.selects[0], "# Ещё не рассказано")
+    assert [t.id for t in answer.told] == ["H-002"]
 
 
 def test_a_law_number_is_not_a_quantity_to_get_wrong() -> None:
