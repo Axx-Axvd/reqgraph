@@ -106,9 +106,9 @@ reqgraph/
 │   │   └── prompts/           # *.md, по одному на агента и задачу
 │   ├── llm/                   # router.py (pydantic-ai) roles.yaml
 │   ├── exporters/             # srs.py tz_gost.py reqif.py markdown.py
-│   │   └── templates/         # srs.md.j2 tz_gost34.md.j2 reference.docx
+│   │   └── templates/         # document.md.j2 (SRS и оба ТЗ) reference.docx
 │   ├── sim/                   # stakeholder.py judge.py
-│   ├── standards/             # iso29148_srs.yaml gost34_602.yaml
+│   ├── standards/             # iso29148_srs.yaml gost34_602.yaml gost19_201.yaml content.py
 │   │                          # iso25010.yaml vague_terms_ru_en.yaml
 │   └── cli.py
 ├── packages/core/tests/       # unit/ golden/ fixtures/{good,bad}/ cassettes/

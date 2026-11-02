@@ -8,6 +8,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- TZ for a program by GOST 19.201-78 (T-407): `reqgraph export --doc tz19` (or `gost19_201` in
+  `project.standards`) writes `exports/tz_gost19.md|docx` from the same graph and schemes; the structure
+  `standards/gost19_201.yaml` has the eight sections of the standard with their contents as subsections and
+  appendices A (models) and B (traceability), names only, to be checked by the author. TPL-003 checks its required
+  sections. **Public schema `project-config` stays version 1:** `project.standards` accepts `gost19_201` in
+  addition, every earlier `reqgraph.yaml` stays valid, nothing to migrate.
 - TZ by GOST 34.602-2020 (T-402): `reqgraph export` writes `exports/tz_gost34.md|docx` next to the SRS from the same
   graph (`--doc srs,tz`, by default `project.standards`); the structure `standards/gost34_602.yaml` has every
   section of the standard (names only, to be checked by the author); NFR, constraints, C4 elements and functions go
@@ -97,6 +103,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Export: figures are numbered by the appendix they are in; the TZ by GOST 34.602 had «Рисунок Б.n» in
+  appendix A (T-407).
 - LLM ladder: a provider that blocks an answer (Gemini `finish_reason: content_filter: PROHIBITED_CONTENT` on an
   ordinary repair prompt) no longer ends the run; the next model of the ladder answers.
 - `structured()` waits and asks again when every model of a ladder answers 429 (free tiers count tokens per
