@@ -96,15 +96,14 @@ def test_formats_are_strict() -> None:
             {"id": "dev-09", "title": "t", "domain": "d", "size": "S", "split": "test"}
         )
     raw = yaml.safe_load((sc.SCENARIOS / "dev-02" / "hidden.yaml").read_text(encoding="utf-8"))
-    assert {r["source"] for r in sc.Hidden.model_validate(raw).model_dump()["requirements"]} == {
-        "own"
-    }
+    sources = {r["source"] for r in sc.Hidden.model_validate(raw).model_dump()["requirements"]}
+    assert "own" in sources and all(s == "own" or s.startswith("PURE:") for s in sources)
 
 
 def test_cli_checks_without_printing_test_texts() -> None:
     result = CliRunner().invoke(app, ["scenarios"])
     assert result.exit_code == 0, result.output
-    assert "dev-01: S, требований 25" in result.output and "test-12: L" in result.output
+    assert "dev-01: S, требований 30" in result.output and "test-12: L" in result.output
     test_brief = (sc.SCENARIOS / "test-01" / "brief.md").read_text(encoding="utf-8")
     assert test_brief.splitlines()[2][:40] not in result.output
 
@@ -123,3 +122,15 @@ def test_groups_are_all_or_nothing_and_dev_is_labelled() -> None:
     assert any("H-002" in p for p in found)  # started labelling: every one needs a group
     with pytest.raises(ValueError):
         type(items[0]).model_validate({**items[0].model_dump(), "group": "common"})
+
+
+def test_dev_references_hold_requirements_from_pure() -> None:
+    """T-307: part of each dev reference is retold from real SRS documents of the PURE set."""
+    docs = {"dev-01": "2005-microcare", "dev-02": "2007-e-store", "dev-03": "2009-library"}
+    need = {"dev-01": 4, "dev-02": 1, "dev-03": 4}
+    for scenario_id, doc in docs.items():
+        items = sc.load_scenario(scenario_id).hidden.requirements
+        pure = [r for r in items if r.source.startswith("PURE:")]
+        assert len(pure) >= need[scenario_id], scenario_id
+        assert all(r.source.startswith(f"PURE:{doc}#") for r in pure), scenario_id
+        assert all(not r.in_brief for r in pure)  # hidden, to be found in the interview

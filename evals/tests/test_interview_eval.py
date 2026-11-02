@@ -55,7 +55,7 @@ async def test_a_dialog_with_the_simulator_is_recorded(tmp_path: Path) -> None:
         keep=tmp_path / "runs",
     )
     assert row.error == "" and row.turns == 2 and row.end == "limit"
-    assert (row.revealed, row.hidden) == (1, 20)  # H-013 once; 5 of 25 are in the brief
+    assert (row.revealed, row.hidden) == (1, 25)  # H-013 once; 5 of 30 are in the brief
     assert row.off_topic == 0  # H-013 is about exceptions, as the question
     assert row.empty == 1  # the second answer only repeats H-013
     assert (row.revealed_typical, row.revealed_unique) == (0, 1)  # H-013 is unique (T-308)
@@ -71,7 +71,7 @@ async def test_a_dialog_with_the_simulator_is_recorded(tmp_path: Path) -> None:
     write_csv([row], tmp_path / "interview.csv")
     with (tmp_path / "interview.csv").open(encoding="utf-8") as fh:
         assert next(iter(csv.DictReader(fh))).keys() == set(CSV_FIELDS)
-    line = "| dev-01 | cooperative | 1 | 2 | limit | 1/20 (5%) | 0 / 1 | 1 |"
+    line = "| dev-01 | cooperative | 1 | 2 | limit | 1/25 (4%) | 0 / 1 | 1 |"
     assert line in summary_markdown([row])
 
 
