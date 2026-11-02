@@ -19,6 +19,7 @@ dependencies = [
     "langgraph==1.2.16",
     "jinja2==3.1.6",
     "langgraph-checkpoint-sqlite==3.1.2",
+    "pypandoc-binary==1.17",  # SRS and TZ to DOCX (ADR-016); pandoc runs as a separate program
 ]
 
 [project.scripts]
