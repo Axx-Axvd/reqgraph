@@ -1,0 +1,35 @@
+# Структура ТЗ на программу по ГОСТ 19.201-78 (ЕСПД, T-407). Только названия разделов своими
+# словами (ADR-012); черновик Claude по памяти — названия сверяет автор по тексту ГОСТ (бэклог, [you]).
+# ГОСТ задаёт восемь разделов и перечисляет, что в каждом указать; содержание разделов 1–3 вынесено
+# в подразделы, чтобы каждый пункт заполнялся и проверялся отдельно.
+# fill — те же виды, что в gost34_602.yaml; ИСО 25010 разложен так, что каждое НФТ попадает в один
+# раздел: надёжность — 4.2, совместимость — 4.5, остальные характеристики — 4.8.
+# required: true — раздел обязан быть заполнен (проверка TPL-003).
+document: tz_gost19
+title: Техническое задание на разработку программы
+sections:
+  - {id: SEC-TZ19-1,   title: Введение,                                                   fill: none}
+  - {id: SEC-TZ19-1.1, title: Наименование программы,                                     fill: project,           required: true}
+  - {id: SEC-TZ19-1.2, title: Краткая характеристика области применения программы,        fill: llm:scope,         required: true}
+  - {id: SEC-TZ19-2,   title: Основания для разработки,                                   fill: none}
+  - {id: SEC-TZ19-2.1, title: "Документы, на основании которых ведётся разработка",       fill: llm:references}
+  - {id: SEC-TZ19-2.2, title: "Организация, утвердившая документ, и дата его утверждения", fill: contract}
+  - {id: SEC-TZ19-2.3, title: Наименование и условное обозначение темы разработки,        fill: project}
+  - {id: SEC-TZ19-3,   title: Назначение разработки,                                      fill: none}
+  - {id: SEC-TZ19-3.1, title: Функциональное назначение программы,                        fill: llm:purpose,       required: true}
+  - {id: SEC-TZ19-3.2, title: Эксплуатационное назначение программы,                      fill: nodes:ACT}
+  - {id: SEC-TZ19-4,   title: Требования к программе,                                     fill: none}
+  - {id: SEC-TZ19-4.1, title: Требования к функциональным характеристикам,                fill: features,          required: true}
+  - {id: SEC-TZ19-4.2, title: Требования к надёжности,                                    fill: "nfr:reliability"}
+  - {id: SEC-TZ19-4.3, title: Условия эксплуатации,                                       fill: llm:environment+nodes:ACT}
+  - {id: SEC-TZ19-4.4, title: Требования к составу и параметрам технических средств,      fill: llm:hardware}
+  - {id: SEC-TZ19-4.5, title: Требования к информационной и программной совместимости,    fill: "interfaces+nfr:compatibility+con:tech"}
+  - {id: SEC-TZ19-4.6, title: Требования к маркировке и упаковке,                         fill: not_applicable}
+  - {id: SEC-TZ19-4.7, title: Требования к транспортированию и хранению,                  fill: not_applicable}
+  - {id: SEC-TZ19-4.8, title: Специальные требования,                                     fill: "nfr:functional_suitability,performance_efficiency,usability,interaction_capability,security,maintainability,portability,flexibility,safety+con:law+llm:other"}
+  - {id: SEC-TZ19-5,   title: Требования к программной документации,                      fill: llm:user_docs}
+  - {id: SEC-TZ19-6,   title: Технико-экономические показатели,                           fill: "nodes:BR+con:budget"}
+  - {id: SEC-TZ19-7,   title: Стадии и этапы разработки,                                  fill: "con:deadline+contract"}
+  - {id: SEC-TZ19-8,   title: Порядок контроля и приёмки,                                 fill: acceptance,        required: true}
+  - {id: SEC-TZ19-A,   title: Приложение А. Модели программы,                             fill: models}
+  - {id: SEC-TZ19-B,   title: Приложение Б. Трассировка требований,                      fill: trace}

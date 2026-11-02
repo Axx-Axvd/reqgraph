@@ -1,5 +1,5 @@
-{#- SRS (T-401, T-408, ADR-016): Markdown for people and for pandoc. Variables: title, project,
-    sections (with their schemes), docx (true — the Markdown for pandoc: raw OpenXML page breaks
+{#- SRS and TZ (T-401, T-408, T-402, T-407, ADR-016): Markdown for people and for pandoc.
+    Variables: title, project, sections (with their schemes; s.figure — the figure prefix), docx (true — the Markdown for pandoc: raw OpenXML page breaks
     around schemes). -#}
 # {{ title }}
 
@@ -31,10 +31,10 @@
 {% endif %}
 
 {% if d.path %}
-![Рисунок Б.{{ d.number }} — {% if d.id.startswith("PRC") %}{{ d.id }} · {% endif %}{{ d.name }}]({{ d.path }}){% if docx %}{width={{ d.width_cm }}cm height={{ d.height_cm }}cm}{% endif %}
+![Рисунок {{ s.figure }}{{ d.number }} — {% if d.id.startswith("PRC") %}{{ d.id }} · {% endif %}{{ d.name }}]({{ d.path }}){% if docx %}{width={{ d.width_cm }}cm height={{ d.height_cm }}cm}{% endif %}
 
 {% else %}
-*Рисунок Б.{{ d.number }} — {% if d.id.startswith("PRC") %}{{ d.id }} · {% endif %}{{ d.name }}: схема не отрисована ({{ d.note }}).*
+*Рисунок {{ s.figure }}{{ d.number }} — {% if d.id.startswith("PRC") %}{{ d.id }} · {% endif %}{{ d.name }}: схема не отрисована ({{ d.note }}).*
 {% endif %}
 {% if docx %}
 

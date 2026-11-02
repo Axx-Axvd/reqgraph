@@ -42,7 +42,7 @@ reqgraph treats requirements the way software teams treat code. Code is not acce
 
 To make this possible, all artifacts are stored in one graph. Every requirement, process step and interview turn is a separate node with its own identifier, and the edges between nodes record origin and implementation: a requirement is derived from a given turn, a process step implements a given requirement. Diagrams are also stored as text (JSON for processes, DBML for data, PlantUML and Structurizr for other models), so they can be parsed and checked by a program. The language model does not write BPMN: it describes the process in a simplified format, and a compiler builds the BPMN from it, so the diagram always conforms to the standard.
 
-There are 22 checks, 21 of which are working now; the last one arrives with the GOST export. They detect specific defects: an invalid diagram file, a process with no way out, wording without a measurable criterion, a requirement not implemented in any diagram, a diagram element with no requirement behind it. The same input always gives the same result.
+There are 23 checks. They detect specific defects: an invalid diagram file, a process with no way out, wording without a measurable criterion, a requirement not implemented in any diagram, a diagram element with no requirement behind it. The same input always gives the same result.
 
 The interview is not conducted from memory either. A coverage tracker counts what is already known across nine areas (goals, stakeholders, scenarios, exceptions, data, rules, integrations, quality requirements, constraints), and the next question targets the least covered area.
 
@@ -77,7 +77,7 @@ A run on a bakery brief:
 | Interview | from memory; exceptions and quality requirements are missed | the next question is chosen by gaps in coverage |
 | Origin of a requirement | cannot be traced after a week | every requirement links to the client's answer |
 | Diagrams | drawn separately, drift from the text | stored as code, linked to requirements, checked |
-| Text from a language model | not checked | 22 checks without AI; errors go back to the agents |
+| Text from a language model | not checked | 23 checks without AI; errors go back to the agents |
 | SRS and GOST specification | filled in twice by hand | one graph, two documents |
 | First draft | about a day | target: about an hour |
 

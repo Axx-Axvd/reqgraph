@@ -26,7 +26,7 @@ from reqgraph.checks.base import Finding, Owner
 from reqgraph.checks.report import CIReport
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.llm.router import BudgetExceeded
-from reqgraph.standards import Section, load_structure
+from reqgraph.standards import STRUCTURES, Section, load_structure
 
 MAX_TASKS = 10  # repair tasks per round (03_agents)
 STUCK_ROUNDS = 2  # the same errors after this many repair rounds in a row -> needs_human
@@ -69,8 +69,8 @@ def stuck(history: Sequence[Sequence[str]]) -> bool:
 
 
 def _section(section_id: str) -> Section | None:
-    """A section of the SRS or of the TZ by its id (TPL-001, TPL-002)."""
-    for template in ("iso29148_srs", "gost34_602"):
+    """A section of any document by its id (TPL-001, TPL-002, TPL-003)."""
+    for template in STRUCTURES:
         for section in load_structure(template).sections:
             if section.id == section_id:
                 return section
@@ -90,7 +90,7 @@ def _kinds(section: Section) -> list[str]:
 
 def owner_of(finding: Finding) -> Owner:
     """TPL-001 on a section built from graph nodes belongs to the owner of those nodes."""
-    if finding.check_id not in ("TPL-001", "TPL-002") or not finding.node_ids:
+    if finding.check_id not in ("TPL-001", "TPL-002", "TPL-003") or not finding.node_ids:
         return finding.owner
     section = _section(finding.node_ids[0])
     if section is None:
@@ -120,7 +120,7 @@ _KIND_NAMES = {
 def explain(finding: Finding) -> str:
     """The message and hint; an empty section listed from the graph says which nodes are missing."""
     text = finding.message + (f" — {finding.hint}" if finding.hint else "")
-    if finding.check_id not in ("TPL-001", "TPL-002") or not finding.node_ids:
+    if finding.check_id not in ("TPL-001", "TPL-002", "TPL-003") or not finding.node_ids:
         return text
     section = _section(finding.node_ids[0])
     if section is None or not (_kinds(section) or section.fill == "acceptance"):

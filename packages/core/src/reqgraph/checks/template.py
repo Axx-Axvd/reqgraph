@@ -1,8 +1,9 @@
-"""TPL-001 and TPL-002: required sections of the SRS and of the TZ are filled (own structures in
-standards/, names only — ADR-012).
+"""TPL-001, TPL-002 and TPL-003: required sections of the SRS and of the TZ are filled (own
+structures in standards/, names only — ADR-012).
 
 TPL-001 checks standards/iso29148_srs.yaml (the structure after Wiegers, T-408), TPL-002 —
-standards/gost34_602.yaml (the TZ by GOST 34.602-2020, T-402). Sections the code builds are taken
+standards/gost34_602.yaml (the TZ by GOST 34.602-2020, T-402), TPL-003 — standards/gost19_201.yaml
+(the TZ for a program by GOST 19.201-78, T-407). Sections the code builds are taken
 from the graph as it is now; the connected text — from the sections the Standards agent wrote for
 the SRS, which the TZ shares. Until Standards has run there is nothing to check: skipped.
 """
@@ -72,3 +73,12 @@ class TzSections(DocumentSections):
     template = "gost34_602"
     standard = "gost34_602"
     document = "ТЗ"
+
+
+@register
+class ProgramTzSections(DocumentSections):
+    id = "TPL-003"
+    title = "разделы ТЗ на программу по ГОСТ 19.201 заполнены"
+    template = "gost19_201"
+    standard = "gost19_201"
+    document = "ТЗ на программу"

@@ -129,7 +129,8 @@
           "items": {
             "enum": [
               "iso29148",
-              "gost34_602"
+              "gost34_602",
+              "gost19_201"
             ],
             "type": "string"
           },

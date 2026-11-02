@@ -94,3 +94,26 @@ def test_tz_check_is_skipped_without_sections_or_without_the_standard() -> None:
     config = project.config.model_copy(update={"project": info})
     with pytest.raises(CheckSkipped, match="gost34_602"):
         TzSections().run(graph, CheckContext(replace(project, config=config)))
+
+
+def test_program_tz_sections_are_checked_by_tpl_003() -> None:
+    """TPL-003 (T-407): the TZ for a program by GOST 19.201 shares the Standards text too."""
+    from reqgraph.checks.template import ProgramTzSections
+
+    graph, project = with_sections()
+    info = project.config.project.model_copy(update={"standards": ["iso29148", "gost19_201"]})
+    project = replace(project, config=project.config.model_copy(update={"project": info}))
+    assert ProgramTzSections().run(graph, CheckContext(project)) == []
+    graph, _ = with_sections(empty=frozenset({"SEC-SRS-1.4"}))  # scope is empty
+    found = ProgramTzSections().run(graph, CheckContext(project.with_graph(graph)))
+    assert [f.node_ids for f in found] == [["SEC-TZ19-1.2"]] and found[0].check_id == "TPL-003"
+    assert "области применения" in found[0].message
+
+
+def test_program_tz_check_is_skipped_for_garage61() -> None:
+    """garage61 asks for the SRS and the TZ by GOST 34 only: no TPL-003 errors on it."""
+    from reqgraph.checks.template import ProgramTzSections
+
+    graph, project = with_sections()
+    with pytest.raises(CheckSkipped, match="gost19_201"):
+        ProgramTzSections().run(graph, CheckContext(project))

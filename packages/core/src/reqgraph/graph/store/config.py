@@ -27,7 +27,8 @@ class ProjectInfo(_Strict):
     name: str = Field(min_length=1)
     description: str | None = None
     reference: bool = False  # the reference project: only checks and export, no agents
-    standards: list[Literal["iso29148", "gost34_602"]] = []
+    # T-407: gost19_201 added within v1 — every earlier reqgraph.yaml stays valid
+    standards: list[Literal["iso29148", "gost34_602", "gost19_201"]] = []
     langs: list[Literal["ru", "en"]] = ["ru"]
     dsl_version: Literal[1] = 1
 

@@ -24,8 +24,8 @@
 - uv run reqgraph bpmn <процесс.json> -o <файл.bpmn>   # DSL процесса -> BPMN 2.0 (Camunda Modeler, bpmn-js)
 - REQGRAPH_UPDATE_GOLDEN=1 uv run pytest packages/core/tests/dsl packages/core/tests/exporters   # пересоздать golden BPMN и SRS после намеренной правки компилятора или шаблона
 - uv run reqgraph render <файл.dbml|.puml|.dsl|.bpmn> -o <схема.svg>   # SVG через Kroki (KROKI_URL), с кэшем
-- uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # 22 проверки, отчёт в reports/; код 1 при ошибках
-- uv run reqgraph export <проект> [--doc srs,tz] [--format md,docx] [--out <папка>] [--offline]   # SRS и ТЗ по ГОСТ 34.602: exports/srs.*, tz_gost34.* (pandoc), схемы на отдельных листах
+- uv run reqgraph check <проект> [--no-write] [--offline] [--json]   # 23 проверки, отчёт в reports/; код 1 при ошибках
+- uv run reqgraph export <проект> [--doc srs,tz,tz19] [--format md,docx] [--out <папка>] [--offline]   # SRS, ТЗ по ГОСТ 34.602 и ТЗ на программу по ГОСТ 19.201: exports/srs.*, tz_gost34.*, tz_gost19.* (pandoc), схемы на отдельных листах
 - uv run python scripts/make_reference_docx.py   # пересобрать стили Word (exporters/templates/reference.docx)
 - uv run reqgraph init <папка> --name <название> --brief <бриф.md> [--id] [--profile]   # новый проект: reqgraph.yaml и brief.md
 - uv run reqgraph run <папка> [--brief] [--budget-usd] [--max-iter] [--reviewer llm|template] [--offline] [--no-write] [--json]   # бриф → агенты → проверки → ремонт (нужна сеть); код 0 / 1 ошибки остались / 2 не запустился

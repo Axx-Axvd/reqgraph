@@ -177,6 +177,7 @@ def test_tz_of_garage61_matches_the_golden_file(tmp_path: Path, kroki: list[str]
     assert "Заполняется заказчиком при заключении договора." in text
     assert "Требования не предъявляются." in text
     assert "## Приложение А. Модели системы" in text and "](img/PRC-01.svg)" in text
+    assert "![Рисунок А.1 — PRC-01 · " in text and "Рисунок Б." not in text
 
 
 def test_tz_docx_puts_every_bpmn_on_a_landscape_page(tmp_path: Path, kroki: list[str]) -> None:
@@ -197,4 +198,42 @@ def test_cli_exports_the_documents_the_project_asks_for(tmp_path: Path, kroki: l
     only = CliRunner().invoke(app, [*args, "--out", str(tmp_path / "tz"), "--doc", "tz"])
     assert only.exit_code == 0 and not (tmp_path / "tz" / "srs.md").exists()
     bad = CliRunner().invoke(app, [*args, "--doc", "gost19"])
-    assert bad.exit_code == 2 and "srs, tz" in bad.output
+    assert bad.exit_code == 2 and "srs, tz, tz19" in bad.output
+    program = CliRunner().invoke(app, [*args, "--out", str(tmp_path / "p"), "--doc", "tz19"])
+    assert program.exit_code == 0 and (tmp_path / "p" / "tz_gost19.md").is_file()
+
+
+def test_program_tz_of_garage61_matches_the_golden_file(tmp_path: Path, kroki: list[str]) -> None:
+    """T-407: the TZ for a program by GOST 19.201 from the same graph and the same schemes."""
+    written = asyncio.run(srs.export_documents(garage61(), tmp_path, ["tz19"], ["md"]))
+    assert tmp_path / "tz_gost19.md" in written
+    text = (tmp_path / "tz_gost19.md").read_text(encoding="utf-8")
+    golden = GOLDEN / "garage61_tz_gost19.md"
+    if os.environ.get("REQGRAPH_UPDATE_GOLDEN") == "1":
+        golden.write_text(text, encoding="utf-8", newline="\n")
+    assert golden.read_text(encoding="utf-8") == text, "REQGRAPH_UPDATE_GOLDEN=1"
+    assert text.startswith("# Техническое задание на разработку программы")
+    assert "### 1.1 Наименование программы" in text
+    assert "### 4.1 Требования к функциональным характеристикам" in text
+    assert "#### 4.1.1 Онлайн-запись частного клиента (UR-001)" in text
+    assert "### 4.6 Требования к маркировке и упаковке\n\nТребования не предъявляются." in text
+    assert "## Приложение А. Модели программы" in text and "](img/PRC-01.svg)" in text
+    assert "![Рисунок А.1 — PRC-01 · " in text and "Рисунок Б." not in text  # its own appendix
+
+
+def test_program_tz_docx_puts_every_bpmn_on_a_landscape_page(
+    tmp_path: Path, kroki: list[str]
+) -> None:
+    asyncio.run(srs.export_documents(garage61(), tmp_path, ["tz19"], ["docx"]))
+    with zipfile.ZipFile(tmp_path / "tz_gost19.docx") as docx:
+        xml = docx.read("word/document.xml").decode("utf-8")
+    assert xml.count('w:orient="landscape"') == 6 and "Порядок контроля и приёмки" in xml
+
+
+def test_documents_follow_the_standards_of_the_project() -> None:
+    from dataclasses import replace
+
+    project = garage61()
+    info = project.config.project.model_copy(update={"standards": ["gost19_201", "iso29148"]})
+    config = project.config.model_copy(update={"project": info})
+    assert srs.documents_of(replace(project, config=config)) == ["tz19", "srs"]
