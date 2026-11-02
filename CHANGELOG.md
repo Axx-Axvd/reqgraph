@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Simulator select step without repeats (T-309): the choice sees the hidden list split into untold (grouped by
+  area) and told, and the brief counts as told; a broad question about an area may reveal up to three untold
+  items; code keeps a repeat only when nothing new is picked. `python -m reqgraph_evals.simprobe` replays the
+  select step on questions of the T-305 dialogs.
+- Own price list in `roles.yaml` (`prices`): the cost of models genai-prices does not list (Qwen3.8-27B,
+  DeepSeek V4 Flash on OpenRouter) is counted instead of a silent zero.
+
 - Interviewer without repeats (T-305): an answer that yields no new requirement closes its area; every area gets
   a question before any is asked again, even one the brief covered; the interviewer sees the facts told about the
   areas it asks about and starts an area with a broad question; the interview ends as saturated when nothing is left
@@ -169,6 +176,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   ADR-016 (DOCX export via pandoc); ADR-015 (Streamlit demo) recorded as rejected.
 
 ### Changed
+
+- Simulator and judge run on Qwen3.8-27B through OpenRouter (paid) with Groq as the free reserve, and on the same
+  model in profile `cheap` instead of Llama 3.3 70B and GLM-5.3 Flash (author's decision of 2026-11-02, after a
+  probe of four models in the simulator's select step).
 
 - README rewritten for any visitor, in a plain professional style: purpose, approach, how it works, what changes,
   evaluation, project status; English is the main `README.md`, the Russian version is

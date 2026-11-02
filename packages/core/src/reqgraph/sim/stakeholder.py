@@ -1,8 +1,9 @@
 """The simulated client (T-302, 03_agents): answers the interviewer from hidden requirements.
 
 Two steps per answer, so the client cannot give away what it was not asked about:
-1. select — a model sees the hidden list and the question and only picks the items the question
-   is about (at most MAX_ITEMS); code checks the ids and keeps what was told;
+1. select — a model sees the hidden list, split into untold and told, and the question and only
+   picks the items the question is about (at most MAX_ITEMS); code checks the ids, puts the untold
+   first and drops repeats when the answer has something new (T-309), and keeps what was told;
 2. reply — a model writes the answer in the persona's manner and sees only the picked items.
 
 The character is code, not a prompt wish: a vague client tells an item in general words the first
@@ -89,20 +90,24 @@ class Stakeholder:
     def __post_init__(self) -> None:
         self.rng = random.Random(f"{self.seed}:{self.scenario.id}:{self.character}")
         self.items = {r.id: r for r in self.scenario.hidden.requirements}
+        self.brief = {r.id for r in self.scenario.hidden.requirements if r.in_brief}
 
     async def answer(self, question: str, history: Sequence[tuple[str, str]] = ()) -> SimAnswer:
         """The client's answer to one question; history — earlier (question, answer) pairs."""
         recent = list(history)[-RECENT:]
+        known = self.revealed | self.brief  # what the brief says is told already, not news
         selection, select_stats = await self._ask(
             "stakeholder/select",
             Selection,
             question=question,
             recent=recent[-RECENT_SELECT:],
-            items=list(self.items.values()),
-            revealed=sorted(self.revealed),
+            untold=[r for r in self.items.values() if r.id not in known],
+            told=[r for r in self.items.values() if r.id in known],
             max_items=MAX_ITEMS,
         )
-        picked = [i for i in dict.fromkeys(selection.ids) if i in self.items][:MAX_ITEMS]
+        picked = [i for i in dict.fromkeys(selection.ids) if i in self.items]
+        fresh = [i for i in picked if i not in known]
+        picked = (fresh or picked)[:MAX_ITEMS]  # a repeat only when nothing new is asked (T-309)
         told = self._modes(picked, selection.details)
         told += self._correction(told, {self.items[i].area for i in picked})
         reply, reply_stats = await self._ask(

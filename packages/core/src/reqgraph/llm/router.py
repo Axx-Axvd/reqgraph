@@ -246,7 +246,11 @@ async def structured[T](
 
     step = _answered_by(steps, result.response.model_name)
     usage = result.usage
-    list_price = None if given else _list_price(result.response)
+    list_price = None
+    if not given:  # the own price list first: genai-prices lacks some OpenRouter models
+        list_price = cfg.price(step, usage.input_tokens, usage.output_tokens)
+        if list_price is None:
+            list_price = _list_price(result.response)
     stats = CallStats(
         role=role,
         model=step.model,
