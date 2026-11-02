@@ -124,6 +124,8 @@ def _build_model(step: Step) -> Model:
     settings = ModelSettings()
     if cfg.defaults.seed is not None and provider.supports_seed:
         settings["seed"] = cfg.defaults.seed
+    if (extra := cfg.extra_body(step)) is not None:  # e.g. OpenRouter `reasoning` (T-310)
+        settings["extra_body"] = extra
     client = OpenAIProvider(base_url=base_url(provider), api_key=api_key(provider))
     model = OpenAIChatModel(step.model, provider=client, settings=settings)
     if provider.output_mode is None:
