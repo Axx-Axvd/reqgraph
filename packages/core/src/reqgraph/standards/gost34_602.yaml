@@ -1,0 +1,63 @@
+# Структура ТЗ на создание автоматизированной системы по ГОСТ 34.602-2020 (T-402): полная, со всеми
+# разделами и подразделами (решение автора 29.10). Только названия разделов своими словами
+# (ADR-012); черновик Claude по памяти — названия сверяет автор по тексту ГОСТ (бэклог, [you]).
+# fill — как в iso29148_srs.yaml, и ещё:
+#   project        — полное наименование системы из reqgraph.yaml;
+#   contract       — «заполняется заказчиком при заключении договора»;
+#   not_applicable — «требования не предъявляются»;
+#   c4             — система и контейнеры со схемы C4 с технологиями;
+#   con:<темы>     — ограничения по темам: deadline, budget, law, tech;
+#   language       — языки проекта из reqgraph.yaml;
+#   sources        — источники разработки: бриф, интервью, SRS;
+#   a+b            — несколько видов подряд;
+#   llm:<поле>     — текст Standards из разделов SRS с тем же полем.
+# required: true — раздел обязан быть заполнен (проверка TPL-002).
+document: tz_gost34
+title: Техническое задание на создание автоматизированной системы
+sections:
+  - {id: SEC-TZ-1,      title: Общие положения,                                                    fill: none}
+  - {id: SEC-TZ-1.1,    title: Полное наименование системы и её условное обозначение,              fill: project,                  required: true}
+  - {id: SEC-TZ-1.2,    title: "Наименования организаций заказчика и разработчика, их реквизиты",  fill: contract}
+  - {id: SEC-TZ-1.3,    title: "Перечень документов, на основании которых создаётся система",      fill: llm:references}
+  - {id: SEC-TZ-1.4,    title: Плановые сроки начала и окончания работ по созданию системы,        fill: "con:deadline"}
+  - {id: SEC-TZ-1.5,    title: Сведения об источниках и порядке финансирования работ,              fill: "con:budget"}
+  - {id: SEC-TZ-1.6,    title: Порядок оформления и предъявления заказчику результатов работ,      fill: contract}
+  - {id: SEC-TZ-1.7,    title: "Определения, обозначения и сокращения",                          fill: llm:glossary,             required: true}
+  - {id: SEC-TZ-2,      title: Назначение и цели создания системы,                                fill: none}
+  - {id: SEC-TZ-2.1,    title: Назначение системы,                                                fill: llm:purpose,              required: true}
+  - {id: SEC-TZ-2.2,    title: Цели создания системы,                                             fill: nodes:BR,                 required: true}
+  - {id: SEC-TZ-3,      title: Характеристика объекта автоматизации,                              fill: llm:perspective,          required: true}
+  - {id: SEC-TZ-4,      title: Требования к системе,                                              fill: none}
+  - {id: SEC-TZ-4.1,    title: Требования к системе в целом,                                      fill: none}
+  - {id: SEC-TZ-4.1.1,  title: Требования к структуре и функционированию системы,                 fill: c4}
+  - {id: SEC-TZ-4.1.2,  title: "Требования к численности и квалификации персонала, режиму его работы", fill: nodes:ACT}
+  - {id: SEC-TZ-4.1.3,  title: Показатели назначения,                                             fill: "nfr:performance_efficiency"}
+  - {id: SEC-TZ-4.1.4,  title: Требования к надёжности,                                           fill: "nfr:reliability"}
+  - {id: SEC-TZ-4.1.5,  title: Требования к безопасности,                                         fill: "nfr:safety"}
+  - {id: SEC-TZ-4.1.6,  title: Требования к эргономике и технической эстетике,                    fill: "nfr:usability,interaction_capability"}
+  - {id: SEC-TZ-4.1.7,  title: Требования к транспортабельности,                                  fill: not_applicable}
+  - {id: SEC-TZ-4.1.8,  title: "Требования к эксплуатации, техническому обслуживанию, ремонту и хранению компонентов системы", fill: "nfr:maintainability"}
+  - {id: SEC-TZ-4.1.9,  title: Требования к защите информации,                                    fill: "nfr:security+con:law"}
+  - {id: SEC-TZ-4.1.10, title: Требования по сохранности информации при авариях,                  fill: not_applicable}
+  - {id: SEC-TZ-4.1.11, title: Требования к защите от влияния внешних воздействий,                fill: not_applicable}
+  - {id: SEC-TZ-4.1.12, title: Требования к патентной чистоте,                                    fill: not_applicable}
+  - {id: SEC-TZ-4.1.13, title: Требования по стандартизации и унификации,                         fill: "con:tech"}
+  - {id: SEC-TZ-4.1.14, title: Дополнительные требования,                                         fill: "nfr:compatibility,portability,flexibility,functional_suitability+llm:other"}
+  - {id: SEC-TZ-4.2,    title: "Требования к функциям (задачам), выполняемым системой",           fill: features,                 required: true}
+  - {id: SEC-TZ-4.3,    title: Требования к видам обеспечения,                                    fill: none}
+  - {id: SEC-TZ-4.3.1,  title: Требования к математическому обеспечению,                          fill: not_applicable}
+  - {id: SEC-TZ-4.3.2,  title: Требования к информационному обеспечению,                          fill: nodes:ENT,                required: true}
+  - {id: SEC-TZ-4.3.3,  title: Требования к лингвистическому обеспечению,                         fill: language}
+  - {id: SEC-TZ-4.3.4,  title: Требования к программному обеспечению,                             fill: "con:tech"}
+  - {id: SEC-TZ-4.3.5,  title: Требования к техническому обеспечению,                             fill: llm:environment+llm:hardware}
+  - {id: SEC-TZ-4.3.6,  title: Требования к метрологическому обеспечению,                         fill: not_applicable}
+  - {id: SEC-TZ-4.3.7,  title: Требования к организационному обеспечению,                         fill: nodes:ACT}
+  - {id: SEC-TZ-4.3.8,  title: Требования к методическому обеспечению,                            fill: llm:user_docs}
+  - {id: SEC-TZ-5,      title: Состав и содержание работ по созданию системы,                     fill: contract}
+  - {id: SEC-TZ-6,      title: Порядок разработки системы,                                        fill: contract}
+  - {id: SEC-TZ-7,      title: Порядок контроля и приёмки системы,                                fill: acceptance,               required: true}
+  - {id: SEC-TZ-8,      title: Требования к составу и содержанию работ по подготовке объекта автоматизации к вводу системы в действие, fill: contract}
+  - {id: SEC-TZ-9,      title: Требования к документированию,                                    fill: llm:user_docs}
+  - {id: SEC-TZ-10,     title: Источники разработки,                                              fill: sources,                  required: true}
+  - {id: SEC-TZ-A,      title: Приложение А. Модели системы,                                      fill: models}
+  - {id: SEC-TZ-B,      title: Приложение Б. Трассировка требований,                             fill: trace}

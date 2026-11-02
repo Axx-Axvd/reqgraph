@@ -99,3 +99,75 @@ def test_trace_is_a_table() -> None:
         body.startswith("| ФТ |")
         and "| FR-006 Расписание мастеров | UR-004 | BR-001, BR-002 |" in body
     )
+
+
+TZ = load_structure("gost34_602")
+
+
+def tz(section_id: str) -> Section:
+    return next(s for s in TZ.sections if s.id == section_id)
+
+
+def test_the_tz_has_every_section_of_gost_34_602() -> None:
+    numbers = [s.number for s in TZ.sections if s.number]
+    assert [n for n in numbers if "." not in n] == [str(i) for i in range(1, 11)]
+    assert [n for n in numbers if n.startswith("4.1.")] == [f"4.1.{i}" for i in range(1, 15)]
+    assert [n for n in numbers if n.startswith("4.3.")] == [f"4.3.{i}" for i in range(1, 9)]
+    assert {s.id for s in TZ.required} >= {"SEC-TZ-1.1", "SEC-TZ-2.1", "SEC-TZ-4.2", "SEC-TZ-7"}
+
+
+def test_constraints_are_split_by_topic() -> None:
+    from reqgraph.standards.content import section_text
+
+    g = graph()
+    deadline = section_text(tz("SEC-TZ-1.4"), g)[1]
+    budget = section_text(tz("SEC-TZ-1.5"), g)[1]
+    law = section_text(tz("SEC-TZ-4.1.9"), g)[1]
+    assert deadline == ["CON-003"] and budget == ["CON-002"] and "CON-001" in law
+
+
+def test_fixed_texts_project_and_language() -> None:
+    from reqgraph.standards.content import CONTRACT, NOT_APPLICABLE, section_text
+
+    g = graph()
+    assert section_text(tz("SEC-TZ-1.2"), g)[0] == CONTRACT
+    assert section_text(tz("SEC-TZ-4.1.7"), g)[0] == NOT_APPLICABLE
+    named = section_text(tz("SEC-TZ-1.1"), g, project_name="Гараж 61", project_id="garage61")
+    assert "Гараж 61" in named[0] and "garage61" in named[0]
+    assert "русском" in section_text(tz("SEC-TZ-4.3.3"), g, langs=["ru"])[0]
+    assert "Бриф заказчика" in section_text(tz("SEC-TZ-10"), g)[0]
+
+
+def test_llm_text_of_the_tz_comes_from_the_srs_sections() -> None:
+    from reqgraph.standards.content import llm_texts, section_text
+
+    g = graph()
+    ops = [
+        {
+            "op": "add",
+            "kind": "SEC",
+            "tmp_id": f"s{i}",
+            "fields": {"id": sid, "template": "iso29148_srs", "text": text},
+        }
+        for i, (sid, text) in enumerate(
+            [
+                ("SEC-SRS-1.1", "Запись в сервис."),
+                ("SEC-SRS-2.4", "Браузер."),
+                ("SEC-SRS-4.3", "Принтер чеков."),
+            ]
+        )
+    ]
+    g = g.apply(GraphPatch.model_validate({"ops": ops}), actor="user").graph
+    texts = llm_texts(g)
+    assert texts["purpose"] == "Запись в сервис."
+    assert section_text(tz("SEC-TZ-2.1"), g, texts)[0] == "Запись в сервис."
+    both = section_text(tz("SEC-TZ-4.3.5"), g, texts)[0]  # environment + hardware
+    assert both == "Браузер.\n\nПринтер чеков."
+    assert section_text(tz("SEC-TZ-2.1"), g)[0] == ""  # no Standards text yet
+
+
+def test_structure_of_the_system_is_the_c4_model() -> None:
+    from reqgraph.standards.content import section_text
+
+    _text, refs = section_text(tz("SEC-TZ-4.1.1"), graph())
+    assert refs and all(r.startswith("C4-") for r in refs) and "C4-EXT" not in " ".join(refs)
