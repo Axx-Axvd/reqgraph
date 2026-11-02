@@ -27,13 +27,24 @@
 | `Modeler` | логика процессов, валидный DSL | `groq/openai/gpt-oss-120b` -> `gpt-oss-20b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/moonshotai/kimi-k2.7-code` |
 | `Standards` | связный деловой текст, стиль ГОСТ | `groq/openai/gpt-oss-120b` -> `gpt-oss-20b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
 | `Reviewer` | рассуждение по отчёту CI | `groq/openai/gpt-oss-120b` -> `gpt-oss-20b` | `openrouter/deepseek/deepseek-v4-flash` | `openrouter/deepseek/deepseek-v4-pro` |
-| `Stakeholder sim` | другая семья, чем все агенты, живой стиль | `groq/qwen/qwen3.8-27b` | `openrouter/meta-llama/llama-3.3-70b-instruct` | — |
-| `Judge (ISO-002, recall)` | другая семья, чем все агенты, стабильность | `groq/qwen/qwen3.8-27b` | `openrouter/z-ai/glm-5.3-flash` | + ручная проверка 20% |
+| `Stakeholder sim` | другая семья, чем все агенты, живой стиль | `openrouter/qwen/qwen3.8-27b` (платно) -> `groq/qwen/qwen3.8-27b` | `openrouter/qwen/qwen3.8-27b` | — |
+| `Judge (ISO-002, recall)` | другая семья, чем все агенты, стабильность | `openrouter/qwen/qwen3.8-27b` (платно) -> `groq/qwen/qwen3.8-27b` | `openrouter/qwen/qwen3.8-27b` | + ручная проверка 20% |
 | `Локально (CPU)` | офлайн-разработка, smoke | `ollama/qwen3:4b`, `ollama/qwen3:1.7b` | — | — |
 
 Лестницы запасных моделей у агентов: бесплатно — `gpt-oss-120b` -> `gpt-oss-20b` -> `nemotron-3.5-super-vl:free` -> `gemini-3.5-flash-lite`; платно — `deepseek-v4-flash` -> `gemini-3.5-flash-lite`. Одна модель для всех агентов с запасом, симулятор и судья — другая семья (ADR-017).
 
 <sub>Groq даёт 8000 токенов в минуту на модель, поэтому длинный транскрипт на Groq не помещается: роутер пропускает Groq для промпта длиннее ~6000 токенов, а Analyst начинает с Gemini. Бесплатные модели OpenRouter меняются и бывают недоступны (404/429): лестница фолбэков обязательна.</sub>
+
+**Выбор симулятора (02.11, T-309).** Четыре модели в шаге выбора симулятора на 10 вопросах из диалогов T-305, по 2 повтора: сколько ожидаемых скрытых требований названо (из 46), сколько лишних нерассказанных (подсказка без вопроса) и сколько повторов уже сказанного. Результаты — `evals/reports/simprobe-2026-11-02-models.json`.
+
+| Модель | Названо | Лишних | Повторов |
+|---|---|---|---|
+| `qwen/qwen3.8-27b` | 34/46 (74%) | 9 | 8 |
+| `qwen/qwen3.8-flash` | 32/46 (70%) | 8 | 14 |
+| `meta-llama/llama-3.3-70b-instruct` | 24/46 (52%) | 14 | 10 |
+| `z-ai/glm-5.3-flash` | 17/46 (37%) | 6 | 6 |
+
+Решение автора: симулятор и судья — Qwen 3.8 27B через OpenRouter и сейчас, и в финальной матрице S6 (вместо Llama 3.3 70B и GLM-5.3 Flash); Groq — бесплатный запас. Платный вызов симулятора стоит ~$0.001–0.006.
 
 ## Цены дешёвых моделей
 
@@ -42,6 +53,7 @@
 | `DeepSeek V4 Flash` | 0.091 | 0.182 | 1M | основной кандидат; tools и structured output |
 | `DeepSeek V4 Pro` | 0.955 | 1.911 | 1M | сильный в коде и рассуждении; 21.10 было 0.419 / 0.838, 23.10 цена выросла |
 | `Qwen 3.8 Flash` / `3.7 Flash` | 0.15 / 0.03 | 0.47 / 0.13 | 1M | у 3.7 нет structured output, только JSON mode |
+| `Qwen 3.8 27B` | 0.15 | 1.875 | — | симулятор и судья (решение автора 02.11); цена 02.11, нет в genai-prices — цена в `roles.yaml` |
 | `GLM-5.3 Flash` | 0.15 | 0.50 | 1M | tools и structured output |
 | `MiniMax M3` | 0.30 | 1.20 | 1M | tools и structured output |
 | `Kimi K2.7 Code` | 0.671 | 3.35 | 262K | силён в коде; дороже |
@@ -93,12 +105,12 @@ profiles:
   free:                                    # разработка до января (решение автора)
     "*":         [groq/openai/gpt-oss-120b, groq/openai/gpt-oss-20b, openrouter/nvidia/nemotron-3.5-super-vl:free, gemini/gemini-3.5-flash-lite]
     analyst:     [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
-    stakeholder: [groq/qwen/qwen3.8-27b]       # другая семья, чем все агенты
-    judge:       [groq/qwen/qwen3.8-27b]
+    stakeholder: [openrouter/qwen/qwen3.8-27b, groq/qwen/qwen3.8-27b]   # другая семья, чем все агенты
+    judge:       [openrouter/qwen/qwen3.8-27b, groq/qwen/qwen3.8-27b]
   cheap:                                   # эксперименты (январь–февраль)
     "*":         [openrouter/deepseek/deepseek-v4-flash, gemini/gemini-3.5-flash-lite]
-    stakeholder: [openrouter/meta-llama/llama-3.3-70b-instruct]
-    judge:       [openrouter/z-ai/glm-5.3-flash]
+    stakeholder: [openrouter/qwen/qwen3.8-27b]
+    judge:       [openrouter/qwen/qwen3.8-27b]
   local: {"*": [ollama/qwen3:4b]}
 defaults: {temperature: 0.2, timeout_s: 60, retries: 2, seed: 42}
 budget:   {run_usd: 0.50, run_tokens: 800000}   # -> pydantic-ai UsageLimits
