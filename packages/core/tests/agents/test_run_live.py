@@ -31,7 +31,7 @@ def test_run_from_a_dev_brief_to_a_report(tmp_path: Path) -> None:
     assert "→ Analyst: требования" in result.output and "Отчёт:" in result.output
     summary = json.loads((root / "reports" / "run-summary.json").read_text(encoding="utf-8"))
     assert summary["requirements"] >= 5 and summary["processes"] >= 1
-    assert summary["entities"] >= 1 and summary["sections"] == 15
+    assert summary["entities"] >= 1 and summary["sections"] == 32
     assert summary["llm_calls"] >= 3 and summary["cost_usd"] == 0.0  # free profile
     assert {"analyst", "modeler", "standards"} <= set(summary["models"])
     assert (root / "reports" / "ci-report.md").is_file()

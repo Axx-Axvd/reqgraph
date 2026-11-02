@@ -26,7 +26,7 @@ from reqgraph.checks.base import Finding, Owner
 from reqgraph.checks.report import CIReport
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.llm.router import BudgetExceeded
-from reqgraph.standards import load_structure
+from reqgraph.standards import Section, load_structure
 
 MAX_TASKS = 10  # repair tasks per round (03_agents)
 STUCK_ROUNDS = 2  # the same errors after this many repair rounds in a row -> needs_human
@@ -68,6 +68,17 @@ def stuck(history: Sequence[Sequence[str]]) -> bool:
     return bool(last[-1]) and all(set(h) == set(last[-1]) for h in last)
 
 
+def _kinds(section: Section) -> list[str]:
+    """Node kinds a section is listed from (T-408: features, NFR by characteristic, models)."""
+    if section.fill == "features":
+        return ["UR", "FR"]
+    if section.fill == "models":
+        return ["ENT", "PRC"]
+    if section.characteristics:
+        return ["NFR"]
+    return section.node_kinds
+
+
 def owner_of(finding: Finding) -> Owner:
     """TPL-001 on a section built from graph nodes belongs to the owner of those nodes."""
     if finding.check_id != "TPL-001" or not finding.node_ids:
@@ -78,7 +89,7 @@ def owner_of(finding: Finding) -> Owner:
         return finding.owner
     if section.fill in ("acceptance", "assumptions"):
         return "analyst"
-    kinds = set(section.node_kinds)
+    kinds = set(_kinds(section))
     if kinds and kinds <= _ANALYST_KINDS:
         return "analyst"
     if kinds:
@@ -104,12 +115,12 @@ def explain(finding: Finding) -> str:
     if finding.check_id != "TPL-001" or not finding.node_ids:
         return text
     section = {s.id: s for s in load_structure("iso29148_srs").sections}.get(finding.node_ids[0])
-    if section is None or not (section.node_kinds or section.fill == "acceptance"):
+    if section is None or not (_kinds(section) or section.fill == "acceptance"):
         return text
     missing = (
         "критериев приёмки у ФТ"
         if section.fill == "acceptance"
-        else ", ".join(_KIND_NAMES.get(k, k) for k in section.node_kinds)
+        else ", ".join(_KIND_NAMES.get(k, k) for k in _kinds(section))
     )
     return (
         f"раздел «{section.title}» пуст: в графе нет {missing}. Добавьте их по репликам заказчика; "

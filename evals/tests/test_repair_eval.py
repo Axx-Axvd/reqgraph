@@ -34,6 +34,7 @@ def anyio_backend() -> str:
 async def test_stub_agents_that_never_fix_stop_with_needs_human(reviewer: str) -> None:
     srs: dict[str, Any] = {
         "purpose": "Назначение.",
+        "perspective": "Новая система.",
         "scope": "Область.",
         "glossary": [{"term": "a", "definition": "b"}],
     }

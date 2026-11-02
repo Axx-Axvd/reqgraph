@@ -47,7 +47,7 @@ async def test_run_writes_the_project_reports_and_a_summary(tmp_path: Path) -> N
     saved = json.loads((root / "reports" / "run-summary.json").read_text(encoding="utf-8"))
     assert saved == summary.to_dict()
     assert summary.requirements == 5 and summary.processes == 1 and summary.entities == 2
-    assert summary.sections == 15 and summary.errors == report.summary.errors
+    assert summary.sections == 32 and summary.errors == report.summary.errors
     assert summary.models["analyst"] == "test/test" and summary.cost_usd == 0.0
     assert summary.temperature == load_roles().defaults.temperature
     assert summary.seeds["analyst"] == load_roles().defaults.seed

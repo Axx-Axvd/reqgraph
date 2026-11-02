@@ -1,27 +1,52 @@
-# Структура SRS reqgraph — свой минимальный список разделов по мотивам ISO/IEC/IEEE 29148
-# (только названия разделов своими словами, без текста стандарта — ADR-012).
+# Структура SRS reqgraph — по шаблону Вигерса и Битти («Разработка требований к программному
+# обеспечению», восходит к IEEE 830); решение автора 02.11.2026 (T-408). Только названия разделов
+# (ADR-012): title — русский перевод автора, title_en — оригинал. Имя файла и значение
+# `standards: [iso29148]` в reqgraph.yaml остались прежними, чтобы не менять формат проекта.
 # fill: откуда берётся содержимое раздела
-#   llm:<поле>    — пишет Standards (связный текст: назначение, область, глоссарий);
-#   nodes:<виды>  — собирает код из узлов графа (список с id);
-#   acceptance    — критерии приёмки ФТ (как проверить требования);
+#   llm:<поле>    — связный текст пишет Standards;
+#   nodes:<виды>  — список узлов графа с id;
+#   features      — функции системы: пользовательское требование, его сценарий, ФТ под ним;
+#   nfr:<…>       — НФТ с этими характеристиками ISO/IEC 25010;
+#   interfaces    — требования области «интеграции» и внешние системы C4;
+#   models        — сущности и процессы; схемы проекта добавляет выгрузка;
+#   issues        — конфликты между требованиями и допущения;
+#   acceptance    — критерии приёмки ФТ;
 #   assumptions   — узлы с пометкой «допущение»;
+#   trace         — таблица трассировки ФТ → ПТ → БТ → модели;
 #   none          — раздел-заголовок без своего текста.
 # required: true — раздел обязан быть заполнен (проверка TPL-001).
 document: srs
 title: Спецификация требований к программному обеспечению
 sections:
-  - {id: SEC-SRS-1,   title: Введение,                               fill: none,           required: false}
-  - {id: SEC-SRS-1.1, title: Назначение документа и системы,         fill: llm:purpose,    required: true}
-  - {id: SEC-SRS-1.2, title: Область применения,                     fill: llm:scope,      required: true}
-  - {id: SEC-SRS-1.3, title: Пользователи и другие участники,        fill: nodes:ACT,      required: true}
-  - {id: SEC-SRS-1.4, title: Термины и определения,                  fill: llm:glossary,   required: true}
-  - {id: SEC-SRS-2,   title: Бизнес-цели,                            fill: nodes:BR,       required: true}
-  - {id: SEC-SRS-3,   title: Требования,                             fill: none,           required: false}
-  - {id: SEC-SRS-3.1, title: Пользовательские требования,            fill: nodes:UR,       required: true}
-  - {id: SEC-SRS-3.2, title: Функциональные требования,              fill: nodes:FR,       required: true}
-  - {id: SEC-SRS-3.3, title: Требования к качеству,                  fill: nodes:NFR,      required: true}
-  - {id: SEC-SRS-3.4, title: Ограничения,                            fill: nodes:CON,      required: false}
-  - {id: SEC-SRS-3.5, title: Логическая модель данных,               fill: nodes:ENT,      required: true}
-  - {id: SEC-SRS-3.6, title: Бизнес-процессы,                        fill: nodes:PRC,      required: false}
-  - {id: SEC-SRS-4,   title: Проверка требований,                    fill: acceptance,     required: true}
-  - {id: SEC-SRS-5,   title: Допущения и зависимости,                fill: assumptions,    required: false}
+  - {id: SEC-SRS-1,     title: "Введение",                                     title_en: Introduction,                                fill: none}
+  - {id: SEC-SRS-1.1,   title: "Назначение",                                   title_en: Purpose,                                     fill: llm:purpose,     required: true}
+  - {id: SEC-SRS-1.2,   title: "Соглашения, принятые в документе",             title_en: Document conventions,                        fill: llm:conventions}
+  - {id: SEC-SRS-1.3,   title: "Целевая аудитория и рекомендации по чтению",   title_en: Intended audience and reading suggestions,  fill: llm:audience}
+  - {id: SEC-SRS-1.4,   title: "Границы проекта",                              title_en: Project scope,                               fill: llm:scope,       required: true}
+  - {id: SEC-SRS-1.4.1, title: "Бизнес-цели",                                  title_en: Business objectives (reqgraph),              fill: nodes:BR,        required: true}
+  - {id: SEC-SRS-1.5,   title: "Ссылки",                                       title_en: References,                                  fill: llm:references}
+  - {id: SEC-SRS-2,     title: "Общее описание",                               title_en: Overall description,                         fill: none}
+  - {id: SEC-SRS-2.1,   title: "Положение продукта",                           title_en: Product perspective,                         fill: llm:perspective, required: true}
+  - {id: SEC-SRS-2.2,   title: "Функции продукта",                             title_en: Product features,                            fill: nodes:UR,        required: true}
+  - {id: SEC-SRS-2.3,   title: "Классы пользователей и их характеристики",     title_en: User classes and characteristics,            fill: nodes:ACT,       required: true}
+  - {id: SEC-SRS-2.4,   title: "Операционная среда",                           title_en: Operating environment,                       fill: llm:environment}
+  - {id: SEC-SRS-2.5,   title: "Ограничения проектирования и реализации",      title_en: Design and implementation constraints,      fill: nodes:CON}
+  - {id: SEC-SRS-2.6,   title: "Пользовательская документация",                title_en: User documentation,                          fill: llm:user_docs}
+  - {id: SEC-SRS-2.7,   title: "Допущения и зависимости",                      title_en: Assumptions and dependencies,                fill: assumptions}
+  - {id: SEC-SRS-3,     title: "Функции системы",                              title_en: System features,                             fill: features,        required: true}
+  - {id: SEC-SRS-4,     title: "Требования к внешним интерфейсам",             title_en: External interface requirements,             fill: none}
+  - {id: SEC-SRS-4.1,   title: "Пользовательские интерфейсы",                  title_en: User interfaces,                             fill: llm:ui}
+  - {id: SEC-SRS-4.2,   title: "Программные интерфейсы",                       title_en: Software interfaces,                         fill: interfaces}
+  - {id: SEC-SRS-4.3,   title: "Аппаратные интерфейсы",                        title_en: Hardware interfaces,                         fill: llm:hardware}
+  - {id: SEC-SRS-4.4,   title: "Коммуникационные интерфейсы",                  title_en: Communication interfaces,                    fill: llm:communication}
+  - {id: SEC-SRS-5,     title: "Нефункциональные требования",                  title_en: Nonfunctional requirements,                  fill: none}
+  - {id: SEC-SRS-5.1,   title: "Требования к производительности",              title_en: Performance requirements,                    fill: "nfr:performance_efficiency"}
+  - {id: SEC-SRS-5.2,   title: "Требования к безопасности",                    title_en: Safety requirements,                         fill: "nfr:safety"}
+  - {id: SEC-SRS-5.3,   title: "Атрибуты качества ПО",                         title_en: Software quality attributes,                 fill: "nfr:functional_suitability,compatibility,usability,interaction_capability,reliability,maintainability,portability,flexibility"}
+  - {id: SEC-SRS-5.4,   title: "Требования к защищённости",                    title_en: Security requirements,                       fill: "nfr:security"}
+  - {id: SEC-SRS-6,     title: "Прочие требования",                            title_en: Other requirements,                          fill: llm:other}
+  - {id: SEC-SRS-A,     title: "Приложение А. Глоссарий",                      title_en: "Appendix A: Glossary",                      fill: llm:glossary,    required: true}
+  - {id: SEC-SRS-B,     title: "Приложение Б. Модели анализа",                 title_en: "Appendix B: Analysis models",               fill: models,          required: true}
+  - {id: SEC-SRS-C,     title: "Приложение В. Список открытых вопросов",       title_en: "Appendix C: Issues list",                   fill: issues}
+  - {id: SEC-SRS-D,     title: "Приложение Г. Критерии приёмки",               title_en: "Appendix D: Acceptance criteria (reqgraph)", fill: acceptance,      required: true}
+  - {id: SEC-SRS-E,     title: "Приложение Д. Трассировка требований",         title_en: "Appendix E: Traceability (reqgraph)",       fill: trace}

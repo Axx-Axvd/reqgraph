@@ -32,7 +32,7 @@ def with_sections(empty: frozenset[str] = frozenset()) -> tuple[ArtifactGraph, P
 
 def test_structure_is_own_list_of_section_names() -> None:
     assert STRUCTURE.sections[0].id == "SEC-SRS-1" and len(STRUCTURE.required) == 10
-    assert {s.fill for s in STRUCTURE.sections} >= {"llm:glossary", "nodes:FR", "acceptance"}
+    assert {s.fill for s in STRUCTURE.sections} >= {"llm:glossary", "features", "acceptance"}
 
 
 def test_all_required_sections_filled() -> None:
@@ -41,10 +41,10 @@ def test_all_required_sections_filled() -> None:
 
 
 def test_empty_or_missing_required_section_is_an_error() -> None:
-    graph, project = with_sections(empty=frozenset({"SEC-SRS-1.4", "SEC-SRS-1"}))  # 1 is a heading
+    graph, project = with_sections(empty=frozenset({"SEC-SRS-A", "SEC-SRS-1"}))  # 1 is a heading
     found = SrsSections().run(graph, CheckContext(project))
-    assert [(f.severity, f.node_ids) for f in found] == [("error", ["SEC-SRS-1.4"])]
-    assert "Термины и определения" in found[0].message and found[0].owner == "standards"
+    assert [(f.severity, f.node_ids) for f in found] == [("error", ["SEC-SRS-A"])]
+    assert "Глоссарий" in found[0].message and found[0].owner == "standards"
 
 
 def test_skipped_before_sections_are_built() -> None:

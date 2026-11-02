@@ -2,7 +2,8 @@
 
 Most sections are built by code from the graph: lists of requirements, actors, entities and the
 acceptance criteria, each item with its id, and `rendered_in` links node -> section. The LLM writes
-only connected text: purpose, scope and the glossary (StandardsDraft). An empty field is asked for
+only connected text (StandardsDraft): purpose, scope, product perspective, glossary and the other
+descriptive sections of the structure after Wiegers (T-408). An empty required field is asked for
 once more; what is still empty stays empty, and TPL-001 reports it.
 """
 
@@ -41,8 +42,21 @@ class GlossaryTerm(_Draft):
 
 
 class StandardsDraft(_Draft):
+    """Connected text of the SRS (T-408: the structure after Wiegers). Required: purpose, scope,
+    perspective, glossary; the rest may stay empty when the data say nothing about it."""
+
     purpose: str = Field(default="", description="2–4 предложения: что за система и для кого")
+    conventions: str = Field(default="", description="как читать документ: id, приоритеты")
+    audience: str = Field(default="", description="кому адресован документ и что кому читать")
     scope: str = Field(default="", description="что система делает и чего не делает")
+    references: str = Field(default="", description="документы и законы, названные заказчиком")
+    perspective: str = Field(default="", description="новая система или замена, с чем связана")
+    environment: str = Field(default="", description="где работает: устройства, браузеры, ОС")
+    user_docs: str = Field(default="", description="какая документация нужна пользователям")
+    ui: str = Field(default="", description="требования к экранам и удобству")
+    hardware: str = Field(default="", description="оборудование: сканеры, принтеры, кассы")
+    communication: str = Field(default="", description="SMS, почта, протоколы обмена")
+    other: str = Field(default="", description="требования, не попавшие в другие разделы")
     glossary: list[GlossaryTerm] = Field(default_factory=list, description="5–15 терминов")
 
 
@@ -98,12 +112,19 @@ def build_sections(
     return GraphPatch(ops=ops)
 
 
+REQUIRED_TEXT = {  # T-408: the LLM sections TPL-001 requires, with what to ask for
+    "purpose": "нужно 2–4 предложения о назначении системы",
+    "scope": "нужны границы проекта: что система делает и чего не делает",
+    "perspective": "нужно положение продукта: новая система или замена, с чем связана",
+}
+
+
 def _missing(draft: StandardsDraft) -> list[str]:
-    found = []
-    if not draft.purpose.strip():
-        found.append("purpose: пусто — нужно 2–4 предложения о назначении системы")
-    if not draft.scope.strip():
-        found.append("scope: пусто — нужна область применения")
+    found = [
+        f"{name}: пусто — {need}"
+        for name, need in REQUIRED_TEXT.items()
+        if not str(getattr(draft, name)).strip()
+    ]
     if not [t for t in draft.glossary if t.term.strip() and t.definition.strip()]:
         found.append("glossary: нет терминов с определениями")
     return found

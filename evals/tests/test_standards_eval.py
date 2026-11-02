@@ -17,15 +17,21 @@ def anyio_backend() -> str:
 
 
 async def test_row_counts_empty_required_sections() -> None:
-    srs: dict[str, Any] = {"purpose": "Назначение.", "scope": "Область.", "glossary": []}
+    srs: dict[str, Any] = {
+        "purpose": "Назначение.",
+        "scope": "Область.",
+        "perspective": "Новая система.",
+        "glossary": [],
+    }
     models = {
         "analyst": TestModel(custom_output_args=ANALYST),
         "modeler": TestModel(custom_output_args=MODELER),
         "standards": TestModel(custom_output_args=srs),
     }
     row = await run_scenario("dev-01", 1, models=models)
-    assert row.error == "" and row.sections == 15 and row.required == 10
+    assert row.error == "" and row.sections == 32 and row.required == 10
     assert row.retried  # an empty glossary is asked again
-    # empty: glossary (the stub repeats itself), actors and NFR (the stub Analyst wrote none)
-    assert row.empty_required == 3 and row.filled_share == 0.7
-    assert "заполнено: 7 (70%)" in summary_markdown([row]) and ": нет." in summary_markdown([row])
+    # empty: glossary (the stub repeats itself) and actors (the stub Analyst wrote none);
+    # NFR sections are not required in the structure after Wiegers (T-408)
+    assert row.empty_required == 2 and row.filled_share == 0.8
+    assert "заполнено: 8 (80%)" in summary_markdown([row]) and ": да." in summary_markdown([row])

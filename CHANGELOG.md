@@ -198,6 +198,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- SRS structure after Wiegers and Beatty (IEEE 830) instead of the own list after ISO/IEC/IEEE 29148 (T-408):
+  introduction, overall description, system features (a user requirement with its stimulus / response
+  sequence and FRs), external interfaces, NFR by ISO 25010 characteristic, other requirements, appendices
+  glossary, analysis models (every scheme of the project: BPMN, ER, UML, C4), issues, acceptance criteria,
+  traceability; sections keep their English originals (`title_en`). Standards writes 13 text fields
+  (purpose, scope, perspective and glossary required). The value `standards: [iso29148]` is unchanged.
 - Document sections (SEC) are kept in `documents/<template>.yaml` of the project (T-401): the Standards text
   survives saving; TPL-001 builds list sections from the graph and reads only the LLM text from the stored sections.
 - Simulator and judge run on Qwen3.8-27B through OpenRouter (paid) with Groq as the free reserve, and on the same

@@ -110,10 +110,10 @@ async def run_scenario(
     row.retried = any(
         e["type"] == "patch_retry" and e["agent"] == "standards" for e in events.events
     )
-    glossary = sections.get("SEC-SRS-1.4")
+    glossary = sections.get("SEC-SRS-A")  # T-408: the glossary is appendix A
     row.glossary_terms = len(glossary.text.splitlines()) if glossary and glossary.text else 0
     row.purpose_chars = len(sections["SEC-SRS-1.1"].text) if "SEC-SRS-1.1" in sections else 0
-    row.scope_chars = len(sections["SEC-SRS-1.2"].text) if "SEC-SRS-1.2" in sections else 0
+    row.scope_chars = len(sections["SEC-SRS-1.4"].text) if "SEC-SRS-1.4" in sections else 0
     return row
 
 
