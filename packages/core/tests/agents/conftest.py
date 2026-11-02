@@ -23,16 +23,37 @@ SRS = {
 }
 
 
+# The Modeler's second answer (T-207) for the requirements of DRAFT: ACT-01 and FR-001.
+VIEWS: dict[str, Any] = {
+    "use_cases": [
+        {"ref": "uc_book", "name": "Записаться на приём", "actor": "ACT-01", "realizes": ["FR-001"]}
+    ],
+    "c4": {
+        "system_name": "Улыбка: запись к стоматологу",
+        "containers": [{"ref": "cnt_api", "name": "API", "realizes": ["FR-001"]}],
+        "links": [{"src": "ACT-01", "dst": "cnt_api", "label": "Записывается"}],
+    },
+}
+
+
 def stub_models(**patches: dict[str, Any]) -> dict[str, Model]:
-    """Every agent answers an empty patch, the interviewer asks QUESTION; overrides by role."""
+    """Every agent answers an empty patch, the interviewer asks QUESTION, the Modeler's views are
+    VIEWS; overrides by role."""
     models: dict[str, Model] = {
         "*": TestModel(custom_output_args={"ops": []}),
         "interviewer": TestModel(custom_output_args={"text": QUESTION}),
+        "modeler_views": TestModel(custom_output_args=VIEWS),
         "standards": TestModel(custom_output_args=SRS),
     }
     for role, patch in patches.items():
         models[role] = TestModel(custom_output_args=patch)
     return models
+
+
+def garage61_models(**patches: dict[str, Any]) -> dict[str, Model]:
+    """stub_models for garage61: it has its use cases and C4 already, the Modeler's views answer
+    changes nothing."""
+    return stub_models(**patches) | {"modeler_views": TestModel(custom_output_args={})}
 
 
 @pytest.fixture
@@ -57,7 +78,7 @@ def context(garage61: Path) -> Callable[..., RunContext]:
         options: dict[str, Any] = {
             "store": store,
             "events": MemoryEvents(),
-            "models": stub_models(),
+            "models": garage61_models(),
             "offline": True,
         }
         return RunContext.for_project(store.load(), **(options | overrides))

@@ -34,6 +34,8 @@ profiles:
     analyst: [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
     # The Modeler reads every UR and FR too (T-203): the same long-context ladder.
     modeler: [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
+    # Its second question, use cases and C4 (T-207): the same requirements, the same ladder.
+    modeler_views: [gemini/gemini-3.5-flash-lite, openrouter/nvidia/nemotron-3.5-super-vl:free, groq/openai/gpt-oss-20b]
     # Simulator and judge: another model family than every agent (CLAUDE.md, checked by a test).
     # Paid Qwen3.8-27B first (author's decision 2026-11-02): it best picked the hidden requirements
     # a question is about (evals/reports/simprobe-2026-11-02.md); Groq's free tier is the reserve.

@@ -39,7 +39,8 @@ async def test_live_interview_asks_by_coverage_and_counts_the_answers(tmp_path: 
         return ANSWERS[turn - 1]
 
     stubs = stub_models()
-    models = {"modeler": stubs["*"], "standards": stubs["standards"]}  # interviewer, Analyst real
+    models = {"modeler": stubs["*"], "modeler_views": stubs["*"], "standards": stubs["standards"]}
+    # the interviewer and the Analyst are real
     outcome = await interview_project(root, answer, models=models, offline=True, max_iter=0)
     assert not outcome.paused and outcome.turns == 2 and len(asked) == 3
     assert all(0 < len(q) <= 300 for q in asked), asked  # one short question, not a list
