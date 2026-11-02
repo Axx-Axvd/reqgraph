@@ -53,6 +53,8 @@ class Row:
     hidden: int = 0  # hidden requirements not in the brief
     revealed: int = 0  # of them, told in full by the simulator
     revealed_share: float = 0.0
+    revealed_typical: int | None = None  # T-308: told in full, by group; None — no labels
+    revealed_unique: int | None = None
     mentioned_only: int = 0
     wrong_left: int = 0
     off_topic: int = 0  # told items whose area is not the area the question aimed at
@@ -194,6 +196,11 @@ def _fill(
     told = summary(sim)
     row.hidden, row.revealed = told["hidden"], told["revealed"]
     row.revealed_share = round(row.revealed / row.hidden, 3) if row.hidden else 0.0
+    hidden = [r for r in sim.scenario.hidden.requirements if not r.in_brief]
+    if hidden and all(r.group for r in hidden):
+        told_ids = sim.revealed
+        row.revealed_typical = sum(r.id in told_ids for r in hidden if r.group == "typical")
+        row.revealed_unique = sum(r.id in told_ids for r in hidden if r.group == "unique")
     row.mentioned_only, row.wrong_left = told["mentioned_only"], told["wrong_left"]
 
 
@@ -245,19 +252,26 @@ def write_csv(rows: Sequence[Row], path: Path) -> None:
             writer.writerow(asdict(row))
 
 
+def _groups(row: Row) -> str:
+    if row.revealed_typical is None or row.revealed_unique is None:
+        return "—"
+    return f"{row.revealed_typical} / {row.revealed_unique}"
+
+
 def summary_markdown(rows: Sequence[Row]) -> str:
     lines = [
         "# Интервью с симулятором заказчика",
         "",
-        "| Сценарий | Характер | Повтор | Вопросов | Конец | Рассказано | Пустых вопросов "
-        "| Упомянуто | Неверных | Вне области | Требований | Ошибок | Вызовов LLM | Токены "
-        "| Время, с | Ошибка |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Сценарий | Характер | Повтор | Вопросов | Конец | Рассказано | Типовых / уникальных "
+        "| Пустых вопросов | Упомянуто | Неверных | Вне области | Требований | Ошибок "
+        "| Вызовов LLM | Токены | Время, с | Ошибка |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         lines.append(
             f"| {r.scenario} | {r.character} | {r.repeat} | {r.turns} | {r.end or '—'} "
-            f"| {r.revealed}/{r.hidden} ({r.revealed_share:.0%}) | {r.empty} | {r.mentioned_only} "
+            f"| {r.revealed}/{r.hidden} ({r.revealed_share:.0%}) | {_groups(r)} | {r.empty} "
+            f"| {r.mentioned_only} "
             f"| {r.wrong_left} | {r.off_topic} | {r.requirements} | {r.errors_final} "
             f"| {r.llm_calls} | {r.input_tokens + r.output_tokens} | {r.latency_ms / 1000:.1f} "
             f"| {r.error} |"

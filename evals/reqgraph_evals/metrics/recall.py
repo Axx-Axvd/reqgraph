@@ -8,7 +8,7 @@ parts — and whether fully or only partly (the topic without its numbers or a k
 kappa, agreement.py). Every pair is kept for that check.
 """
 
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from typing import Any, Literal
@@ -116,6 +116,22 @@ class Recall:
         """Against the whole reference, the brief and the Analyst's assumptions included."""
         total = self.hidden + self.in_brief
         return len(self.matched_all) / total if total else 0.0
+
+
+def by_group(hidden: Sequence[HiddenRequirement], matched: Mapping[str, str]) -> dict[str, float]:
+    """T-308: recall of typical and unique hidden requirements outside the brief, apart.
+    Empty when the reference is not labelled (a test one before the author's labels)."""
+    told = [h for h in hidden if not h.in_brief]
+    if not told or any(h.group is None for h in told):
+        return {}
+    out: dict[str, float] = {}
+    for group in ("typical", "unique"):
+        ids = {h.id for h in told if h.group == group}
+        found = len(ids & matched.keys())
+        out[f"hidden_{group}"] = len(ids)
+        out[f"matched_{group}"] = found
+        out[f"recall_{group}"] = round(found / len(ids), 4) if ids else 0.0
+    return out
 
 
 def found_requirements(graph: ArtifactGraph) -> list[Found]:

@@ -25,7 +25,14 @@ from reqgraph.sim.stakeholder import Character
 
 from reqgraph_evals import interview
 from reqgraph_evals.metrics.quality import quality
-from reqgraph_evals.metrics.recall import Pair, Verdict, found_requirements, judge_prompt, recall
+from reqgraph_evals.metrics.recall import (
+    Pair,
+    Verdict,
+    by_group,
+    found_requirements,
+    judge_prompt,
+    recall,
+)
 from reqgraph_evals.scenario import SCENARIOS, load_scenario
 
 Method = Literal["M2", "M1"]
@@ -73,6 +80,13 @@ class Result:
     hidden: int = 0
     matched: int = 0
     recall_per_10q: float = 0.0
+    # T-308: hidden requirements outside the brief by group; empty for an unlabelled reference
+    hidden_typical: int | None = None
+    hidden_unique: int | None = None
+    matched_typical: int | None = None
+    matched_unique: int | None = None
+    recall_typical: float | None = None
+    recall_unique: float | None = None
     requirements: int = 0
     ambiguity: float = 0.0
     validity: float = 0.0
@@ -141,6 +155,7 @@ class RecallEvaluator(Evaluator[RunInputs, RunOutput, None]):
             "recall_all": round(result.recall_all, 4),
             "hidden": result.hidden,
             "matched": len(result.matched),
+            **by_group(scenario.hidden.requirements, result.matched),
         }
 
 
@@ -283,6 +298,9 @@ def _result(
         int(result.matched),
         int(result.errors),
     )
+    for key in ("hidden_typical", "hidden_unique", "matched_typical", "matched_unique"):
+        if (value := getattr(result, key)) is not None:
+            setattr(result, key, int(value))
     if row.turns:
         result.recall_per_10q = round(result.matched / row.turns * 10, 3)
     return result
@@ -326,6 +344,10 @@ def read_interview_rows(path: Path) -> dict[str, interview.Row]:
     return rows
 
 
+def _group(share: float | None, matched: int | None, hidden: int | None) -> str:
+    return "—" if share is None else f"{share:.0%} ({matched}/{hidden})"
+
+
 def summary_markdown(results: Sequence[Result]) -> str:
     lines = [
         "# Метрики прогонов (T-304)",
@@ -333,17 +355,21 @@ def summary_markdown(results: Sequence[Result]) -> str:
         "recall — доля скрытых требований вне брифа, которые рассказал заказчик и система нашла "
         "полностью (сопоставление: эмбеддинги → судья); с частичными — вместе с найденными "
         "частично (тема без чисел или главного условия); recall_all — по всему эталону, с брифом "
-        "и допущениями, только полные.",
+        "и допущениями, только полные. Типовых и уникальных — recall по группам эталона (T-308, "
+        "правило — evals/scenarios/README.md); «—» — эталон не размечен.",
         "",
-        "| Прогон | Вопросов | recall | с частичными | recall_all | на 10 вопросов "
+        "| Прогон | Вопросов | recall | с частичными | recall_all | типовых | уникальных "
+        "| на 10 вопросов "
         "| Требований | Неоднозначных | Validity | Soundness | Trace | Сироты | Ошибок "
         "| Вызовов LLM | $ | Минут | Ошибка |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in results:
         lines.append(
             f"| {r.run} | {r.turns} | {r.recall:.0%} ({r.matched}/{r.hidden}) "
             f"| {r.recall_partial:.0%} | {r.recall_all:.0%} "
+            f"| {_group(r.recall_typical, r.matched_typical, r.hidden_typical)} "
+            f"| {_group(r.recall_unique, r.matched_unique, r.hidden_unique)} "
             f"| {r.recall_per_10q} | {r.requirements} | {r.ambiguity:.0%} | {r.validity:.0%} "
             f"| {r.soundness:.0%} | {r.trace_coverage:.0%} | {r.orphan_rate:.0%} | {r.errors} "
             f"| {r.llm_calls} | {r.cost_usd:.4f} | {r.minutes} | {r.error} |"
