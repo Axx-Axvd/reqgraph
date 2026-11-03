@@ -18,6 +18,7 @@ from reqgraph.agents.common import ALLOWED, Attempt, apply_with_retry, diff_summ
 from reqgraph.agents.prompts import load_prompt
 from reqgraph.agents.runtime import RunContext
 from reqgraph.agents.state import BudgetState, RepairTask, RunState
+from reqgraph.checks.iso import two_actions
 from reqgraph.checks.text import vague_dictionary
 from reqgraph.graph.edges import Rel
 from reqgraph.graph.errors import GraphError
@@ -286,6 +287,20 @@ def without_frs(draft: AnalystDraft, graph: ArtifactGraph) -> list[str]:
     ]
 
 
+def not_singular(draft: AnalystDraft) -> list[str]:
+    """FR of the answer with two actions in one (T-313, H5): the ISO-002 heuristic, so the check
+    and the Analyst agree."""
+    found = []
+    for item in draft.requirements:
+        what = two_actions(item.statement) if item.kind == "FR" else None
+        if what is not None:
+            found.append(
+                f"{item.ref} «{item.title}»: в одном FR {what} — раздели на отдельные FR, "
+                "у каждого свои критерии приёмки"
+            )
+    return found
+
+
 def without_acceptance(draft: AnalystDraft) -> list[str]:
     """FR of the answer without acceptance criteria (T-311): the prompt asks for 1-3, yet a free
     model now and then leaves them out for every FR of an answer (ISO-003 on all of them)."""
@@ -328,7 +343,12 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
             "analyst", text, AnalystDraft, budget[0], template=load_prompt("analyst/extract")
         )
         conversion = to_patch(draft, graph)
-        problems = [*conversion.dropped, *without_frs(draft, graph), *without_acceptance(draft)]
+        problems = [
+            *conversion.dropped,
+            *without_frs(draft, graph),
+            *without_acceptance(draft),
+            *not_singular(draft),
+        ]
         return guarded(conversion.patch, graph, "analyst", mine, problems)
 
     async def retry(reasons: str) -> Attempt:

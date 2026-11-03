@@ -62,6 +62,16 @@ class NoVagueWords(BaseCheck):
         return found
 
 
+def two_actions(statement: str) -> str | None:
+    """Two modal verbs, or two infinitives joined by «и» / a comma: two actions in one FR (ISO-002;
+    the Analyst asks again on it, T-313). A list of objects is fine. Returns what was found."""
+    modals = sum(w.lemma in _MODAL for w in words(statement))
+    actions = _joined_infinitives(statement)
+    if actions:
+        return f"действия «{actions[0]}» и «{actions[1]}»"
+    return "две «должна»" if modals > 1 else None
+
+
 @register
 class OneStatement(BaseCheck):
     id = "ISO-002"
@@ -75,11 +85,8 @@ class OneStatement(BaseCheck):
         found = []
         for node in graph.nodes_of("FR"):
             assert isinstance(node, FunctionalReq)
-            tokens = words(node.statement)
-            modals = sum(w.lemma in _MODAL for w in tokens)
-            actions = _joined_infinitives(node.statement)
-            if modals > 1 or actions:
-                what = f"действия «{actions[0]}» и «{actions[1]}»" if actions else "две «должна»"
+            what = two_actions(node.statement)
+            if what is not None:
                 found.append(
                     self.finding(
                         "warning",
