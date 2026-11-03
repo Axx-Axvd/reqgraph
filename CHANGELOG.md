@@ -230,6 +230,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- Dev references (T-312): the facts of the brief (`in_brief`) say only what the brief says — dev-01 H-011, dev-03
+  H-051 and H-052 lose details the brief does not give, dev-02 H-034 keeps the brief's 120 orders and the
+  300 visitors become a new hidden H-045. Interview recall on dev-02 before and after is not comparable
+  (33 hidden requirements instead of 32).
 - SRS structure after Wiegers and Beatty (IEEE 830) instead of the own list after ISO/IEC/IEEE 29148 (T-408):
   introduction, overall description, system features (a user requirement with its stimulus / response
   sequence and FRs), external interfaces, NFR by ISO 25010 characteristic, other requirements, appendices
