@@ -5,6 +5,7 @@ built by the same code as the agents' answers, with no checks, no retries and no
 The model is the Analyst's (the same ladder as the agents): one model for every method.
 """
 
+import json
 import shutil
 import tempfile
 from collections.abc import Mapping
@@ -128,6 +129,20 @@ async def run_one_shot(
             row.error = f"модели: {exc}"[:300]
             files = {}
         store.save(replace(project, graph=graph, files=project.files | files))
+        # what the answer had and what the build dropped: why a model or a link is missing
+        answer = {
+            "answer": {
+                "actors": len(draft.actors),
+                "requirements": len(draft.requirements),
+                "processes": len(draft.processes),
+                "entities": len(draft.entities),
+            },
+            "dropped": [*kept.dropped, *kept_models.dropped],
+        }
+        (folder / "reports").mkdir(exist_ok=True)
+        (folder / "reports" / "oneshot.json").write_text(
+            json.dumps(answer, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         row.turns = sum(t.role == "agent" for t in turns)
         row.end = "one-shot"
         row.requirements = sum(

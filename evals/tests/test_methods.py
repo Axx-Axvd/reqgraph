@@ -57,7 +57,11 @@ async def test_the_matrix_runs_every_method_with_the_same_inputs(tmp_path: Path)
     models = agents() | {"analyst": TestModel(custom_output_args=ONE_SHOT)}
     cases = [harness.RunInputs("dev-01", "cooperative", m) for m in ("B1", "B3", "B2", "M1")]
     task = harness.run_task(
-        max_turns=2, runs=tmp_path / "runs", models=models, sim_model=simulator(["H-013"])
+        max_turns=2,
+        runs=tmp_path / "runs",
+        dialogs=tmp_path / "dialogs",
+        models=models,
+        sim_model=simulator(["H-013"]),
     )
     results, _ = await harness.evaluate(
         cases, task, judge_model=judge_first(), embedder=TestEmbeddingModel()
@@ -72,6 +76,15 @@ async def test_the_matrix_runs_every_method_with_the_same_inputs(tmp_path: Path)
     kept = tmp_path / "runs" / "B1" / "dev-01-cooperative-r1"
     turns = json.dumps(sorted(p.name for p in kept.rglob("*")))
     assert "erd.dbml" in turns  # the one-shot entities are built into the ERD by code
+    answer = json.loads((kept / "reports" / "oneshot.json").read_text(encoding="utf-8"))
+    assert answer["answer"] == {"actors": 0, "requirements": 1, "processes": 0, "entities": 1}
+    assert answer["dropped"] == []
+    dialogs = sorted(
+        p.relative_to(tmp_path / "dialogs").as_posix() for p in (tmp_path / "dialogs").rglob("*.md")
+    )
+    assert dialogs == [
+        f"{m}/dev-01-cooperative-r1.md" for m in ("B2", "B3", "M1")
+    ]  # one per method
 
 
 async def test_b1_without_its_m1_run_is_a_row_with_the_error(tmp_path: Path) -> None:

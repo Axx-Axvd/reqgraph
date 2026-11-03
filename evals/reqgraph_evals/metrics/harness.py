@@ -243,7 +243,7 @@ def run_task(
             models=models,
             sim_model=sim_model,
             root=root,
-            dialogs=dialogs,
+            dialogs=None if dialogs is None else dialogs / inputs.method,  # a case per method
             keep=runs / inputs.method,
         )
         return RunOutput(row, runs / inputs.method / case)
