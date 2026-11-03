@@ -8,6 +8,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Baselines of the matrix (T-405): `reqgraph-evals matrix --methods` runs M2, M1, B1 (one request on the brief and
+  the M1 interview of the same case, built by the agents' code without checks), B2 (the agents without the repair
+  loop and without their self-checks), B3 (a fixed questionnaire of 12 questions, `interviewer/questionnaire.md`,
+  then the M1 pipeline) and the ablations A1-A3 (no repair, no TRC-*, template Reviewer); the scenario,
+  character, simulator seed, model ladder and budget are the same for all. Core: `RunContext.interviewer =
+  "questionnaire"` and `RunContext.self_checks`.
 - `reqgraph-evals analyst` (T-311): requirements by kind, the reasons of dropped items, the facts of the brief kept
   (`in_brief` of hidden.yaml, the T-304 recall with the judge; its calls and cost apart), the T-311 rule per brief
   in the summary; `--save-runs` keeps the requirements of every run.

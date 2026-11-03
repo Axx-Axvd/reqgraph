@@ -311,7 +311,7 @@ def metrics_cmd(
         harness.RunInputs(
             r.scenario,
             cast("Character", r.character),
-            "M2" if r.interviewer == "coverage" else "M1",
+            r.method or ("M2" if r.interviewer == "coverage" else "M1"),  # type: ignore[arg-type]
             r.repeat,
         )
         for r in rows.values()
@@ -329,7 +329,13 @@ def matrix_cmd(
     characters: Annotated[str, typer.Option(help="характеры через запятую")] = ",".join(
         interview.CHARACTERS
     ),
-    methods: Annotated[str, typer.Option(help="M2 (с покрытием), M1 (без)")] = "M2",
+    methods: Annotated[
+        str,
+        typer.Option(
+            help="M2 (с покрытием), M1 (без), B1 one-shot, B2 без проверок, B3 анкета, "
+            "A1-A3 абляции M2 (T-405)"
+        ),
+    ] = "M2",
     repeat: Annotated[int, typer.Option(min=1, help="повторов")] = 1,
     profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
     max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
@@ -339,6 +345,11 @@ def matrix_cmd(
     """Прогнать интервью с симулятором и сразу посчитать метрики (pydantic-evals): results-*.csv.
     Test-сценарии не запускаются до финальной матрицы (S6)."""
     from reqgraph_evals.metrics import harness
+
+    unknown = [m for m in methods.split(",") if m.strip() and m.strip() not in harness.METHODS]
+    if unknown:
+        typer.echo(f"--methods: нет методов {', '.join(unknown)}", err=True)
+        raise typer.Exit(2)
 
     cases = [
         harness.RunInputs(s.strip(), c.strip(), m.strip(), r)  # type: ignore[arg-type]

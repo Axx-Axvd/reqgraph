@@ -131,10 +131,26 @@ def next_gaps(state: RunState) -> list[tuple[str, int, int]]:
     return found
 
 
+def questionnaire() -> list[str]:
+    """The fixed questions of the B3 baseline (T-405), one per line of the file."""
+    text = load_prompt("interviewer/questionnaire").render()
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
 async def interviewer(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     ctx = start(runtime, "interviewer")
     if state["stop"] is not None:
         return {}
+    if ctx.interviewer == "questionnaire":  # B3: the next fixed question, no model
+        questions = questionnaire()
+        if state["turns"] >= len(questions):
+            ctx.events.emit("interview_end", reason="questionnaire", turns=state["turns"])
+            return {"question": None, "interview_done": True}
+        ctx.events.emit("question", turn=state["turns"] + 1, area=None)
+        return {
+            "question": questions[state["turns"]],
+            "asked_areas": [*state["asked_areas"], None],
+        }
     prompt, name = render_question(state, ctx)
     template = load_prompt(name)
     try:

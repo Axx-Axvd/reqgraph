@@ -423,6 +423,10 @@ async def views_step(
             current.problems = [*current.attempt.dropped, "id моделей разошлись после отсева"]
             current.errors = len(current.problems)
             current.result = None
+        if current.result is not None and not ctx.self_checks:  # B2 (T-405): first that applies
+            current.problems = current.attempt.dropped
+            tries.append(current)
+            break
         if current.result is not None:
             project = replace(
                 ctx.project, graph=current.result.graph, files=current.files, warnings=[]

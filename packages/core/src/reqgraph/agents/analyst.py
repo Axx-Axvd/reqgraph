@@ -343,12 +343,13 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
             "analyst", text, AnalystDraft, budget[0], template=load_prompt("analyst/extract")
         )
         conversion = to_patch(draft, graph)
-        problems = [
-            *conversion.dropped,
-            *without_frs(draft, graph),
-            *without_acceptance(draft),
-            *not_singular(draft),
-        ]
+        problems = list(conversion.dropped)
+        if ctx.self_checks:  # B2 (T-405): no checks of its own, only the parse
+            problems += [
+                *without_frs(draft, graph),
+                *without_acceptance(draft),
+                *not_singular(draft),
+            ]
         return guarded(conversion.patch, graph, "analyst", mine, problems)
 
     async def retry(reasons: str) -> Attempt:

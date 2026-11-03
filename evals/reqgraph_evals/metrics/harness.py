@@ -18,12 +18,13 @@ from pydantic_ai.embeddings import EmbeddingModel
 from pydantic_ai.models import Model
 from pydantic_evals import Case, Dataset
 from pydantic_evals.evaluators import Evaluator, EvaluatorContext
+from reqgraph.agents.nodes import questionnaire
 from reqgraph.graph.store import FileStore
 from reqgraph.llm.embed import embed, embedding_model
 from reqgraph.llm.router import CallStats, structured
 from reqgraph.sim.stakeholder import Character
 
-from reqgraph_evals import interview
+from reqgraph_evals import interview, oneshot
 from reqgraph_evals.metrics.quality import quality
 from reqgraph_evals.metrics.recall import (
     Pair,
@@ -35,8 +36,34 @@ from reqgraph_evals.metrics.recall import (
 )
 from reqgraph_evals.scenario import SCENARIOS, load_scenario
 
-Method = Literal["M2", "M1"]
-INTERVIEWER: dict[str, Literal["coverage", "free"]] = {"M2": "coverage", "M1": "free"}
+Method = Literal["M2", "M1", "B1", "B2", "B3", "A1", "A2", "A3"]
+TRC = ("TRC-001", "TRC-002", "TRC-003", "TRC-004", "TRC-005", "TRC-006")
+
+
+@dataclass(frozen=True)
+class MethodOptions:
+    """How a method of 09_eval differs from the others (T-405); the scenario, the character, the
+    seed of the simulator, the model ladder and the budget are the same for all."""
+
+    interviewer: Literal["coverage", "free", "questionnaire"]
+    self_checks: bool = True  # False: agents apply their first answer (B2)
+    max_iter: int | None = None  # None: the project's repair rounds; 0 — no repair
+    reviewer: Literal["llm", "template"] = "llm"
+    disabled: tuple[str, ...] = ()  # checks off in the run's project (A2)
+    one_shot: bool = False  # B1: one request on the M1 interview of the same case
+
+
+METHODS: dict[str, MethodOptions] = {
+    "M2": MethodOptions("coverage"),
+    "M1": MethodOptions("free"),
+    "B1": MethodOptions("free", one_shot=True),
+    "B2": MethodOptions("free", self_checks=False, max_iter=0),
+    "B3": MethodOptions("questionnaire"),
+    "A1": MethodOptions("coverage", max_iter=0),
+    "A2": MethodOptions("coverage", disabled=TRC),
+    "A3": MethodOptions("coverage", reviewer="template"),
+}
+INTERVIEWER = {name: m.interviewer for name, m in METHODS.items()}
 
 
 @dataclass(frozen=True)
@@ -186,22 +213,40 @@ def run_task(
     """The task of a case: the interview with the simulator, the project kept for the metrics."""
 
     async def task(inputs: RunInputs) -> RunOutput:
+        options = METHODS[inputs.method]
+        case = f"{inputs.scenario}-{inputs.character}-r{inputs.repeat}"
+        if options.one_shot:
+            row = await oneshot.run_one_shot(
+                inputs.scenario,
+                inputs.character,
+                inputs.repeat,
+                source=runs / "M1" / case,
+                profile=profile,
+                models=models,
+                root=root,
+                keep=runs / inputs.method,
+            )
+            return RunOutput(row, runs / inputs.method / case)
+        questions = len(questionnaire()) if options.interviewer == "questionnaire" else max_turns
         row = await interview.run_interview(
             inputs.scenario,
             inputs.character,
             inputs.repeat,
             profile=profile,
-            interviewer=INTERVIEWER[inputs.method],
-            max_turns=max_turns,
+            interviewer=options.interviewer,
+            max_turns=questions,
+            max_iter=options.max_iter,
+            method=inputs.method,
+            self_checks=options.self_checks,
+            reviewer=options.reviewer,
+            disabled=options.disabled,
             models=models,
             sim_model=sim_model,
             root=root,
-            dialogs=dialogs,
+            dialogs=None if dialogs is None else dialogs / inputs.method,  # a case per method
             keep=runs / inputs.method,
         )
-        return RunOutput(
-            row, runs / inputs.method / f"{inputs.scenario}-{inputs.character}-r{inputs.repeat}"
-        )
+        return RunOutput(row, runs / inputs.method / case)
 
     return task
 
@@ -227,9 +272,11 @@ async def evaluate(
 ) -> tuple[list[Result], list[dict[str, Any]]]:
     """Run (or read) every case, score it, return the rows of results.csv and the judged pairs."""
     collected = Collected()
+    order = list(METHODS)  # M1 before B1: the one-shot reads the M1 interview of its case
+    ordered = sorted(cases, key=lambda c: order.index(c.method))
     dataset: Dataset[RunInputs, RunOutput, None] = Dataset(
         name="reqgraph",
-        cases=[Case(name=c.name, inputs=c) for c in cases],
+        cases=[Case(name=c.name, inputs=c) for c in ordered],
         evaluators=[
             RecallEvaluator(collected, profile, judge_model, embedder, root),
             QualityEvaluator(),

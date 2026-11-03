@@ -98,7 +98,8 @@ async def interview_project(
     max_turns: int | None = None,
     max_iter: int | None = None,
     reviewer: Literal["llm", "template"] = "llm",
-    interviewer: Literal["coverage", "free"] = "coverage",
+    interviewer: Literal["coverage", "free", "questionnaire"] = "coverage",
+    self_checks: bool = True,
     offline: bool = False,
     models: Mapping[str, Model] | None = None,
     on_line: Callable[[str], None] | None = None,
@@ -112,7 +113,7 @@ async def interview_project(
         events_file.unlink(missing_ok=True)
     text = brief if brief is not None else project.files.get(BRIEF_FILE)  # used at the start only
     options: dict[str, Any] = {"store": store, "offline": offline, "models": models or {}}
-    options |= {"reviewer": reviewer, "interviewer": interviewer}
+    options |= {"reviewer": reviewer, "interviewer": interviewer, "self_checks": self_checks}
     if profile is not None:
         options["profile"] = profile
     if max_iter is not None:
