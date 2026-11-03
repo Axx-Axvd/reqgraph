@@ -126,7 +126,7 @@ def load(folder: Path) -> Session:
     data = json.loads((folder / STATE / "session.json").read_text(encoding="utf-8"))
     pending = data.pop("pending")
     session = Session(
-        Path(data["folder"]),
+        folder,  # where it is now, even if the folder was moved
         data["scenario"],
         data["repeat"],
         data["max_turns"],
