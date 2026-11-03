@@ -1,7 +1,8 @@
 """Command line: ``reqgraph-evals probe | rescore | analyst | modeler | uml | standards | repair |
-scenarios | interview | metrics | matrix | label | agreement``."""
+scenarios | interview | metrics | matrix | label | agreement | human``."""
 
 import asyncio
+import json
 from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, cast
@@ -14,6 +15,7 @@ from reqgraph_evals import scenario as scenario_files
 if TYPE_CHECKING:
     from reqgraph.sim.stakeholder import Character
 
+    from reqgraph_evals import human as human_session
     from reqgraph_evals.metrics import harness
 
 app = typer.Typer(name="reqgraph-evals", no_args_is_help=True, add_completion=False)
@@ -478,3 +480,91 @@ def agreement_cmd(
         text, encoding="utf-8"
     )
     typer.echo(text)
+
+
+human_app = typer.Typer(
+    no_args_is_help=True,
+    help="Пилот «человек вместо симулятора» (T-306): один ход за вызов, ответ — в JSON.",
+)
+app.add_typer(human_app, name="human")
+
+
+def _human_state(session: "human_session.Session") -> None:
+    pending = session.pending
+    typer.echo(
+        json.dumps(
+            {
+                "session": str(session.folder),
+                "status": session.status,
+                "turn": pending.turn if pending else None,
+                "question": pending.question if pending else None,
+                "area": pending.area if pending else None,
+                "csv": str(session.csv) if session.status == "done" else None,
+                "dialog": str(session.dialog) if session.status == "done" else None,
+            },
+            ensure_ascii=False,
+        )
+    )
+
+
+@human_app.command("card")
+def human_card_cmd(scenario: Annotated[str, typer.Argument(help="dev-сценарий")]) -> None:
+    """Карточка для человека: персона, бриф, правила ответа, скрытые требования по областям."""
+    from reqgraph_evals import human as human_session
+
+    typer.echo(json.dumps(human_session.card(scenario), ensure_ascii=False, indent=2))
+
+
+@human_app.command("start")
+def human_start_cmd(
+    scenario: Annotated[str, typer.Argument(help="dev-сценарий")],
+    max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
+    profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
+) -> None:
+    """Новая сессия: проект из брифа сценария и первый вопрос интервьюера."""
+    from reqgraph_evals import human as human_session
+
+    if scenario.strip().startswith("test"):
+        typer.echo("test-сценарии — только в финальной матрице (S6)", err=True)
+        raise typer.Exit(2)
+    _human_state(asyncio.run(human_session.start(scenario, max_turns=max_turns, profile=profile)))
+
+
+@human_app.command("answer")
+def human_answer_cmd(
+    session: Annotated[Path, typer.Argument(help="папка сессии", exists=True, file_okay=False)],
+    text_file: Annotated[
+        Path, typer.Option(help="ответ человека, UTF-8, как написан", exists=True, dir_okay=False)
+    ],
+    told: Annotated[str, typer.Option(help="отметки: H-013,H-014 (необязательно)")] = "",
+) -> None:
+    """Ответ на текущий вопрос; печатает следующий вопрос или итог интервью."""
+    from reqgraph_evals import human as human_session
+
+    text = text_file.read_text(encoding="utf-8")
+    try:
+        state = asyncio.run(human_session.answer(session, text, told.split(",")))
+    except (human_session.UnknownMark, ValueError, RuntimeError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
+    _human_state(state)
+
+
+@human_app.command("finish")
+def human_finish_cmd(
+    session: Annotated[Path, typer.Argument(help="папка сессии", exists=True, file_okay=False)],
+) -> None:
+    """Закончить интервью: агенты, проверки, строка CSV и диалог, как у симулятора."""
+    from reqgraph_evals import human as human_session
+
+    _human_state(asyncio.run(human_session.finish(session)))
+
+
+@human_app.command("status")
+def human_status_cmd(
+    session: Annotated[Path, typer.Argument(help="папка сессии", exists=True, file_okay=False)],
+) -> None:
+    """Текущий вопрос сессии (после паузы или перезапуска)."""
+    from reqgraph_evals import human as human_session
+
+    _human_state(human_session.load(session))
