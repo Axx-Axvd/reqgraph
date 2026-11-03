@@ -286,6 +286,7 @@ def by_brief(rows: Sequence[Row]) -> list[dict[str, Any]]:
                 "fr": frs,
                 "fr_spread": spread,
                 "violation_share": violating / total if total else 0.0,
+                "iso002": sum(r.iso002 for r in mine),  # T-313: FRs with two actions
                 "passes": min(shares) >= BRIEF_SHARE and spread <= FR_SPREAD,
             }
         )
@@ -320,20 +321,20 @@ def summary_markdown(rows: Sequence[Row]) -> str:
         "",
         f"Правило T-311 на бриф: худший повтор — не меньше {BRIEF_SHARE:.0%} фактов брифа, "
         f"ФТ max/min — не больше {FR_SPREAD:g}; доля нарушений ISO-001/003 сравнивается с замером "
-        "до правки.",
+        "до правки, ФТ с ISO-002 за все повторы (T-313) — тоже.",
         "",
         "| Сценарий | Прогонов | Факты брифа: медиана | худший | ФТ по повторам | max/min ФТ "
-        "| Доля нарушений | Правило |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Доля нарушений | ISO-002 | Правило |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for b in by_brief(rows):
         if not b["runs"]:
-            lines.append(f"| {b['scenario']} | 0 | — | — | — | — | — | нет |")
+            lines.append(f"| {b['scenario']} | 0 | — | — | — | — | — | — | нет |")
             continue
         lines.append(
             f"| {b['scenario']} | {b['runs']} | {b['brief_median']:.0%} | {b['brief_worst']:.0%} "
             f"| {', '.join(map(str, b['fr']))} | {b['fr_spread']:.1f} "
-            f"| {b['violation_share']:.0%} | {_yes(b['passes'])} |"
+            f"| {b['violation_share']:.0%} | {b['iso002']} | {_yes(b['passes'])} |"
         )
     lines += [
         "",
