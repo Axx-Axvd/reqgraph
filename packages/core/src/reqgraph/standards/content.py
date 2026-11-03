@@ -3,13 +3,13 @@ system features, NFR by characteristic, interfaces, models, open issues, accepta
 assumptions and the traceability table. The Standards agent, TPL-001 and the exporters share it,
 so a section reads the same in the run, in the check and in the document."""
 
-import re
 from collections.abc import Mapping, Sequence
 
 from reqgraph.graph.edges import Rel
 from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.nodes import (
     C4Node,
+    Constraint,
     EntityNode,
     FunctionalReq,
     Node,
@@ -22,15 +22,9 @@ from reqgraph.standards import Section, load_structure
 CONTRACT = "Заполняется заказчиком при заключении договора."
 NOT_APPLICABLE = "Требования не предъявляются."
 LANGUAGES = {"ru": "русском", "en": "английском"}
-# T-402: a constraint goes to a section of the TZ by its topic
-TOPICS = {
-    "deadline": re.compile(r"срок|запуск|не позднее|\bдо \d|\d{4} год", re.I),
-    "budget": re.compile(r"бюджет|стоимост|руб|финанс", re.I),
-    "law": re.compile(r"ФЗ|закон|персональн|лиценз", re.I),
-    "tech": re.compile(
-        r"технолог|платформ|1С|python|linux|windows|браузер|postgres|облак|сервер", re.I
-    ),
-}
+# T-402, T-314: a constraint goes to the sections of the TZ by its type, which the Analyst sets
+# (not by words of its text: «в России» names no law, «на серверах» is not a technology)
+CONSTRAINT_TYPES = {"deadline": "time", "budget": "budget", "law": "legal", "tech": "tech"}
 SRS_TEMPLATE = "iso29148_srs"
 PRIORITY = {"must": "обязательно", "should": "желательно", "could": "можно", "wont": "не сейчас"}
 _REQUIREMENTS = ("BR", "UR", "FR", "NFR", "CON")
@@ -173,13 +167,9 @@ def _c4(graph: ArtifactGraph) -> tuple[str, list[str]]:
 
 
 def _constraints(section: Section, graph: ArtifactGraph) -> tuple[str, list[str]]:
-    patterns = [TOPICS[t] for t in section.constraint_topics]
-    nodes = [
-        n
-        for n in graph.nodes_of("CON")
-        if any(
-            p.search(f"{getattr(n, 'title', '')} {getattr(n, 'statement', '')}") for p in patterns
-        )
+    types = {CONSTRAINT_TYPES[t] for t in section.constraint_topics}
+    nodes: list[Node] = [
+        n for n in graph.nodes_of("CON") if isinstance(n, Constraint) and n.type in types
     ]
     return "\n".join(line(n) for n in nodes), [n.id for n in nodes]
 
