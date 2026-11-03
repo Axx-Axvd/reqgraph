@@ -41,7 +41,7 @@
 - uv run python -m reqgraph_evals.simprobe --out evals/reports/simprobe-<дата>.json   # шаг выбора симулятора на вопросах T-305 (нужна сеть)
 - uv run python -m reqgraph_evals.judgeprobe --reasoning on|low|off --out evals/reports/judgeprobe-<дата>.json   # судья заново на разметке автора, каппа (нужна сеть)
 - uv run reqgraph-evals groups [сценарии] [--check]   # разметка «типовое / уникальное» (T-308): t / u / ? / q, ответ сразу в hidden.yaml
-- uv run reqgraph-evals analyst --repeat 3   # Analyst на 3 dev-брифах: валидность патча, доля нарушений ISO-001/003 (нужна сеть)
+- uv run reqgraph-evals analyst --repeat 5 [--save-runs] [--no-brief]   # Analyst на 3 dev-брифах: валидность патча, нарушения ISO-001/003, требования по видам, найденные факты брифа (судья) и разброс ФТ по правилу T-311 (нужна сеть)
 - uv run reqgraph-evals modeler --repeat 3  # Analyst → Modeler на 3 dev-брифах: SCH-002 за ≤ 3 ответа, доля без SND-001 (нужна сеть)
 - uv run reqgraph-evals uml --repeat 3      # Modeler: сценарии использования и C4 на 3 dev-брифах, SCH-004/005 через Kroki, сироты, роли без UC (нужна сеть)
 - uv run reqgraph-evals standards --repeat 3  # Analyst → Modeler → Standards: доля заполненных разделов SRS (нужна сеть)

@@ -8,6 +8,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- `reqgraph-evals analyst` (T-311): requirements by kind, the reasons of dropped items, the facts of the brief kept
+  (`in_brief` of hidden.yaml, the T-304 recall with the judge; its calls and cost apart), the T-311 rule per brief
+  in the summary; `--save-runs` keeps the requirements of every run.
 - ReqIF export (T-403): `reqgraph export` writes `exports/req.reqif` with the documents (`--doc reqif` alone needs
   no schemes and no pandoc). Sections by kind; every BR/UR/FR/NFR/CON with id, name, statement, status, priority,
   acceptance, metric, scenario, goal, realized_by, depends_on, conflicts_with; refines is the Parent relation.
@@ -116,6 +119,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Analyst (T-311): a user requirement that no FR refines and an FR without acceptance criteria are reasons for
+  its one retry, and the better of the two answers is applied (a UR without FRs costs three times other problems).
+  On one dev brief the FR count of five repeats went from 2-11 to 6-10.
 - Export: figures are numbered by the appendix they are in; the TZ by GOST 34.602 had «Рисунок Б.n» in
   appendix A (T-407).
 - LLM ladder: a provider that blocks an answer (Gemini `finish_reason: content_filter: PROHIBITED_CONTENT` on an
