@@ -17,6 +17,7 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import Any, Literal
 
+import yaml
 from pydantic_ai.models import Model
 from reqgraph.agents.interview import EVENTS, interview_project
 from reqgraph.agents.run import init_project
@@ -42,6 +43,7 @@ class Row:
     character: str
     repeat: int
     interviewer: str = "coverage"
+    method: str = ""  # T-405: M2, M1, B1, B2, B3, A1-A3; empty for runs before it
     models: str = ""  # role=provider/model of every role that answered, the simulator included
     temperature: float = 0.0  # agents
     sim_temperature: float = 0.0
@@ -88,9 +90,13 @@ async def run_interview(
     repeat: int,
     *,
     profile: str = "free",
-    interviewer: Literal["coverage", "free"] = "coverage",
+    interviewer: Literal["coverage", "free", "questionnaire"] = "coverage",
     max_turns: int | None = None,
     max_iter: int | None = None,
+    method: str = "",
+    self_checks: bool = True,
+    reviewer: Literal["llm", "template"] = "llm",
+    disabled: Sequence[str] = (),
     models: Mapping[str, Model] | None = None,
     sim_model: Model | None = None,
     root: Path = SCENARIOS,
@@ -99,7 +105,9 @@ async def run_interview(
 ) -> Row:
     scenario = load_scenario(scenario_id, root)
     cfg = load_roles()
-    row = Row(scenario_id, character, repeat, interviewer, package_version=version("reqgraph"))
+    row = Row(
+        scenario_id, character, repeat, interviewer, method, package_version=version("reqgraph")
+    )
     row.temperature, row.sim_temperature = (
         cfg.temperature("analyst"),
         cfg.temperature("stakeholder"),
@@ -125,6 +133,8 @@ async def run_interview(
             brief=scenario.brief,
             project_id=scenario_id,
         )
+        if disabled:  # A2 (T-405): checks off for this project only
+            disable_checks(project, disabled)
         try:
             outcome = await interview_project(
                 project,
@@ -133,6 +143,8 @@ async def run_interview(
                 interviewer=interviewer,
                 max_turns=max_turns,
                 max_iter=max_iter,
+                self_checks=self_checks,
+                reviewer=reviewer,
                 offline=True,
                 models=models,
             )
@@ -153,6 +165,14 @@ async def run_interview(
         path = dialogs / f"{scenario_id}-{character}-r{repeat}.md"
         path.write_text(dialog_markdown(row, turns, sim), encoding="utf-8")
     return row
+
+
+def disable_checks(project: Path, checks: Sequence[str]) -> None:
+    """reqgraph.yaml of a run's project: these checks are off (the A2 ablation, T-405)."""
+    path = project / "reqgraph.yaml"
+    config = yaml.safe_load(path.read_text(encoding="utf-8"))
+    config.setdefault("checks", {})["disabled"] = list(checks)
+    path.write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
 
 def _events(path: Path) -> list[dict[str, Any]]:
