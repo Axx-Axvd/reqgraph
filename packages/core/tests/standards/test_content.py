@@ -209,3 +209,29 @@ def test_compatibility_joins_interfaces_nfr_and_technology() -> None:
     assert "CON-001" in found and any(r.startswith("NFR-") for r in found)
     stages, _ = section_text(program("SEC-TZ19-7"), graph())
     assert "CON-003" in stages and stages.endswith(CONTRACT)
+
+
+def test_a_constraint_goes_to_the_sections_of_its_type_not_of_its_words() -> None:
+    """T-314: «в России» has no word of law, «на серверах» has a word of technology — both are
+    legal by their type and land in the information security section only."""
+    from reqgraph.standards.content import section_text
+
+    ops = [
+        {
+            "op": "add",
+            "kind": "CON",
+            "tmp_id": f"c{i}",
+            "fields": {"title": title, "type": "legal", "statement": statement},
+        }
+        for i, (title, statement) in enumerate(
+            [
+                ("Данные в РФ", "Данные клиентов хранятся в России."),
+                ("Хранение у заказчика", "Данные читателей хранятся на серверах университета."),
+            ]
+        )
+    ]
+    g = graph().apply(GraphPatch.model_validate({"ops": ops}), actor="user").graph
+    new = sorted(set(g.nodes) - set(graph().nodes))
+    law = section_text(tz("SEC-TZ-4.1.9"), g)[1]
+    tech = section_text(tz("SEC-TZ-4.1.13"), g)[1] + section_text(tz("SEC-TZ-4.3.4"), g)[1]
+    assert set(new) <= set(law) and not set(new) & set(tech)

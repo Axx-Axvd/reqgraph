@@ -119,6 +119,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- TZ (T-314): a constraint goes to the TZ sections by its type (time, budget, legal, tech) that the Analyst sets,
+  not by words of its text: «stored in Russia» landed nowhere, «on the university servers» in two sections.
 - Analyst (T-313): atomic FRs — the prompt says one function, one FR, with an example of a list of functions
   against a list of one object's properties; an FR with two actions by the ISO-002 heuristic
   (`checks.iso.two_actions`, shared with the check) is a reason for the retry. On the dev briefs the worst of five
