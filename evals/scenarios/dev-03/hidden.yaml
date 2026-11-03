@@ -50,8 +50,8 @@ requirements:
   - {id: H-048, kind: FR, area: integrations, priority: must, in_brief: true, statement: "Список студентов и сотрудников каждую ночь сверяется с 1С:Университет.", reveal: "связь с 1С", group: typical}
   - {id: H-049, kind: FR, area: integrations, priority: should, statement: "Читатели входят через единый вход университета по номеру студенческого билета или пропуска.", reveal: "вход в личный кабинет", group: typical}
   - {id: H-050, kind: FR, area: integrations, priority: could, statement: "Онлайн-оплата пеней идёт через платёжный шлюз университета.", reveal: "онлайн-оплата", group: typical}
-  - {id: H-051, kind: NFR, area: nfr, priority: must, in_brief: true, statement: "Сайт доступен слабовидящим: есть версия для слабовидящих, работа с экранным диктором.", reveal: "доступность для слабовидящих", group: typical}
-  - {id: H-052, kind: NFR, area: nfr, priority: must, in_brief: true, statement: "В начале семестра сайт выдерживает 500 человек одновременно, поиск отвечает быстрее 2 секунд.", reveal: "нагрузка в начале семестра", group: typical}
+  - {id: H-051, kind: NFR, area: nfr, priority: must, in_brief: true, statement: "Сайт доступен слабовидящим.", reveal: "доступность для слабовидящих", group: typical}
+  - {id: H-052, kind: NFR, area: nfr, priority: must, in_brief: true, statement: "В начале семестра сайт выдерживает несколько сотен человек одновременно.", reveal: "нагрузка в начале семестра", group: typical}
   - {id: H-053, kind: NFR, area: nfr, priority: should, statement: "Система доступна 99% учебного времени, плановые работы — только ночью.", reveal: "доступность и плановые работы", group: typical}
   - {id: H-054, kind: NFR, area: nfr, priority: should, statement: "Библиотекари и администраторы входят с двухфакторной аутентификацией.", reveal: "безопасность входа", group: typical}
   - {id: H-055, kind: NFR, area: nfr, priority: should, statement: "Сроки выдачи, размер пеней и лимиты меняются в настройках без программиста.", reveal: "изменение правил", group: typical}
