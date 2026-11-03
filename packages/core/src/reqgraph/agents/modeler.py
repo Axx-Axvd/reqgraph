@@ -472,6 +472,10 @@ async def _models(
             current.problems = [*current.attempt.dropped, "id моделей разошлись после отсева"]
             current.errors = len(current.problems)
             current.result = None
+        if current.result is not None and not ctx.self_checks:  # B2 (T-405): first that applies
+            current.problems, current.errors = current.attempt.dropped, 0
+            tries.append(current)
+            break
         if current.result is not None:
             report = await run_checks(
                 candidate(ctx, current.result.graph, current.files), checks, offline=True

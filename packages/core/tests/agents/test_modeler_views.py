@@ -193,3 +193,21 @@ async def test_repair_tasks_on_use_cases_go_to_the_views_step(
     assert [t.node_ids for t in views_tasks] == [["UC-01"]]
     assert [t.node_ids for t in models_tasks] == [["PRC-01"]]
     assert "UC-01" in out["graph"].nodes
+
+
+async def test_without_self_checks_the_agents_apply_their_first_answer(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-405, B2: no self-checks — the Modeler takes its first answer that applies, the views
+    question too, the Analyst asks again only when its answer does not parse."""
+    from .test_modeler import broken
+
+    models = stub_models(analyst=DRAFT) | {
+        "modeler": scripted(broken(flows=[{"src": "S", "dst": "T99"}]), MODEL),
+        "modeler_views": scripted({"use_cases": VIEWS["use_cases"]}, VIEWS),
+    }
+    ctx = brief_context(models=models, max_iter=0, self_checks=False)
+    await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
+    roles = [e["role"] for e in events_of(ctx, "llm_call")]
+    assert roles.count("modeler") == 1 and roles.count("modeler_views") == 1
+    assert not events_of(ctx, "views_check") and not events_of(ctx, "patch_retry")

@@ -72,6 +72,8 @@ class RunContext:
     reviewer: Literal["llm", "template"] = "llm"  # template: the «without Reviewer» ablation
     # free: no coverage tracker (M1, H1); questionnaire: fixed questions, no model (B3, T-405)
     interviewer: Literal["coverage", "free", "questionnaire"] = "coverage"
+    # False: agents do not check their own answers (B2, T-405) — only the schema parse stays
+    self_checks: bool = True
 
     @classmethod
     def for_project(cls, project: Project, **options: Any) -> "RunContext":
