@@ -92,3 +92,65 @@ async def test_b1_without_its_m1_run_is_a_row_with_the_error(tmp_path: Path) -> 
 
     row = await run_one_shot("dev-01", "cooperative", 1, source=tmp_path / "none")
     assert row.error.startswith("B1 нужен прогон M1") and row.method == "B1"
+
+
+async def test_the_run_stops_starting_cases_once_the_dollar_limit_is_spent(tmp_path: Path) -> None:
+    """T-406: a case that would start past the limit is a row with the reason, not a silent gap."""
+    inner = harness.run_task(
+        max_turns=2, runs=tmp_path / "runs", models=agents(), sim_model=simulator(["H-013"])
+    )
+
+    async def priced(inputs: harness.RunInputs) -> harness.RunOutput:
+        out = await inner(inputs)
+        out.row.cost_usd = 0.02  # the stub models cost nothing
+        return out
+
+    cases = [harness.RunInputs("dev-01", "cooperative", "M2", r) for r in (1, 2, 3)]
+    results, _ = await harness.evaluate(
+        cases, priced, judge_model=judge_first(), embedder=TestEmbeddingModel(), max_usd=0.03
+    )
+    done = [r for r in results if not r.error]
+    skipped = [r for r in results if r.error]
+    assert len(done) == 2  # 0.02 spent < 0.03: the second starts, then 0.04 stops the third
+    assert [r.repeat for r in skipped] == [3]
+    assert skipped[0].error == "лимит $ запуска исчерпан: потрачено $0.0400 из $0.0300"
+    assert skipped[0].llm_calls == 0 and skipped[0].cost_usd == 0
+
+
+def test_the_summary_averages_each_method_and_draws_charts() -> None:
+    def result(method: str, recall: float, usd: float, error: str = "") -> harness.Result:
+        return harness.Result(
+            f"dev-01-cooperative-{method}",
+            "dev-01",
+            "cooperative",
+            method,
+            1,
+            recall=recall,
+            recall_partial=recall,
+            requirements=10,
+            cost_usd=usd,
+            error=error,
+        )
+
+    results = [
+        result("M1", 0.4, 0.02),
+        result("M2", 0.8, 0.02),
+        result("M2", 0.6, 0.02),
+        result("B3", 0.0, 0.01, error="ModelRateLimitError: 429"),
+    ]
+    text = harness.summary_markdown(results)
+    assert "| M2 | 2 | 2 | 70% | 70% | 10.0 | 0.0 | 0.0400 | 0.0 |" in text
+    assert "| B3 | 1 | 0 | — | — | — | — | 0.0100 | 0.0 |" in text
+    chart = text[text.index("```mermaid") :]
+    assert 'x-axis ["M2", "M1"]' in chart and "bar [70, 40]" in chart  # the order of METHODS
+    assert 'x-axis ["M2", "M1", "B3"]' in chart  # money: every method that spent it
+
+
+def test_the_matrix_refuses_test_scenarios_and_a_limit_over_5_dollars() -> None:
+    from reqgraph_evals.cli import app
+    from typer.testing import CliRunner
+
+    refused = CliRunner().invoke(app, ["matrix", "--scenarios", "test-01"])
+    assert refused.exit_code == 2 and "только в финальной матрице (S6)" in refused.output
+    costly = CliRunner().invoke(app, ["matrix", "--scenarios", "dev-01", "--max-usd", "6"])
+    assert costly.exit_code == 2 and "--allow-over-5" in costly.output
