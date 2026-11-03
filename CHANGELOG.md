@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- The pilot «a person instead of the simulator» (T-306): `reqgraph-evals human card|start|answer|finish|page` —
+  a person answers the interviewer from the scenario's card (persona, brief, the cooperative simulator's rules,
+  hidden requirements by area), one turn per call, the interview waiting in its checkpoint between calls; optional
+  marks of what was told are checked against the scenario; the result is a row in the simulator's interview format
+  (method `M2-human`) read by `reqgraph-evals metrics`, and a dialog. The page `evals/human/page.html` is a
+  claude.ai artifact: it stores the answer in its database and wakes the Claude session, which runs the interview
+  (the model keys live there) and writes the next question back.
 - A dollar limit for a matrix run (T-406): `reqgraph-evals matrix --max-usd` (1.0 by default, over 5 only with
   `--allow-over-5`) starts no case once the runs, the simulator and the judge have spent it; each case left is a
   row with the reason. `results-*.md` ends with a summary by method — means over the runs without an error, money
