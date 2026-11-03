@@ -568,3 +568,32 @@ def human_status_cmd(
     from reqgraph_evals import human as human_session
 
     _human_state(human_session.load(session))
+
+
+@human_app.command("page")
+def human_page_cmd(
+    session: Annotated[Path, typer.Argument(help="папка сессии", exists=True, file_okay=False)],
+    out: Annotated[Path, typer.Option(help="папка для JSON-документов страницы")],
+    turn_file: Annotated[
+        Path | None,
+        typer.Option(help="документ хода со страницы: ответ, отметки или конец интервью"),
+    ] = None,
+) -> None:
+    """Мост к странице пилота: применить ход со страницы (если дан) и записать документы для неё
+    в out/<коллекция>/<id>.json — их сессия кладёт в данные артефакта без правок."""
+    from reqgraph_evals import human as human_session
+
+    state = human_session.load(session)
+    if turn_file is not None:
+        doc = json.loads(turn_file.read_text(encoding="utf-8"))
+        doc = doc.get("data", doc)  # a document saved by ArtifactData keeps its body in data
+        try:
+            state = asyncio.run(human_session.from_page(session, doc))
+        except (human_session.UnknownMark, ValueError, RuntimeError) as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(2) from None
+    for path, body in human_session.page_docs(state).items():
+        target = out / f"{path}.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(body, ensure_ascii=False, indent=2), encoding="utf-8")
+    _human_state(state)

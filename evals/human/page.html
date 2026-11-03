@@ -1,0 +1,321 @@
+<title>Пилот интервью reqgraph</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=PT+Serif:wght@400;700&display=swap">
+<style>
+/* Layout: a case file on the left (who you are, what you know), the conversation on the right;
+   one column on a phone, the conversation first. Colors: a clinical blue-grey with an ink accent. */
+:root {
+  --bg: #f3f5f7;
+  --paper: #ffffff;
+  --ink: #18222d;
+  --muted: #5b6876;
+  --line: #d7dee5;
+  --accent: #1f5f8b;
+  --accent-soft: #e2edf5;
+  --told: #2f7a4f;
+  --told-soft: #e3f1e8;
+  --warn: #9a5b12;
+  --warn-soft: #f7ecdc;
+  --display: "PT Serif", Georgia, "Times New Roman", serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171d; --paper: #18212a; --ink: #e4eaf0; --muted: #9aa8b5; --line: #2c3a47;
+    --accent: #7db3da; --accent-soft: #1d3245; --told: #7fc79c; --told-soft: #1c3427;
+    --warn: #e0a95e; --warn-soft: #3a2b17; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171d; --paper: #18212a; --ink: #e4eaf0; --muted: #9aa8b5; --line: #2c3a47;
+  --accent: #7db3da; --accent-soft: #1d3245; --told: #7fc79c; --told-soft: #1c3427;
+  --warn: #e0a95e; --warn-soft: #3a2b17; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+}
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 0.8rem; font-family: var(--body); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.sub { color: var(--muted); font-size: 0.9rem; }
+.chip { font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.chip.done { background: var(--told-soft); color: var(--told); }
+.chip.paused, .chip.thinking { background: var(--warn-soft); color: var(--warn); }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } .talk { order: -1; } }
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 16px; min-width: 0; }
+.case { position: sticky; top: env(safe-area-inset-top, 0px); max-height: calc(100vh - 24px); overflow-y: auto; }
+@media (max-width: 860px) { .case { position: static; max-height: none; } }
+.persona { display: grid; gap: 4px; }
+.persona p { margin: 0; }
+ul.facts { margin: 0; padding-left: 18px; color: var(--muted); }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 600; }
+summary:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.prose { white-space: pre-wrap; color: var(--ink); font-size: 0.92rem; margin: 8px 0 0; }
+.area-list { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.area { display: grid; gap: 6px; }
+.req { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 8px; align-items: start; padding: 6px 8px; border-radius: 6px; }
+.req:hover { background: var(--accent-soft); }
+.req input { margin-top: 4px; }
+.req code { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.req.was { opacity: 0.62; }
+.req.was code::after { content: " ✓"; color: var(--told); }
+.req span { font-size: 0.9rem; }
+.turns { display: grid; gap: 14px; }
+.turn { display: grid; gap: 6px; }
+.q, .a { padding: 10px 12px; border-radius: 8px; max-width: 92%; }
+.q { background: var(--accent-soft); justify-self: start; }
+.a { background: var(--bg); border: 1px solid var(--line); justify-self: end; }
+.meta { font-size: 0.75rem; color: var(--muted); font-family: var(--mono); }
+.marks { display: flex; flex-wrap: wrap; gap: 4px; }
+.mark { font-family: var(--mono); font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; background: var(--told-soft); color: var(--told); }
+.current { border: 2px solid var(--accent); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+.current .question { font-family: var(--display); font-size: 1.15rem; }
+textarea { width: 100%; min-height: 120px; resize: vertical; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: inherit; font-weight: 600; border-radius: 8px; padding: 8px 14px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.note { font-size: 0.88rem; color: var(--muted); margin: 0; }
+.note.warn { color: var(--warn); }
+.empty { color: var(--muted); padding: 24px 8px; text-align: center; }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px; border-radius: 8px; background: var(--warn-soft); }
+@media (prefers-reduced-motion: no-preference) { .turn:last-child { animation: rise 220ms ease-out; } }
+@keyframes rise { from { transform: translateY(4px); } to { transform: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1 id="title">Пилот интервью</h1>
+      <div class="sub" id="subtitle">Человек вместо симулятора заказчика · reqgraph, T-306</div>
+    </div>
+    <span class="chip" id="status">загрузка</span>
+  </header>
+
+  <div class="grid">
+    <aside class="panel case" aria-label="Карточка заказчика">
+      <div id="card-empty" class="empty">Карточка появится, когда Claude запустит интервью: кто вы, бриф, правила ответа и что вы знаете о будущей системе.</div>
+      <div id="card" hidden>
+        <div class="persona">
+          <h3>Вы</h3>
+          <h2 id="p-name"></h2>
+          <p id="p-role" class="sub"></p>
+          <ul class="facts" id="p-facts"></ul>
+          <p class="sub" id="p-style"></p>
+        </div>
+        <details>
+          <summary>Бриф проекта</summary>
+          <p class="prose" id="brief"></p>
+        </details>
+        <details open>
+          <summary>Как отвечать</summary>
+          <p class="prose" id="rules"></p>
+        </details>
+        <div class="area-list" id="areas"></div>
+      </div>
+    </aside>
+
+    <main class="panel talk" aria-label="Разговор с интервьюером">
+      <div id="talk-empty" class="empty">Здесь будет разговор. Первый вопрос интервьюера появится после запуска сессии.</div>
+      <div class="turns" id="turns"></div>
+      <div class="current" id="current" hidden>
+        <div class="meta" id="q-meta"></div>
+        <div class="question" id="q-text"></div>
+        <label for="answer" class="sub">Ваш ответ, 1–4 предложения. Отметьте в карточке слева, что из списка вы назвали (необязательно).</label>
+        <textarea id="answer" maxlength="2000"></textarea>
+        <div class="marks" id="picked"></div>
+        <div class="row">
+          <button class="primary" id="send">Отправить ответ</button>
+          <button id="pause">Пауза</button>
+          <button id="finish">Закончить интервью</button>
+        </div>
+        <div class="confirm" id="confirm" hidden>
+          <span>Закончить интервью на этом вопросе? Ответ на него не уйдёт.</span>
+          <button id="finish-yes">Да, закончить</button>
+          <button id="finish-no">Вернуться</button>
+        </div>
+        <p class="note" id="hint"></p>
+      </div>
+      <p class="note" id="wait" hidden>Интервьюер думает над следующим вопросом. Обычно это 20–60 секунд.</p>
+      <p class="note" id="done" hidden>Интервью закончено. Дальше агенты строят требования и модели, Claude считает метрики и пишет сравнение с симулятором.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const STATUS = { asking: "ваш ход", thinking: "интервьюер думает", paused: "пауза", done: "закончено", waiting: "ждём запуска" };
+  let db = null, comments = null, state = null, turns = [], picked = new Set(), busy = false;
+
+  function draftKey() { const t = pending(); return t ? "draft-" + (state && state.session) + "-" + t.turn : null; }
+  function loadDraft() { try { const k = draftKey(); return k ? localStorage.getItem(k) || "" : ""; } catch (e) { return ""; } }
+  function saveDraft(v) { try { const k = draftKey(); if (k) localStorage.setItem(k, v); } catch (e) {} }
+
+  function areaTitle(key) { const m = state && state.card && state.card.area_titles; return (m && m[key]) || key; }
+  function pending() { return turns.find((t) => !t.answer && !t.finish) || null; }
+  function told() { const s = new Set(); turns.forEach((t) => (t.told || []).forEach((i) => s.add(i))); return s; }
+
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function renderCard() {
+    const card = state && state.card;
+    $("card").hidden = !card; $("card-empty").hidden = !!card;
+    if (!card) return;
+    $("title").textContent = "Пилот интервью · " + card.title;
+    $("subtitle").textContent = card.scenario + " · характер «сотрудничающий» · вопросов не больше " + (state.max_turns || "—");
+    $("p-name").textContent = card.persona.name;
+    $("p-role").textContent = card.persona.role;
+    const facts = $("p-facts"); facts.replaceChildren(...card.persona.facts.map((f) => el("li", null, f)));
+    $("p-style").textContent = "Манера: " + card.persona.style;
+    $("brief").textContent = card.brief;
+    $("rules").textContent = card.rules;
+    const was = told(), areas = $("areas");
+    areas.replaceChildren(...card.areas.map((a) => {
+      const box = el("div", "area");
+      box.append(el("h3", null, a.title));
+      a.requirements.forEach((r) => {
+        const row = el("label", "req" + (was.has(r.id) ? " was" : ""));
+        const cb = el("input"); cb.type = "checkbox"; cb.id = "m-" + r.id; cb.checked = picked.has(r.id);
+        cb.disabled = !pending() || busy;
+        cb.addEventListener("change", () => { cb.checked ? picked.add(r.id) : picked.delete(r.id); renderPicked(); });
+        row.append(cb, el("code", null, r.id), el("span", null, r.statement));
+        box.append(row);
+      });
+      return box;
+    }));
+  }
+
+  function renderPicked() {
+    $("picked").replaceChildren(...[...picked].map((i) => el("span", "mark", i)));
+  }
+
+  function renderTurns() {
+    const done = turns.filter((t) => t.answer || t.finish);
+    $("talk-empty").hidden = turns.length > 0;
+    $("turns").replaceChildren(...done.map((t) => {
+      const box = el("div", "turn");
+      box.append(el("div", "meta", "вопрос " + t.turn + (t.area ? " · " + areaTitle(t.area) : "")));
+      box.append(el("div", "q", t.question));
+      if (t.finish) { box.append(el("div", "meta", "здесь интервью закончено")); return box; }
+      box.append(el("div", "a", t.answer));
+      if ((t.told || []).length) { const m = el("div", "marks"); m.style.justifySelf = "end"; (t.told || []).forEach((i) => m.append(el("span", "mark", i))); box.append(m); }
+      return box;
+    }));
+  }
+
+  function renderCurrent() {
+    const t = pending(), status = state ? state.status : "waiting";
+    const asking = !!t && status !== "done";
+    $("current").hidden = !asking;
+    $("wait").hidden = !(status === "thinking" && !asking);
+    $("done").hidden = status !== "done";
+    const chip = $("status"); chip.textContent = STATUS[busy ? "thinking" : (asking && status !== "paused" ? "asking" : status)] || status;
+    chip.className = "chip " + (busy ? "thinking" : status);
+    if (!asking) return;
+    $("q-meta").textContent = "вопрос " + t.turn + (t.area ? " · " + areaTitle(t.area) : "");
+    $("q-text").textContent = t.question;
+    if (document.activeElement !== $("answer") && !$("answer").value) $("answer").value = loadDraft();
+    ["send", "pause", "finish"].forEach((id) => ($(id).disabled = busy));
+  }
+
+  function render() { renderCard(); renderTurns(); renderPicked(); renderCurrent(); }
+
+  async function notify(text) {
+    // the answer is already stored; this only wakes the Claude session that runs the interview
+    if (!comments) return false;
+    try {
+      const can = await comments.canSendToClaude();
+      if (can !== "available") return false;
+      const anchor = await comments.anchorFor($("q-text"));
+      await comments.sendToClaude({ anchor, text });
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function manual(text) {
+    $("hint").className = "note warn";
+    $("hint").textContent = "Ответ сохранён, но сессию не удалось разбудить с этой страницы. Напишите в чат сессии: «" + text + "».";
+  }
+
+  async function send() {
+    const t = pending(), text = $("answer").value.trim();
+    if (!t || busy) return;
+    if (!text) { $("hint").className = "note warn"; $("hint").textContent = "Напишите ответ: что сказал бы заказчик. Если сказать нечего — так и напишите."; return; }
+    busy = true; render();
+    try {
+      await db.doc("turns/" + t.id).update({ answer: text, told: [...picked], answeredAt: new Date().toISOString() });
+      await db.doc("pilot/state").update({ status: "thinking" });
+      const msg = "Пилот: ответ на вопрос " + t.turn;
+      $("hint").className = "note"; $("hint").textContent = "";
+      picked = new Set(); $("answer").value = ""; saveDraft("");
+      if (!(await notify(msg))) manual(msg);
+    } catch (e) {
+      $("hint").className = "note warn";
+      $("hint").textContent = "Ответ не сохранился (" + (e && e.code || "ошибка") + "). Проверьте сеть и нажмите «Отправить ответ» ещё раз.";
+    }
+    busy = false; render();
+  }
+
+  async function finish() {
+    const t = pending();
+    if (!t || busy) return;
+    busy = true; $("confirm").hidden = true; render();
+    try {
+      await db.doc("turns/" + t.id).update({ finish: true });
+      await db.doc("pilot/state").update({ status: "thinking" });
+      const msg = "Пилот: закончить интервью";
+      if (!(await notify(msg))) manual(msg);
+    } catch (e) {
+      $("hint").className = "note warn"; $("hint").textContent = "Не удалось сохранить (" + (e && e.code || "ошибка") + "). Попробуйте ещё раз.";
+    }
+    busy = false; render();
+  }
+
+  async function pause() {
+    if (busy) return;
+    try { await db.doc("pilot/state").update({ status: "paused" }); } catch (e) {}
+    $("hint").className = "note"; $("hint").textContent = "Пауза. Можно закрыть страницу: вопрос и черновик ответа дождутся вас.";
+  }
+
+  $("send").addEventListener("click", send);
+  $("pause").addEventListener("click", pause);
+  $("finish").addEventListener("click", () => { $("confirm").hidden = false; });
+  $("finish-no").addEventListener("click", () => { $("confirm").hidden = true; });
+  $("finish-yes").addEventListener("click", finish);
+  $("answer").addEventListener("input", (e) => saveDraft(e.target.value));
+
+  render();
+
+  (async function connect() {
+    const claude = window.claude;
+    if (!claude || !claude.use) { $("status").textContent = "откройте страницу в claude.ai"; return; }
+    db = await claude.use("db");
+    comments = await claude.use("comments");
+    if (!db) { $("status").textContent = "нет доступа к данным"; $("talk-empty").textContent = "Войдите в claude.ai под своей учётной записью: страница хранит разговор в данных артефакта."; return; }
+    const timer = setTimeout(() => { $("status").textContent = "нет связи с данными"; }, 10000);
+    db.doc("pilot/state").onSnapshot((snap) => {
+      clearTimeout(timer);
+      state = snap.exists ? snap.data() : null;
+      render();
+    }, () => { clearTimeout(timer); $("status").textContent = "данные недоступны"; });
+    db.collection("turns").orderBy("turn").onSnapshot((snap) => {
+      turns = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
+      render();
+    }, () => {});
+  })();
+})();
+</script>

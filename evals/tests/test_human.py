@@ -25,7 +25,7 @@ def test_the_card_has_the_persona_the_rules_and_the_hidden_list_by_area() -> Non
     ids = [r["id"] for area in card["areas"] for r in area["requirements"]]
     assert "H-013" in ids and len(ids) == len(set(ids))
     assert all(not r["in_brief"] for area in card["areas"] for r in area["requirements"])
-    assert card["character"] == "cooperative"
+    assert card["character"] == "cooperative" and card["area_titles"]["nfr"]
 
 
 def test_test_scenarios_have_no_card() -> None:
@@ -98,3 +98,19 @@ def test_the_cli_prints_the_card_as_json_and_refuses_test_scenarios() -> None:
     assert shown.exit_code == 0 and json.loads(shown.output)["scenario"] == "dev-01"
     refused = CliRunner().invoke(app, ["human", "start", "test-01"])
     assert refused.exit_code == 2 and "S6" in refused.output
+
+
+async def test_the_page_documents_and_a_turn_from_the_page(tmp_path: Path) -> None:
+    session = await human.start("dev-01", root=tmp_path, max_turns=5, models=agents())
+    docs = human.page_docs(session)
+    assert docs["pilot/state"]["status"] == "asking" and docs["pilot/state"]["card"]["areas"]
+    assert docs["turns/0001"] == {"turn": 1, "question": QUESTION, "area": "exceptions"}
+    with pytest.raises(RuntimeError, match="вопрос 2"):
+        await human.from_page(session.folder, {"turn": 2, "answer": "x"}, models=agents())
+    page_turn = {"turn": 1, "question": QUESTION, "answer": "За 3 часа.", "told": ["H-013"]}
+    step = await human.from_page(session.folder, page_turn, models=agents())
+    assert "turns/0002" in human.page_docs(step)
+    done = await human.from_page(
+        session.folder, {"turn": 2, "finish": True}, models=agents(), max_iter=0, reports=tmp_path
+    )
+    assert done.status == "done" and human.page_docs(done)["pilot/state"]["status"] == "done"

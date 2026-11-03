@@ -118,6 +118,7 @@ def card(scenario_id: str) -> dict[str, Any]:
         "brief": scenario.brief,
         "rules": read_prompt("reqgraph_evals", "human/rules").source,
         "areas": areas,
+        "area_titles": AREA_TITLES,
     }
 
 
@@ -304,3 +305,50 @@ def _write_result(session: Session, outcome: Outcome, reports: Path) -> None:
     )
     title, rest = text.split("\n", 1)
     session.dialog.write_text(f"{title}\n\n{note}\n{rest}", encoding="utf-8")
+
+
+def page_docs(session: Session) -> dict[str, dict[str, Any]]:
+    """The documents of the pilot page's database (evals/human/page.html): the session's state
+    with the card, and the pending question as a turn the page answers."""
+    status = "done" if session.status == "done" else "asking"
+    docs: dict[str, dict[str, Any]] = {
+        "pilot/state": {
+            "scenario": session.scenario,
+            "session": session.folder.name,
+            "status": status,
+            "max_turns": session.max_turns,
+            "card": card(session.scenario),
+        }
+    }
+    if session.pending is not None:
+        p = session.pending
+        docs[f"turns/{p.turn:04d}"] = {"turn": p.turn, "question": p.question, "area": p.area}
+    return docs
+
+
+async def from_page(
+    folder: Path,
+    turn: Mapping[str, Any],
+    *,
+    models: Mapping[str, Model] | None = None,
+    max_iter: int | None = None,
+    reports: Path = REPORTS,
+) -> Session:
+    """Apply the page's turn document: its answer and marks, or the end of the interview."""
+    session = load(folder)
+    if session.pending is None or turn.get("turn") != session.pending.turn:
+        raise RuntimeError(
+            f"на странице вопрос {turn.get('turn')}, а сессия ждёт ответа на "
+            f"{session.pending.turn if session.pending else '—'}"
+        )
+    if turn.get("finish"):
+        return await finish(folder, models=models, max_iter=max_iter, reports=reports)
+    told = [str(t) for t in turn.get("told") or []]
+    return await answer(
+        folder,
+        str(turn.get("answer") or ""),
+        told,
+        models=models,
+        max_iter=max_iter,
+        reports=reports,
+    )
