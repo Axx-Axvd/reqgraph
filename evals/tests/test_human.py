@@ -114,3 +114,24 @@ async def test_the_page_documents_and_a_turn_from_the_page(tmp_path: Path) -> No
         session.folder, {"turn": 2, "finish": True}, models=agents(), max_iter=0, reports=tmp_path
     )
     assert done.status == "done" and human.page_docs(done)["pilot/state"]["status"] == "done"
+
+
+async def test_the_metrics_command_scores_a_finished_session(tmp_path: Path) -> None:
+    """The row of a person's session goes through the same evaluate as the simulator's runs."""
+    from pydantic_ai.embeddings import TestEmbeddingModel
+    from reqgraph_evals.metrics import harness
+
+    from .test_metrics import judge_first
+
+    session = await human.start("dev-01", root=tmp_path, max_turns=5, models=agents())
+    await human.answer(session.folder, "За 3 часа.", told=["H-013"], models=agents())
+    done = await human.finish(session.folder, models=agents(), max_iter=0, reports=tmp_path)
+    rows = read_interview_rows(done.csv)
+    case = harness.RunInputs("dev-01", "cooperative", "M2-human", done.repeat)  # type: ignore[arg-type]
+    results, _ = await harness.evaluate(
+        [case],
+        harness.saved_task(rows, tmp_path),
+        judge_model=judge_first(),
+        embedder=TestEmbeddingModel(),
+    )
+    assert [(r.method, r.error) for r in results] == [("M2-human", "")]

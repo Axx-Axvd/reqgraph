@@ -299,7 +299,10 @@ async def evaluate(
         return output
 
     order = list(METHODS)  # M1 before B1: the one-shot reads the M1 interview of its case
-    ordered = sorted(cases, key=lambda c: order.index(c.method))
+    # a method outside the matrix (M2-human, T-306; older saved runs) goes after the matrix
+    ordered = sorted(
+        cases, key=lambda c: order.index(c.method) if c.method in order else len(order)
+    )
     dataset: Dataset[RunInputs, RunOutput, None] = Dataset(
         name="reqgraph",
         cases=[Case(name=c.name, inputs=c) for c in ordered],
