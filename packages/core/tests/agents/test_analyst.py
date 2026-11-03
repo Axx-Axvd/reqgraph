@@ -255,3 +255,18 @@ async def test_a_worse_retry_keeps_the_first_answer(
     (kept,) = events_of(ctx, "kept_first")
     assert kept["first"] < kept["second"]
     assert [n.kind for n in out["graph"].nodes.values()].count("FR") == 1
+
+
+async def test_an_fr_with_two_actions_is_asked_again(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-313, H5: the ISO-002 heuristic is a reason for the Analyst's retry too."""
+    double = json.loads(json.dumps(DRAFT))
+    double["requirements"][2]["statement"] = (
+        "Система должна отправить пациенту SMS-напоминание и отменить запись по ответу."
+    )
+    ctx = brief_context(models=stub_models() | {"analyst": scripted(double, DRAFT)}, max_iter=0)
+    await build_graph().ainvoke(ctx.initial_state("brief", brief=BRIEF), context=ctx)
+    (retry,) = events_of(ctx, "patch_retry")
+    (reason,) = retry["reasons"]
+    assert reason.startswith("fr_remind «Напоминание»: в одном FR действия «отправить»")

@@ -119,6 +119,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Analyst (T-313): atomic FRs — the prompt says one function, one FR, with an example of a list of functions
+  against a list of one object's properties; an FR with two actions by the ISO-002 heuristic
+  (`checks.iso.two_actions`, shared with the check) is a reason for the retry. On the dev briefs the worst of five
+  repeats now keeps 81-100% of the brief facts (75% before) and fewer FRs carry ISO-002.
 - Analyst (T-311): a user requirement that no FR refines and an FR without acceptance criteria are reasons for
   its one retry, and the better of the two answers is applied (a UR without FRs costs three times other problems).
   On one dev brief the FR count of five repeats went from 2-11 to 6-10.
