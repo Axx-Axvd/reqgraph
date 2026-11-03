@@ -209,3 +209,25 @@ async def test_saturation_waits_for_every_area_to_be_asked_once(
         "Пока не думали."
     )  # goals is closed; constraints are covered, never asked
     assert out["__interrupt__"][0].value["turn"] == 2
+
+
+async def test_the_questionnaire_asks_its_fixed_questions_without_an_llm(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-405, B3: the questions come one by one from interviewer/questionnaire.md, no model asks;
+    the interview ends when they run out."""
+    from reqgraph.agents.nodes import questionnaire
+
+    questions = questionnaire()
+    assert 10 <= len(questions) <= 15
+    ctx = brief_context(interviewer="questionnaire")
+    run = interview(ctx, need=NO_NEED)
+    out = await run.start()
+    asked = [out["__interrupt__"][0].value["question"]]
+    for _ in range(len(questions)):
+        out = await run.answer("Не знаю.")
+        if "__interrupt__" in out:
+            asked.append(out["__interrupt__"][0].value["question"])
+    assert asked == questions
+    assert "interviewer" not in [e["role"] for e in events_of(ctx, "llm_call")]
+    assert events_of(ctx, "interview_end")[0]["reason"] == "questionnaire"

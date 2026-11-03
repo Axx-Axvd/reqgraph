@@ -98,7 +98,7 @@ async def interview_project(
     max_turns: int | None = None,
     max_iter: int | None = None,
     reviewer: Literal["llm", "template"] = "llm",
-    interviewer: Literal["coverage", "free"] = "coverage",
+    interviewer: Literal["coverage", "free", "questionnaire"] = "coverage",
     offline: bool = False,
     models: Mapping[str, Model] | None = None,
     on_line: Callable[[str], None] | None = None,
