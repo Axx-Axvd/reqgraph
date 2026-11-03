@@ -44,6 +44,25 @@ class OneShotDraft(BaseModel):
     entities: list[DraftEntity] = Field(default_factory=list)
 
 
+def with_ids(draft: OneShotDraft, ids: Mapping[str, str]) -> ModelerDraft:
+    """Processes and entities of the answer with the refs of its requirements replaced by ids."""
+
+    def swap(refs: list[str]) -> list[str]:
+        return [ids.get(ref, ref) for ref in refs]
+
+    processes = [
+        p.model_copy(
+            update={
+                "refines": swap(p.refines),
+                "nodes": [n.model_copy(update={"realizes": swap(n.realizes)}) for n in p.nodes],
+            }
+        )
+        for p in draft.processes
+    ]
+    entities = [e.model_copy(update={"realizes": swap(e.realizes)}) for e in draft.entities]
+    return ModelerDraft(processes=processes, entities=entities)
+
+
 def transcript(source: Path) -> list[InterviewTurn]:
     """The turns of a kept run, in order."""
     graph = FileStore(source, readers=model_readers()).load().graph
@@ -117,10 +136,11 @@ async def run_one_shot(
         )
         # the guard only keeps the graph whole (unknown refs, wrong links): no checks, no retry
         kept = guarded(requirements.patch, graph, "analyst", [], requirements.dropped)
-        graph = graph.apply(kept.patch, actor="agent").graph
-        models_update = to_models(
-            ModelerDraft(processes=draft.processes, entities=draft.entities), graph, project.files
-        )
+        applied = graph.apply(kept.patch, actor="agent")
+        graph = applied.graph
+        # one answer: the models name requirements by their refs, the ids are issued only now
+        ids = {ref: applied.id_map.get(tmp, tmp) for ref, tmp in requirements.refs.items()}
+        models_update = to_models(with_ids(draft, ids), graph, project.files)
         kept_models = guarded(models_update.patch, graph, "modeler", [], models_update.dropped)
         try:
             graph = graph.apply(kept_models.patch, actor="agent").graph

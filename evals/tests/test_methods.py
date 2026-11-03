@@ -33,7 +33,7 @@ ONE_SHOT: dict[str, Any] = {
             "name": "Запись",
             "table": "visit",
             "columns": [{"name": "id", "type": "int", "pk": True}],
-            "realizes": ["FR-001"],
+            "realizes": ["fr_cancel"],  # one answer: the models name requirements by their ref
         }
     ],
 }
