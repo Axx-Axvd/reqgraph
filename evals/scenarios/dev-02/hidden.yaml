@@ -33,7 +33,7 @@ requirements:
   - {id: H-031, kind: FR, area: rules, priority: should, statement: "В один часовой интервал курьер везёт не больше 4 заказов.", reveal: "загрузка курьеров", group: typical}
   - {id: H-032, kind: FR, area: integrations, priority: must, statement: "Онлайн-оплата идёт через интернет-эквайринг банка пекарни, чеки по 54-ФЗ пробивает онлайн-касса.", reveal: "банк, касса, чеки", group: typical}
   - {id: H-033, kind: FR, area: integrations, priority: should, statement: "Заказы и оплаты выгружаются в 1С:Бухгалтерию раз в сутки.", reveal: "бухгалтерия и учёт", group: typical}
-  - {id: H-034, kind: NFR, area: nfr, priority: must, in_brief: true, statement: "Сайт выдерживает субботний пик: до 120 заказов за утро и до 300 посетителей одновременно.", reveal: "нагрузка в пик", group: typical}
+  - {id: H-034, kind: NFR, area: nfr, priority: must, in_brief: true, statement: "Сайт выдерживает субботний пик — до 120 заказов за утро.", reveal: "нагрузка в пик", group: typical}
   - {id: H-035, kind: NFR, area: nfr, priority: should, statement: "Оформить заказ с телефона можно за 3 минуты без регистрации.", reveal: "удобство заказа", group: typical}
   - {id: H-036, kind: NFR, area: nfr, priority: should, statement: "Сайт доступен 99,5% времени, а в субботу с 7 до 12 плановых работ не бывает.", reveal: "доступность сайта", group: typical}
   - {id: H-037, kind: NFR, area: nfr, priority: must, statement: "Данные карт в системе не хранятся: оплата проходит на странице банка.", reveal: "безопасность оплаты", group: typical}
@@ -44,3 +44,4 @@ requirements:
   - {id: H-042, kind: FR, area: scenarios, priority: could, statement: "После доставки клиент может поставить изделию оценку от 1 до 5 и написать отзыв, а средняя оценка видна в каталоге.", reveal: "отзывы об изделиях", source: "PURE:2007-e-store#3.1.16", group: typical}
   - {id: H-043, kind: FR, area: rules, priority: could, statement: "После 18:00 выпечка дня продаётся со скидкой 30%; такие акции владелец включает и выключает сам.", reveal: "скидки и акции", source: "PURE:2007-e-store#3.1.19", group: unique}
   - {id: H-044, kind: NFR, area: nfr, priority: should, statement: "Менеджер и курьер автоматически выходят из системы после 30 минут бездействия.", reveal: "безопасность входа сотрудников", source: "PURE:2007-e-store#3.5.1", group: typical}
+  - {id: H-045, kind: NFR, area: nfr, priority: should, statement: "В субботний пик на сайте до 300 посетителей одновременно.", reveal: "сколько людей на сайте в пик", group: typical}

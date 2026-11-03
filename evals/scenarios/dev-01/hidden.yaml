@@ -10,7 +10,7 @@ requirements:
   - {id: H-008, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Накануне приёма пациент получает напоминание.", reveal: "напоминания пациенту", group: typical}
   - {id: H-009, kind: FR, area: scenarios, priority: must, in_brief: true, statement: "Пациент может отменить запись.", reveal: "отмена записи пациентом", group: typical}
   - {id: H-010, kind: FR, area: scenarios, priority: should, statement: "Новый пациент при первой записи указывает ФИО, телефон и дату рождения, телефон подтверждает кодом из SMS.", reveal: "первая запись нового пациента, регистрация", group: typical}
-  - {id: H-011, kind: FR, area: exceptions, priority: must, in_brief: true, statement: "Если врач заболел, регистратор переносит его записи к другому врачу или на другой день.", reveal: "врач заболел", group: typical}
+  - {id: H-011, kind: FR, area: exceptions, priority: must, in_brief: true, statement: "Если врач заболел, регистратор переносит его записи.", reveal: "врач заболел", group: typical}
   - {id: H-012, kind: FR, area: exceptions, priority: should, statement: "Регистратор отмечает неявку; после двух неявок подряд пациент записывается только через регистратора.", reveal: "пациент не пришёл, неявки", group: unique}
   - {id: H-013, kind: FR, area: exceptions, priority: should, statement: "Отменить запись онлайн можно не позднее чем за 3 часа до приёма, позже — только по телефону.", reveal: "сроки отмены", group: unique}
   - {id: H-014, kind: FR, area: exceptions, priority: could, statement: "Если пациент опоздал больше чем на 15 минут, регистратор может перенести приём, опоздание отмечается в истории визитов.", reveal: "опоздание пациента", group: unique}
