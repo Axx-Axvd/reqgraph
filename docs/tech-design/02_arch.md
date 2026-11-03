@@ -136,5 +136,5 @@ reqgraph/
 │   └── reports/               # results.csv, графики, отчёт для диплома
 ├── examples/garage61/         # эталонный проект docs-as-code
 ├── docs/                      # tech-design/ adr/ architecture.md thesis/
-└── .github/workflows/         # ci.yml evals.yml migrate.yml keepalive.yml
+└── .github/workflows/         # ci.yml migrate.yml keepalive.yml (матрица — в облачной сессии Claude, T-406)
 ```

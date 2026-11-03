@@ -8,6 +8,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- A dollar limit for a matrix run (T-406): `reqgraph-evals matrix --max-usd` (1.0 by default, over 5 only with
+  `--allow-over-5`) starts no case once the runs, the simulator and the judge have spent it; each case left is a
+  row with the reason. `results-*.md` ends with a summary by method — means over the runs without an error, money
+  and time over all — and Mermaid bar charts of recall and $. The command refuses test scenarios before anything
+  runs. The experiments run in a Claude cloud session, not in GitHub Actions: the model keys live in the cloud
+  environment (author's decision of 2026-11-03), so there is no evals.yml or probe.yml.
 - Baselines of the matrix (T-405): `reqgraph-evals matrix --methods` runs M2, M1, B1 (one request on the brief and
   the M1 interview of the same case, built by the agents' code without checks), B2 (the agents without the repair
   loop and without their self-checks), B3 (a fixed questionnaire of 12 questions, `interviewer/questionnaire.md`,

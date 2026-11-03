@@ -25,6 +25,9 @@ def main() -> None:
     """reqgraph evaluation tools."""
 
 
+MAX_USD = 5.0  # dollars of one matrix run without --allow-over-5 (T-406)
+
+
 @app.command("probe")
 def probe_cmd(
     models: Annotated[str, typer.Option(help="модели через запятую: провайдер/модель")],
@@ -341,11 +344,28 @@ def matrix_cmd(
     max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
     out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
     tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+    max_usd: Annotated[
+        float, typer.Option(min=0, help="лимит $ на весь запуск: прогоны, симулятор и судья")
+    ] = 1.0,
+    allow_over_5: Annotated[
+        bool, typer.Option("--allow-over-5", help="разрешить лимит больше $5 (потолок $20 в месяц)")
+    ] = False,
 ) -> None:
     """Прогнать интервью с симулятором и сразу посчитать метрики (pydantic-evals): results-*.csv.
+    Новые прогоны не начинаются, когда потрачен --max-usd: каждый пропущенный — строка с причиной.
     Test-сценарии не запускаются до финальной матрицы (S6)."""
     from reqgraph_evals.metrics import harness
 
+    if any(s.strip().startswith("test") for s in scenarios.split(",")):
+        typer.echo("--scenarios: test-сценарии — только в финальной матрице (S6)", err=True)
+        raise typer.Exit(2)
+    if max_usd > MAX_USD and not allow_over_5:
+        typer.echo(
+            f"--max-usd {max_usd}: больше ${MAX_USD:g} за запуск — только с --allow-over-5 "
+            "(потолок $20 в месяц, CLAUDE.md)",
+            err=True,
+        )
+        raise typer.Exit(2)
     unknown = [m for m in methods.split(",") if m.strip() and m.strip() not in harness.METHODS]
     if unknown:
         typer.echo(f"--methods: нет методов {', '.join(unknown)}", err=True)
@@ -366,8 +386,11 @@ def matrix_cmd(
     task = harness.run_task(
         profile=profile, max_turns=max_turns, runs=runs, dialogs=out / "dialogs" / stem
     )
-    results, pairs = asyncio.run(harness.evaluate(cases, task, profile=profile))
+    results, pairs = asyncio.run(harness.evaluate(cases, task, profile=profile, max_usd=max_usd))
     _metrics_out(results, pairs, out, stem)
+    skipped = sum(r.error.startswith(harness.LIMIT_SPENT) for r in results)
+    spent = sum(r.cost_usd for r in results)
+    typer.echo(f"потрачено ${spent:.4f} из ${max_usd:g}; не начато из-за лимита: {skipped}")
 
 
 @app.command("groups")

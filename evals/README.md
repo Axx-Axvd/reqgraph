@@ -55,12 +55,14 @@ uv run python -m reqgraph_evals.judgeprobe --reasoning off --out reports/judgepr
 
 ```bash
 uv run reqgraph-evals metrics reports/interview-<…>.csv --runs runs/<дата>/interview   # по сохранённым прогонам
-uv run reqgraph-evals matrix --scenarios dev-01 --methods M2,M1 --repeat 1                # прогнать и посчитать
+uv run reqgraph-evals matrix --scenarios dev-01 --methods M2,M1 --repeat 1 --max-usd 1   # прогнать и посчитать
 uv run reqgraph-evals label reports/labels/pairs-results-<…>.csv                          # ручная разметка 20% пар
 uv run reqgraph-evals agreement reports/labels/pairs-results-<…>.csv                      # каппа Коэна судьи и человека
 ```
 
 `results-YYYY-MM-DD-<профиль>[-tag].csv` — строка на прогон: модели всех ролей, температуры, seed, хэши промптов, версия пакета, модель судьи и эмбеддингов, вопросов, recall и recall_all, найдено из скрытых, recall на 10 вопросов, recall по группам — типовые и уникальные (T-308: скрытых, найдено и доля в каждой группе; пусто, если эталон не размечен), требований, ambiguity, validity, soundness, trace coverage, orphan rate, ошибок, вызовы LLM (с судьёй), токены, $ и минуты работы моделей. `labels/pairs-*.csv` — каждая пара «эталон — кандидат» с близостью и решением судьи; `labels/pairs-*.human.csv` — ручная разметка (ответы сохраняются сразу, разметку можно прервать и продолжить); `labels/agreement-*.md` — каппа и доля совпадений. Как считаются метрики — 09_eval.
+
+`matrix` (T-405, T-406): методы — `--methods M2,M1,B1,B2,B3` (и абляции A1–A3). `--max-usd` — лимит $ на весь запуск (прогоны, симулятор, судья; по умолчанию $1, больше $5 — только с `--allow-over-5`): когда он потрачен, новые прогоны не начинаются, каждый пропущенный — строка «лимит $ запуска исчерпан»; прогон, который уже идёт, доигрывается. Test-сценарии команда не запускает до финальной матрицы (S6). В конце `results-*.md` — сводка по методам: средние по прогонам без ошибки, $ и минуты по всем, графики Mermaid (GitHub рисует их сам). Гоняется в облачной сессии Claude: ключи моделей — в настройках её среды.
 
 ## Analyst на dev-брифах (T-202)
 

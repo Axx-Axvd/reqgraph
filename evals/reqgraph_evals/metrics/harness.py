@@ -66,6 +66,13 @@ METHODS: dict[str, MethodOptions] = {
 INTERVIEWER = {name: m.interviewer for name, m in METHODS.items()}
 
 
+LIMIT_SPENT = "лимит $ запуска исчерпан"
+
+
+class LimitSpent(Exception):
+    """The dollars of the run are spent: the case is not started (T-406)."""
+
+
 @dataclass(frozen=True)
 class RunInputs:
     scenario: str
@@ -269,9 +276,28 @@ async def evaluate(
     judge_model: Model | None = None,
     embedder: EmbeddingModel | None = None,
     root: Path = SCENARIOS,
+    max_usd: float | None = None,
 ) -> tuple[list[Result], list[dict[str, Any]]]:
-    """Run (or read) every case, score it, return the rows of results.csv and the judged pairs."""
+    """Run (or read) every case, score it, return the rows of results.csv and the judged pairs.
+
+    max_usd — the dollars of the whole run (T-406): runs, the simulator and the judge. A case that
+    would start once they are spent is not run; it is a row with the reason. The case that is
+    running when the limit is passed runs to its end."""
     collected = Collected()
+    costs: list[float] = []  # of the cases run so far
+
+    def spent() -> float:
+        judged = sum(s.cost_usd for calls in collected.judge_calls.values() for s in calls)
+        return sum(costs) + judged
+
+    async def limited(inputs: RunInputs) -> RunOutput:
+        # cases go one by one (max_concurrency=1): the judge of the last case is counted too
+        if max_usd is not None and (usd := spent()) >= max_usd:
+            raise LimitSpent(f"{LIMIT_SPENT}: потрачено ${usd:.4f} из ${max_usd:.4f}")
+        output: RunOutput = await task(inputs)
+        costs.append(output.row.cost_usd)
+        return output
+
     order = list(METHODS)  # M1 before B1: the one-shot reads the M1 interview of its case
     ordered = sorted(cases, key=lambda c: order.index(c.method))
     dataset: Dataset[RunInputs, RunOutput, None] = Dataset(
@@ -282,7 +308,7 @@ async def evaluate(
             QualityEvaluator(),
         ],
     )
-    report = await dataset.evaluate(task, max_concurrency=1, progress=False)
+    report = await dataset.evaluate(limited, max_concurrency=1, progress=False)
     results = []
     for case in report.cases:
         scores = {k: v.value for k, v in case.scores.items()}
@@ -295,7 +321,7 @@ async def evaluate(
                 failure.inputs.character,
                 failure.inputs.method,
                 failure.inputs.repeat,
-                error=failure.error_message[:300],
+                error=failure.error_message.removeprefix(f"{LimitSpent.__name__}: ")[:300],
             )
         )
     for case in report.cases:  # an evaluator that failed is a result too
@@ -421,4 +447,65 @@ def summary_markdown(results: Sequence[Result]) -> str:
             f"| {r.soundness:.0%} | {r.trace_coverage:.0%} | {r.orphan_rate:.0%} | {r.errors} "
             f"| {r.llm_calls} | {r.cost_usd:.4f} | {r.minutes} | {r.error} |"
         )
-    return "\n".join(lines) + "\n"
+    return "\n".join([*lines, "", *methods_markdown(results)]) + "\n"
+
+
+def _mean(values: Sequence[float]) -> float:
+    return sum(values) / len(values)
+
+
+def methods_markdown(results: Sequence[Result]) -> list[str]:
+    """Means of every method over its runs without an error, money and time over all of them,
+    and bar charts (Mermaid, GitHub draws them), methods in the order of METHODS (T-406)."""
+    order = [m for m in METHODS if any(r.method == m for r in results)]
+    lines = [
+        "## Сводка по методам",
+        "",
+        "Средние — по прогонам без ошибки; $ и минуты — по всем прогонам метода.",
+        "",
+        "| Метод | Прогонов | без ошибки | recall | с частичными | Требований | Ошибок проверок "
+        "| $ | Минут |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    recalls: dict[str, int] = {}
+    money: dict[str, float] = {}
+    for method in order:
+        runs = [r for r in results if r.method == method]
+        clean = [r for r in runs if not r.error]
+        money[method] = sum(r.cost_usd for r in runs)
+        minutes = round(sum(r.minutes for r in runs), 2)
+        if clean:
+            recalls[method] = round(_mean([r.recall for r in clean]) * 100)
+            means = (
+                f"{_mean([r.recall for r in clean]):.0%} "
+                f"| {_mean([r.recall_partial for r in clean]):.0%} "
+                f"| {_mean([r.requirements for r in clean]):.1f} "
+                f"| {_mean([r.errors for r in clean]):.1f}"
+            )
+        else:
+            means = "— | — | — | —"
+        lines.append(
+            f"| {method} | {len(runs)} | {len(clean)} | {means} | {money[method]:.4f} | {minutes} |"
+        )
+    if recalls:
+        lines += _bars("recall по методам, %", "recall, %", recalls, 100)
+    spent = {m: usd for m, usd in money.items() if usd > 0}
+    if spent:
+        top = max(spent.values())
+        lines += _bars("$ по методам", "$", {m: round(v, 4) for m, v in spent.items()}, top)
+    return lines
+
+
+def _bars(title: str, axis: str, values: Mapping[str, float], top: float) -> list[str]:
+    names = ", ".join(f'"{m}"' for m in values)
+    bars = ", ".join(str(v) for v in values.values())
+    return [
+        "",
+        "```mermaid",
+        "xychart-beta",
+        f'    title "{title}"',
+        f"    x-axis [{names}]",
+        f'    y-axis "{axis}" 0 --> {top}',
+        f"    bar [{bars}]",
+        "```",
+    ]
