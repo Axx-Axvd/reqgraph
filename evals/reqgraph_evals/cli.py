@@ -69,14 +69,28 @@ def analyst_cmd(
     profile: Annotated[str, typer.Option(help="профиль llm/roles.yaml")] = "free",
     out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
     tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
+    brief: Annotated[
+        bool, typer.Option(help="считать найденные факты брифа (судья, T-311)")
+    ] = True,
+    save: Annotated[
+        bool, typer.Option("--save-runs", help="требования каждого прогона в evals/runs/ (T-311)")
+    ] = False,
 ) -> None:
-    """Прогнать Analyst на dev-брифах (T-202): валидность патча и доля нарушений ISO-001/003."""
+    """Прогнать Analyst на dev-брифах (T-202): валидность патча, доля нарушений ISO-001/003,
+    факты брифа и разброс ФТ по повторам (T-311)."""
     rows: list[analyst.Row] = []
+    stem = f"analyst-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
+    runs = Path(__file__).resolve().parent.parent / "runs" / stem if save else None
     for scenario in [s.strip() for s in scenarios.split(",") if s.strip()]:
         for index in range(1, repeat + 1):
             typer.echo(f"analyst: {scenario} #{index}")
-            rows.append(asyncio.run(analyst.run_scenario(scenario, index, profile=profile)))
-    stem = f"analyst-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
+            rows.append(
+                asyncio.run(
+                    analyst.run_scenario(
+                        scenario, index, profile=profile, brief_recall=brief, save=runs
+                    )
+                )
+            )
     analyst.write_csv(rows, out / f"{stem}.csv")
     summary = analyst.summary_markdown(rows)
     (out / f"{stem}.md").write_text(summary, encoding="utf-8")

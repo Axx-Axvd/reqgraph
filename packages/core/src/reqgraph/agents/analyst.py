@@ -263,6 +263,46 @@ def render(state: RunState, tasks: list[RepairTask]) -> str:
     )
 
 
+LOST_FR = "ни одно ФТ не уточняет это ПТ"
+
+
+def without_frs(draft: AnalystDraft, graph: ArtifactGraph) -> list[str]:
+    """UR of the answer that no FR refines (T-311): a free model sometimes writes the system's
+    actions only into the UR's scenario, and nothing downstream asks for them — the Modeler has no
+    FR to model, the documents no function. The Analyst asks once more with these reasons."""
+    refined = {r for item in draft.requirements if item.kind == "FR" for r in item.refines}
+    refined |= {
+        e.dst
+        for e in graph.edges
+        if e.rel is Rel.REFINES and getattr(graph.get(e.src), "kind", None) == "FR"
+    }
+    return [
+        f"{item.ref} «{item.title}»: {LOST_FR} — добавь его в refines тех FR, "
+        "которые уже описывают нужные действия системы (у FR может быть несколько родителей), "
+        "а недостающие действия из его сценария запиши новыми FR; одно и то же действие для "
+        "разных ролей — одно FR"
+        for item in draft.requirements
+        if item.kind == "UR" and item.ref not in refined
+    ]
+
+
+def without_acceptance(draft: AnalystDraft) -> list[str]:
+    """FR of the answer without acceptance criteria (T-311): the prompt asks for 1-3, yet a free
+    model now and then leaves them out for every FR of an answer (ISO-003 on all of them)."""
+    return [
+        f"{item.ref} «{item.title}»: нет критериев приёмки — добавь 1–3 проверяемых в acceptance"
+        for item in draft.requirements
+        if item.kind == "FR" and not item.acceptance
+    ]
+
+
+def cost(attempt: Attempt) -> int:
+    """How bad an answer is (T-311): a UR without FRs is lost content nobody restores later, so it
+    weighs three times an item dropped or an FR without acceptance criteria (ISO-003 catches those
+    and the repair loop fixes them)."""
+    return sum(3 if LOST_FR in reason else 1 for reason in attempt.dropped)
+
+
 async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     ctx = start(runtime, "analyst")
     if state["stop"] is not None:
@@ -288,13 +328,14 @@ async def analyst(state: RunState, runtime: Runtime[RunContext]) -> dict[str, An
             "analyst", text, AnalystDraft, budget[0], template=load_prompt("analyst/extract")
         )
         conversion = to_patch(draft, graph)
-        return guarded(conversion.patch, graph, "analyst", mine, conversion.dropped)
+        problems = [*conversion.dropped, *without_frs(draft, graph), *without_acceptance(draft)]
+        return guarded(conversion.patch, graph, "analyst", mine, problems)
 
     async def retry(reasons: str) -> Attempt:
         return await ask(prompt + "\n\n" + load_prompt("analyst/retry").render(error=reasons))
 
     try:
-        result = await apply_with_retry(ctx, "analyst", graph, await ask(prompt), retry)
+        result = await apply_with_retry(ctx, "analyst", graph, await ask(prompt), retry, cost)
     except BudgetExceeded:
         ctx.events.emit("stop", reason="budget", node="analyst")
         return {"stop": "budget", "tasks": rest, "budget": budget[0]}
