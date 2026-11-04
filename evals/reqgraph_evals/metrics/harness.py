@@ -283,7 +283,8 @@ async def evaluate(
     running when the limit is passed runs to its end.
 
     progress — a JSON Lines file: every case is written to it as soon as it is scored, and a case
-    already in it is not run again. A matrix stopped halfway goes on from where it stopped."""
+    already in it without an error is not run again. A matrix stopped halfway goes on from where it
+    stopped; a case that failed (a model out of quota) runs again."""
     saved = _read_progress(progress)
     order = list(METHODS)  # M1 before B1: the one-shot reads the M1 interview of its case
     rank = {m: i for i, m in enumerate(order)}
@@ -292,7 +293,7 @@ async def evaluate(
     results: list[Result] = []
     pairs: list[dict[str, Any]] = []
     for inputs in ordered:
-        if inputs.name in saved:
+        if inputs.name in saved and not saved[inputs.name][0].error:  # a failed case runs again
             result, case_pairs = saved[inputs.name]
         elif max_usd is not None and (usd := sum(r.cost_usd for r in results)) >= max_usd:
             result = Result(

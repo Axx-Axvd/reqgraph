@@ -186,3 +186,30 @@ def test_the_progress_file_keeps_a_result_with_its_judged_pairs(tmp_path: Path) 
     pair = {"run": result.run, "hidden_id": "H-013", "judge": True, "level": "full"}
     harness._write_progress(path, result, [pair])
     assert harness._read_progress(path) == {result.run: (result, [pair])}
+
+
+async def test_a_case_that_failed_runs_again_on_resume(tmp_path: Path) -> None:
+    """A free model out of quota fails a case; the resumed run tries it again, not skips it."""
+    progress = tmp_path / "p.jsonl"
+    failed = harness.Result(
+        "dev-01-cooperative-M2-r1", "dev-01", "cooperative", "M2", 1, error="429"
+    )
+    harness._write_progress(progress, failed, [])
+    calls: list[str] = []
+    inner = harness.run_task(
+        max_turns=2, runs=tmp_path / "runs", models=agents(), sim_model=simulator(["H-013"])
+    )
+
+    async def counted(inputs: harness.RunInputs) -> harness.RunOutput:
+        calls.append(inputs.name)
+        return await inner(inputs)
+
+    results, _ = await harness.evaluate(
+        [harness.RunInputs("dev-01", "cooperative", "M2", 1)],
+        counted,
+        progress=progress,
+        judge_model=judge_first(),
+        embedder=TestEmbeddingModel(),
+    )
+    assert calls == ["dev-01-cooperative-M2-r1"] and results[0].error == ""
+    assert harness._read_progress(progress)[failed.run][0].error == ""  # the later line wins
