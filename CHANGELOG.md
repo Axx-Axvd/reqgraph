@@ -8,6 +8,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- The simulated client's understanding of IT (T-316): a 0-3 scale (not related to IT, a confident user, has
+  ordered IT projects, a specialist), a level per persona and per area (`it_level`, `it_by_area` in
+  `persona.yaml`, both optional; 3 by default, as before). A term of `sim/jargon.yaml` above the level without an
+  example is not understood: nothing is told and the client asks what it means; with an example the client
+  answers in general words only. `reqgraph-evals matrix|interview --it-level`; the level and the «not
+  understood» answers go to results.csv and the dialogs. Level 3 behaves as the simulator did.
+- A matrix goes on after a stop: `matrix --resume <results-*.progress.jsonl>` skips the cases already scored
+  and runs again the ones that failed (T-406).
 - B1 one-shot prompt (T-405): states the step types, the start event and foreign keys by table name, as the
   Modeler's prompt does; before, every B1 process and ERD of the smoke runs was dropped on format (author's
   decision of 2026-11-04). The kept B1 project holds the model's raw answer (`reports/oneshot.json`).
