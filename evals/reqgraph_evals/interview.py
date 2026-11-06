@@ -44,6 +44,7 @@ class Row:
     repeat: int
     interviewer: str = "coverage"
     method: str = ""  # T-405: M2, M1, B1, B2, B3, A1-A3; empty for runs before it
+    it_level: str = "3"  # T-316: the client's IT level, 0-3 or «persona»; 3 for runs before it
     models: str = ""  # role=provider/model of every role that answered, the simulator included
     temperature: float = 0.0  # agents
     sim_temperature: float = 0.0
@@ -61,6 +62,8 @@ class Row:
     wrong_left: int = 0
     off_topic: int = 0  # told items whose area is not the area the question aimed at
     empty: int = 0  # questions whose answer told no hidden requirement anew (T-305)
+    not_understood: int = 0  # T-316: answers «I do not understand», no requirement told
+    partly_understood: int = 0  # T-316: understood from an example, told in general words
     coverage: str = ""  # area got/need at the end
     requirements: int = 0
     errors_final: int = 0
@@ -82,6 +85,20 @@ class Turn:
     area: str | None
     answer: str
     told: list[dict[str, str]] = field(default_factory=list)
+    not_understood: list[str] = field(
+        default_factory=list
+    )  # T-316: the words the client asked about
+
+
+def level_suffix(it_level: int | None) -> str:
+    """The IT level in a case name (T-316): level 3 keeps the names of the runs before it."""
+    if it_level == 3:
+        return ""
+    return "-itp" if it_level is None else f"-it{it_level}"
+
+
+def case_key(scenario: str, character: str, repeat: int, it_level: int | None = 3) -> str:
+    return f"{scenario}-{character}{level_suffix(it_level)}-r{repeat}"
 
 
 async def run_interview(
@@ -94,6 +111,7 @@ async def run_interview(
     max_turns: int | None = None,
     max_iter: int | None = None,
     method: str = "",
+    it_level: int | None = 3,
     self_checks: bool = True,
     reviewer: Literal["llm", "template"] = "llm",
     disabled: Sequence[str] = (),
@@ -113,7 +131,10 @@ async def run_interview(
         cfg.temperature("stakeholder"),
     )
     row.seed = (cfg.defaults.seed or 0) + repeat  # the simulator's random choices per repeat
-    sim = Stakeholder(scenario, character, seed=row.seed, profile=profile, model=sim_model)
+    row.it_level = "persona" if it_level is None else str(it_level)
+    sim = Stakeholder(
+        scenario, character, seed=row.seed, profile=profile, model=sim_model, it_level=it_level
+    )
     turns: list[Turn] = []
     history: list[tuple[str, str]] = []
     sim_calls: list[dict[str, Any]] = []
@@ -123,7 +144,8 @@ async def run_interview(
         history.append((question, reply.text))
         sim_calls.extend(asdict(s) for s in reply.stats)
         told = [{"id": t.id, "mode": t.mode, "area": sim.items[t.id].area} for t in reply.told]
-        turns.append(Turn(number, question, None, reply.text, told))
+        missed = list(sim.log[-1].get("not_understood", [])) if sim.log else []
+        turns.append(Turn(number, question, None, reply.text, told, missed))
         return reply.text
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -157,12 +179,12 @@ async def run_interview(
             row.requirements = outcome.summary.requirements
             row.errors_final = outcome.summary.errors
         if keep is not None:
-            target = keep / f"{scenario_id}-{character}-r{repeat}"
+            target = keep / case_key(scenario_id, character, repeat, it_level)
             shutil.rmtree(target, ignore_errors=True)
             shutil.copytree(project, target, ignore=shutil.ignore_patterns(".reqgraph"))
     if dialogs is not None:
         dialogs.mkdir(parents=True, exist_ok=True)
-        path = dialogs / f"{scenario_id}-{character}-r{repeat}.md"
+        path = dialogs / f"{case_key(scenario_id, character, repeat, it_level)}.md"
         path.write_text(dialog_markdown(row, turns, sim), encoding="utf-8")
     return row
 
@@ -222,13 +244,16 @@ def _fill(
         row.revealed_typical = sum(r.id in told_ids for r in hidden if r.group == "typical")
         row.revealed_unique = sum(r.id in told_ids for r in hidden if r.group == "unique")
     row.mentioned_only, row.wrong_left = told["mentioned_only"], told["wrong_left"]
+    row.not_understood = told.get("not_understood", 0)
+    row.partly_understood = told.get("partly_understood", 0)
 
 
 def dialog_markdown(row: Row, turns: Sequence[Turn], sim: Stakeholder) -> str:
     """The dialog for the manual check: every answer with what it told and on which question."""
     items = sim.items
     lines = [
-        f"# Диалог {row.scenario} · {row.character} · повтор {row.repeat}",
+        f"# Диалог {row.scenario} · {row.character} · понимание ИТ {row.it_level} · "
+        f"повтор {row.repeat}",
         "",
         f"Интервьюер: {row.interviewer}; модели: {row.models}; seed {row.seed}; "
         f"вопросов {row.turns}, конец: {row.end or '—'}.",
@@ -252,7 +277,10 @@ def dialog_markdown(row: Row, turns: Sequence[Turn], sim: Stakeholder) -> str:
                 f"- {t['id']} ({item.area}){flag} — {MODES[t['mode']]}: {item.statement} "
                 f"[тема: {item.reveal}]"
             )
-        if not turn.told:
+        if turn.not_understood:
+            words = ", ".join(f"«{w}»" for w in turn.not_understood)
+            lines.append(f"- заказчик не понял вопрос: {words} (T-316)")
+        elif not turn.told:
             lines.append("- ничего из скрытых требований")
         lines.append("")
     left = [
