@@ -104,7 +104,14 @@ async def test_a_vague_client_needs_a_second_question_for_details() -> None:
     assert "сроки отмены" in told and "3 часа" not in told  # only the topic, no details
     second = await sim.answer("А до какого времени можно отменить?", [("Как с отменой?", "Ну.")])
     assert [t.mode for t in second.told] == ["detail"] and "3 часа" in reply_part(client.replies[1])
-    assert summary(sim) == {"hidden": 4, "revealed": 1, "mentioned_only": 0, "wrong_left": 0}
+    assert summary(sim) == {
+        "hidden": 4,
+        "revealed": 1,
+        "mentioned_only": 0,
+        "wrong_left": 0,
+        "not_understood": 0,  # T-316: understood every question
+        "partly_understood": 0,
+    }
 
 
 async def test_a_vague_client_tells_details_when_the_question_asks_for_them() -> None:
