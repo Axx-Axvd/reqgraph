@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- `reqgraph-evals matrix --resume <progress.jsonl>` (T-406): each finished case is written to a progress file
+  as it ends; a launch stopped by a container restart goes on from it, skips the saved cases and runs the
+  failed ones again. Needed for the dev matrix on the cheap profile, run one scenario a day for the
+  embeddings quota.
+- B1 one-shot prompt (T-405): states the step types, the start event and foreign keys by table name, as the
+  Modeler's prompt does; before, every B1 process and ERD of the smoke runs was dropped on format (author's
+  decision of 2026-11-04). The kept B1 project holds the model's raw answer (`reports/oneshot.json`).
 - The pilot «a person instead of the simulator» (T-306): `reqgraph-evals human card|start|answer|finish|page` —
   a person answers the interviewer from the scenario's card (persona, brief, the cooperative simulator's rules,
   hidden requirements by area), one turn per call, the interview waiting in its checkpoint between calls; optional

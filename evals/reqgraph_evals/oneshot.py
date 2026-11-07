@@ -158,6 +158,7 @@ async def run_one_shot(
                 "entities": len(draft.entities),
             },
             "dropped": [*kept.dropped, *kept_models.dropped],
+            "raw": draft.model_dump(mode="json"),  # the model's answer as it came, for the audit
         }
         (folder / "reports").mkdir(exist_ok=True)
         (folder / "reports" / "oneshot.json").write_text(

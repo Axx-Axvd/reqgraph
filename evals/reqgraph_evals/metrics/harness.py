@@ -8,6 +8,7 @@ pairs file for the manual check of the judge (label.py, agreement.py).
 """
 
 import csv
+import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field, fields
 from importlib.metadata import version
@@ -67,10 +68,6 @@ INTERVIEWER = {name: m.interviewer for name, m in METHODS.items()}
 
 
 LIMIT_SPENT = "лимит $ запуска исчерпан"
-
-
-class LimitSpent(Exception):
-    """The dollars of the run are spent: the case is not started (T-406)."""
 
 
 @dataclass(frozen=True)
@@ -277,61 +274,105 @@ async def evaluate(
     embedder: EmbeddingModel | None = None,
     root: Path = SCENARIOS,
     max_usd: float | None = None,
+    progress: Path | None = None,
 ) -> tuple[list[Result], list[dict[str, Any]]]:
     """Run (or read) every case, score it, return the rows of results.csv and the judged pairs.
 
     max_usd — the dollars of the whole run (T-406): runs, the simulator and the judge. A case that
     would start once they are spent is not run; it is a row with the reason. The case that is
-    running when the limit is passed runs to its end."""
-    collected = Collected()
-    costs: list[float] = []  # of the cases run so far
+    running when the limit is passed runs to its end.
 
-    def spent() -> float:
-        judged = sum(s.cost_usd for calls in collected.judge_calls.values() for s in calls)
-        return sum(costs) + judged
-
-    async def limited(inputs: RunInputs) -> RunOutput:
-        # cases go one by one (max_concurrency=1): the judge of the last case is counted too
-        if max_usd is not None and (usd := spent()) >= max_usd:
-            raise LimitSpent(f"{LIMIT_SPENT}: потрачено ${usd:.4f} из ${max_usd:.4f}")
-        output: RunOutput = await task(inputs)
-        costs.append(output.row.cost_usd)
-        return output
-
+    progress — a JSON Lines file: every case is written to it as soon as it is scored, and a case
+    already in it without an error is not run again. A matrix stopped halfway goes on from where it
+    stopped; a case that failed (a model out of quota) runs again."""
+    saved = _read_progress(progress)
     order = list(METHODS)  # M1 before B1: the one-shot reads the M1 interview of its case
+    rank = {m: i for i, m in enumerate(order)}
     # a method outside the matrix (M2-human, T-306; older saved runs) goes after the matrix
-    ordered = sorted(
-        cases, key=lambda c: order.index(c.method) if c.method in order else len(order)
-    )
+    ordered = sorted(cases, key=lambda c: rank.get(c.method, len(order)))
+    results: list[Result] = []
+    pairs: list[dict[str, Any]] = []
+    for inputs in ordered:
+        if inputs.name in saved and not saved[inputs.name][0].error:  # a failed case runs again
+            result, case_pairs = saved[inputs.name]
+        elif max_usd is not None and (usd := sum(r.cost_usd for r in results)) >= max_usd:
+            result = Result(
+                inputs.name,
+                inputs.scenario,
+                inputs.character,
+                inputs.method,
+                inputs.repeat,
+                error=f"{LIMIT_SPENT}: потрачено ${usd:.4f} из ${max_usd:.4f}",
+            )
+            case_pairs = []
+        else:
+            result, case_pairs = await _evaluate_one(
+                inputs, task, profile=profile, judge_model=judge_model, embedder=embedder, root=root
+            )
+            if progress is not None:
+                _write_progress(progress, result, case_pairs)
+        results.append(result)
+        pairs += case_pairs
+    return results, pairs
+
+
+async def _evaluate_one(
+    inputs: RunInputs,
+    task: Task,
+    *,
+    profile: str,
+    judge_model: Model | None,
+    embedder: EmbeddingModel | None,
+    root: Path,
+) -> tuple[Result, list[dict[str, Any]]]:
+    """One case through pydantic-evals: the run (or the saved one) and its scores."""
+    collected = Collected()
     dataset: Dataset[RunInputs, RunOutput, None] = Dataset(
         name="reqgraph",
-        cases=[Case(name=c.name, inputs=c) for c in ordered],
+        cases=[Case(name=inputs.name, inputs=inputs)],
         evaluators=[
             RecallEvaluator(collected, profile, judge_model, embedder, root),
             QualityEvaluator(),
         ],
     )
-    report = await dataset.evaluate(limited, max_concurrency=1, progress=False)
-    results = []
-    for case in report.cases:
-        scores = {k: v.value for k, v in case.scores.items()}
-        results.append(_result(case.inputs, case.output.row, scores, collected, case.name))
-    for failure in report.failures:
-        results.append(
-            Result(
-                failure.name,
-                failure.inputs.scenario,
-                failure.inputs.character,
-                failure.inputs.method,
-                failure.inputs.repeat,
-                error=failure.error_message.removeprefix(f"{LimitSpent.__name__}: ")[:300],
-            )
+    report = await dataset.evaluate(task, max_concurrency=1, progress=False)
+    if report.failures:
+        failure = report.failures[0]
+        error = failure.error_message[:300]
+        result = Result(
+            inputs.name,
+            inputs.scenario,
+            inputs.character,
+            inputs.method,
+            inputs.repeat,
+            error=error,
         )
-    for case in report.cases:  # an evaluator that failed is a result too
-        if case.evaluator_failures:
-            row = next(r for r in results if r.run == case.name)
-            row.error = "; ".join(f.error_message[:150] for f in case.evaluator_failures)
-    return results, collected.pairs
+        return result, []
+    case = report.cases[0]
+    scores = {k: v.value for k, v in case.scores.items()}
+    result = _result(case.inputs, case.output.row, scores, collected, case.name)
+    if case.evaluator_failures:  # an evaluator that failed is a result too
+        result.error = "; ".join(f.error_message[:150] for f in case.evaluator_failures)
+    return result, collected.pairs
+
+
+def _read_progress(path: Path | None) -> dict[str, tuple[Result, list[dict[str, Any]]]]:
+    if path is None or not path.is_file():
+        return {}
+    saved = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            data = json.loads(line)
+            result = Result(**data["result"])
+            saved[result.run] = (result, data["pairs"])
+    return saved
+
+
+def _write_progress(path: Path, result: Result, pairs: Sequence[dict[str, Any]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps({"result": asdict(result), "pairs": list(pairs)}, ensure_ascii=False)
+    with path.open("a", encoding="utf-8") as out:
+        out.write(line + "\n")
 
 
 def _result(

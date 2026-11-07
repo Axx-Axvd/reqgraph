@@ -352,6 +352,15 @@ def matrix_cmd(
     allow_over_5: Annotated[
         bool, typer.Option("--allow-over-5", help="разрешить лимит больше $5 (потолок $20 в месяц)")
     ] = False,
+    resume: Annotated[
+        Path | None,
+        typer.Option(
+            help="продолжить остановленный запуск: его файл reports/results-*.progress.jsonl; "
+            "готовые случаи не запускаются заново (те же сценарии, методы и параметры)",
+            exists=True,
+            dir_okay=False,
+        ),
+    ] = None,
 ) -> None:
     """Прогнать интервью с симулятором и сразу посчитать метрики (pydantic-evals): results-*.csv.
     Новые прогоны не начинаются, когда потрачен --max-usd: каждый пропущенный — строка с причиной.
@@ -384,11 +393,16 @@ def matrix_cmd(
         for r in range(1, repeat + 1)
     ]
     stem = f"results-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
-    runs = REPORTS.parent / "runs" / date.today().isoformat() / "matrix"
+    if resume is not None:
+        stem = resume.name.removesuffix(".progress.jsonl")
+    progress = (resume.parent if resume is not None else out) / f"{stem}.progress.jsonl"
+    runs = REPORTS.parent / "runs" / "matrix" / stem  # B1 reads the M1 runs of the same launch
     task = harness.run_task(
         profile=profile, max_turns=max_turns, runs=runs, dialogs=out / "dialogs" / stem
     )
-    results, pairs = asyncio.run(harness.evaluate(cases, task, profile=profile, max_usd=max_usd))
+    results, pairs = asyncio.run(
+        harness.evaluate(cases, task, profile=profile, max_usd=max_usd, progress=progress)
+    )
     _metrics_out(results, pairs, out, stem)
     skipped = sum(r.error.startswith(harness.LIMIT_SPENT) for r in results)
     spent = sum(r.cost_usd for r in results)
