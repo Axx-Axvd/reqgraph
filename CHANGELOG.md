@@ -8,6 +8,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Embeddings of the cheap profile through OpenRouter (`openrouter/google/gemini-embedding-001`): the same model
+  as Google AI Studio's free tier, paid per token ($0.15 per 1M), without the daily quota that held the matrix to
+  one scenario a day (author's decision of 2026-11-10). Vectors are the same (cosine 1.0 on a cached text).
 - The simulated client's understanding of IT (T-316): a 0-3 scale (not related to IT, a confident user, has
   ordered IT projects, a specialist), a level per persona and per area (`it_level`, `it_by_area` in
   `persona.yaml`, both optional; 3 by default, as before). A term of `sim/jargon.yaml` above the level without an
