@@ -10,6 +10,10 @@ yields no new requirement closes its area.
 Every area is asked at least once before any is asked again, even one the brief already covered:
 the brief gives the topic, the client knows more about it.
 Reached coverage ends the interview only after that (T-318): a rich brief alone does not.
+
+An answer the client did not understand is not «nothing to tell» (T-317): the interviewer marks
+it with the next question, the area stays open and is asked again a step simpler (LANGUAGE_STEPS).
+Only an answer not understood at the last step closes the area.
 """
 
 from collections import Counter
@@ -24,6 +28,9 @@ from reqgraph.graph.nodes import ActorNode, InterviewTurn, Node, NonFunctionalRe
 REQUIREMENT_KINDS = ("BR", "UR", "FR", "NFR", "CON")
 KIND_AREA = {"BR": "goals", "CON": "constraints", "ACT": "stakeholders", "NFR": "nfr"}
 CLOSE_AFTER = 1  # answers about an area that told nothing new: the area is closed
+NOT_UNDERSTOOD = "not_understood"  # the interviewer's mark of an answer (T-317)
+LAST_STEP = 3  # language steps: 0 as is, 1 plain words, 2 his own case, 3 options to choose from
+LOST_AREAS = 2  # areas not understood after which a new area starts in plain words
 
 
 def told_by_client(graph: ArtifactGraph) -> set[str]:
@@ -87,18 +94,91 @@ def answer_yields(graph: ArtifactGraph) -> list[int]:
     return [new.get(answer, 0) for answer in answers]
 
 
-def empty_answers(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> list[str | None]:
-    """The area of every answered question whose answer told nothing new, None otherwise. The
-    latest questions pair with the latest answers: areas of an earlier session may be missing."""
+def _answered(
+    graph: ArtifactGraph, asked_areas: Sequence[str | None]
+) -> list[tuple[int, str | None, bool]]:
+    """Every answered question: its index in asked_areas, its area, whether the answer told
+    nothing new. The latest questions pair with the latest answers: areas of an earlier session
+    may be missing."""
     yields = answer_yields(graph)
     n = min(len(yields), len(asked_areas))
-    pairs = zip(asked_areas[len(asked_areas) - n :], yields[len(yields) - n :], strict=True)
-    return [area if count == 0 else None for area, count in pairs]
+    first = len(asked_areas) - n
+    return [
+        (first + i, asked_areas[first + i], count == 0)
+        for i, count in enumerate(yields[len(yields) - n :])
+    ]
 
 
-def closed_areas(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> set[str]:
-    empty = Counter(a for a in empty_answers(graph, asked_areas) if a is not None)
+def empty_answers(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> list[str | None]:
+    """The area of every answered question whose answer told nothing new, None otherwise."""
+    return [area if empty else None for _, area, empty in _answered(graph, asked_areas)]
+
+
+def _step(area: str | None, before: Sequence[tuple[str | None, str | None]]) -> int:
+    lost = {a for a, mark in before if mark == NOT_UNDERSTOOD and a is not None}
+    start = 1 if len(lost - {area}) >= LOST_AREAS else 0
+    misses = sum(1 for a, mark in before if a == area and mark == NOT_UNDERSTOOD)
+    return min(LAST_STEP, start + misses)
+
+
+def language_steps(asked_areas: Sequence[str | None], marks: Sequence[str | None]) -> list[int]:
+    """The language step of every question asked (T-317): one step simpler for each answer in
+    its area the client did not understand, from step 1 once two other areas lost him."""
+    pairs = list(zip(asked_areas, marks, strict=False))
+    return [_step(area, pairs[:k]) for k, area in enumerate(asked_areas)]
+
+
+def language_step(asked_areas: Sequence[str | None], marks: Sequence[str | None], area: str) -> int:
+    """The step of the next question about the area, given the marks known so far."""
+    return _step(area, list(zip(asked_areas, marks, strict=False)))
+
+
+def closed_areas(
+    graph: ArtifactGraph,
+    asked_areas: Sequence[str | None],
+    marks: Sequence[str | None] = (),
+    *,
+    pending: bool = False,
+) -> set[str]:
+    """Areas whose answer told nothing new (T-305). An answer marked «not understood» does not
+    close its area below the last step (T-317); with pending, neither does the latest answer
+    whose mark has not come yet."""
+    answered = _answered(graph, asked_areas)
+    steps = language_steps(asked_areas, marks)
+    latest = answered[-1][0] if answered else -1
+    empty: Counter[str] = Counter()
+    for k, area, nothing in answered:
+        if area is None or not nothing:
+            continue
+        mark = marks[k] if k < len(marks) else None
+        unknown = mark is None and pending and k == latest
+        if (mark == NOT_UNDERSTOOD or unknown) and steps[k] < LAST_STEP:
+            continue
+        empty[area] += 1
     return {area for area, count in empty.items() if count >= CLOSE_AFTER}
+
+
+def latest_told_nothing(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> bool:
+    """The latest answer told nothing new: only such an answer can be «not understood» (T-317)."""
+    answered = _answered(graph, asked_areas)
+    return bool(answered) and answered[-1][2]
+
+
+def rephrase(
+    graph: ArtifactGraph, asked_areas: Sequence[str | None], marks: Sequence[str | None]
+) -> tuple[str, int] | None:
+    """The area of the latest answer and the step to ask it again at, if that answer told nothing,
+    its mark has not come yet and a simpler step is left: the interviewer decides from the answer
+    whether the client did not understand (T-317)."""
+    answered = _answered(graph, asked_areas)
+    if not answered:
+        return None
+    k, area, nothing = answered[-1]
+    if area is None or not nothing or k < len(marks):
+        return None
+    if language_steps(asked_areas, marks)[k] >= LAST_STEP:
+        return None
+    return area, language_step(asked_areas[: k + 1], [*marks[:k], NOT_UNDERSTOOD], area)
 
 
 def gaps(coverage: Coverage) -> list[tuple[str, int, int]]:
@@ -109,11 +189,16 @@ def gaps(coverage: Coverage) -> list[tuple[str, int, int]]:
 
 
 def queue(
-    coverage: Coverage, graph: ArtifactGraph, asked_areas: Sequence[str | None]
+    coverage: Coverage,
+    graph: ArtifactGraph,
+    asked_areas: Sequence[str | None],
+    marks: Sequence[str | None] = (),
+    *,
+    pending: bool = False,
 ) -> list[tuple[str, int, int]]:
     """What to ask about, in order: gaps never asked (the emptiest first), then areas the brief
     covered but nobody asked about, then gaps asked before. Closed areas drop out."""
-    closed = closed_areas(graph, asked_areas)
+    closed = closed_areas(graph, asked_areas, marks, pending=pending)
     asked = {a for a in asked_areas if a is not None}
     short = [g for g in gaps(coverage) if g[0] not in closed]
     covered = [

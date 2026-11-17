@@ -64,6 +64,8 @@ class Row:
     empty: int = 0  # questions whose answer told no hidden requirement anew (T-305)
     not_understood: int = 0  # T-316: answers «I do not understand», no requirement told
     partly_understood: int = 0  # T-316: understood from an example, told in general words
+    vague: int = 0  # T-317: answers the interviewer marked vague
+    step3_told: int = 0  # T-317: hidden requirements told anew on a question with options (step 3)
     coverage: str = ""  # area got/need at the end
     requirements: int = 0
     errors_final: int = 0
@@ -88,6 +90,9 @@ class Turn:
     not_understood: list[str] = field(
         default_factory=list
     )  # T-316: the words the client asked about
+    step: int | None = None  # T-317: the language step of the question (M2)
+    mark: str | None = None  # T-317: the interviewer's mark of the answer, from the next question
+    marked: str | None = None  # the model's own mark when the code overrode it
 
 
 def level_suffix(it_level: int | None) -> str:
@@ -220,11 +225,23 @@ def _fill(
     row.output_tokens = sum(c["output_tokens"] for c in calls)
     row.cost_usd = round(sum(c["cost_usd"] for c in calls), 6)
     row.latency_ms = sum(c["latency_ms"] for c in calls)
-    areas = [e.get("area") for e in events if e["type"] == "question"]
-    for turn, area in zip(turns, areas, strict=False):
-        turn.area = area
+    questions = [e for e in events if e["type"] == "question"]
+    marks = [(e.get("previous"), e.get("marked")) for e in questions[1:]]
+    marks += [(e.get("previous"), None) for e in events if e["type"] == "interview_end"][:1]
+    marks += [(None, None)] * len(turns)
+    for turn, question, (mark, marked) in zip(turns, questions, marks, strict=False):
+        turn.area, turn.step, turn.mark, turn.marked = (
+            question.get("area"),
+            question.get("step"),
+            mark,
+            marked,
+        )
+        area = turn.area
         new = [t for t in turn.told if t["mode"] != "repeat" and not sim.items[t["id"]].in_brief]
         row.empty += not new
+        row.vague += turn.mark == "vague"
+        if turn.step == 3:
+            row.step3_told += sum(t["mode"] in ("tell", "detail", "correct") for t in new)
         row.off_topic += sum(  # a repeat is not a hint: it was told before
             1 for t in turn.told if area is not None and t["area"] != area and t["mode"] != "repeat"
         )
@@ -248,6 +265,9 @@ def _fill(
     row.partly_understood = told.get("partly_understood", 0)
 
 
+MARKS = {"not_understood": "не понял", "vague": "расплывчато"}
+
+
 def dialog_markdown(row: Row, turns: Sequence[Turn], sim: Stakeholder) -> str:
     """The dialog for the manual check: every answer with what it told and on which question."""
     items = sim.items
@@ -267,7 +287,9 @@ def dialog_markdown(row: Row, turns: Sequence[Turn], sim: Stakeholder) -> str:
         "",
     ]
     for turn in turns:
-        lines += [f"## Вопрос {turn.number} ({turn.area or 'область не названа'})", ""]
+        where = turn.area or "область не названа"
+        step = f", ступень {turn.step}" if turn.step is not None else ""
+        lines += [f"## Вопрос {turn.number} ({where}{step})", ""]
         lines += [f"**Интервьюер:** {turn.question}", "", f"**Заказчик:** {turn.answer}", ""]
         for t in turn.told:
             item = items[t["id"]]
@@ -282,6 +304,13 @@ def dialog_markdown(row: Row, turns: Sequence[Turn], sim: Stakeholder) -> str:
             lines.append(f"- заказчик не понял вопрос: {words} (T-316)")
         elif not turn.told:
             lines.append("- ничего из скрытых требований")
+        if turn.marked in MARKS:  # the code counted the answer as understood: it told something
+            lines.append(
+                f"- интервьюер отметил ответ: {MARKS[turn.marked]}; засчитано «понял»: "
+                "ответ дал новое (T-317)"
+            )
+        elif turn.mark in MARKS:
+            lines.append(f"- интервьюер отметил ответ: {MARKS[turn.mark]} (T-317)")
         lines.append("")
     left = [
         r for r in sim.scenario.hidden.requirements if not r.in_brief and r.id not in sim.revealed

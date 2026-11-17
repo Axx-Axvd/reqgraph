@@ -85,3 +85,29 @@ async def test_test_scenarios_stay_sealed() -> None:
 
     with pytest.raises(SealedScenario):
         await run_interview("test-01", "vague", 1, models=agents(), sim_model=simulator([]))
+
+
+async def test_the_dialog_shows_the_language_step_and_the_interviewers_mark(tmp_path: Path) -> None:
+    models = agents() | {
+        "interviewer": TestModel(
+            custom_output_args={"text": QUESTION, "area": "exceptions", "previous": "vague"}
+        )
+    }
+    row = await run_interview(
+        "dev-01",
+        "cooperative",
+        1,
+        max_turns=2,
+        max_iter=0,
+        models=models,
+        sim_model=simulator(["H-013"]),
+        dialogs=tmp_path / "dialogs",
+    )
+    assert row.error == "" and row.turns == 2
+    assert (row.vague, row.step3_told) == (
+        1,
+        0,
+    )  # the first answer, marked with the second question
+    dialog = (tmp_path / "dialogs" / "dev-01-cooperative-r1.md").read_text(encoding="utf-8")
+    assert "## Вопрос 1 (exceptions, ступень 0)" in dialog
+    assert dialog.count("интервьюер отметил ответ: расплывчато") == 1

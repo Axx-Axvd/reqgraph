@@ -92,6 +92,9 @@ class RunState(TypedDict):
     interview_done: bool  # no more questions: coverage reached, turn limit, «/готово» (T-301)
     extracted_upto: str | None  # the last turn the Analyst has read in the interview
     asked_areas: list[str | None]  # the area of every question asked, in order
+    # T-317: the interviewer's mark of every answer, in order (comes with the next question);
+    # a checkpoint written before T-317 has none: read it with state.get("answer_marks", [])
+    answer_marks: list[str | None]
     ci: CIReport | None
     history: list[list[str]]  # error fingerprints of every CI report of the run (repeat detector)
     tasks: list[RepairTask]
@@ -121,6 +124,7 @@ def initial_state(
         interview_done=mode != "interview",
         extracted_upto=None,
         asked_areas=[],
+        answer_marks=[],
         ci=None,
         history=[],
         tasks=[],
