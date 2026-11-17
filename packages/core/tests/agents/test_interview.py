@@ -140,13 +140,7 @@ async def test_question_events_name_the_area_but_keep_no_texts(
     await run.start()
     await run.answer("Если врач заболел, регистратор обзванивает пациентов.")
     (question,) = events_of(ctx, "question")
-    assert question == {
-        "type": "question",
-        "turn": 1,
-        "area": "exceptions",
-        "previous": None,
-        "step": 0,
-    }
+    assert question == {"type": "question", "turn": 1, "area": "exceptions"}
     text = json.dumps(events_of(ctx, "coverage") + events_of(ctx, "answer"), ensure_ascii=False)
     assert "заболел" not in text and QUESTION not in text
 
@@ -263,69 +257,3 @@ async def test_the_questionnaire_asks_its_fixed_questions_without_an_llm(
     assert asked == questions
     assert "interviewer" not in [e["role"] for e in events_of(ctx, "llm_call")]
     assert events_of(ctx, "interview_end")[0]["reason"] == "questionnaire"
-
-
-async def test_a_client_who_did_not_understand_is_asked_again_in_simpler_words(
-    brief_context: Callable[..., RunContext],
-) -> None:
-    prompts: list[str] = []
-    asks = [
-        {"text": "Нужна ли интеграция с 1С?", "area": "integrations"},
-        {
-            "text": "Нужно, чтобы записи сами попадали в 1С?",
-            "area": "integrations",
-            "previous": "not_understood",
-        },
-        {"text": "Чего вы хотите добиться?", "area": "goals", "previous": "ok"},
-    ]
-    models = stub_models(analyst={"requirements": []}) | {"interviewer": recording(asks, prompts)}
-    ctx = brief_context(models=models, max_turns=10, max_iter=0)
-    run = interview(ctx, need=NO_NEED | {"integrations": 1, "goals": 1})
-    await run.start()
-    out = await run.answer("Не понимаю, что такое интеграция.")
-    assert out["__interrupt__"][0].value["turn"] == 2  # the area is not closed: asked again
-    assert "не понял" in prompts[1] and "integrations" in prompts[1]
-    out = await run.answer("Да, хорошо бы.")  # understood, nothing new: integrations closes
-    assert out["__interrupt__"][0].value["turn"] == 3
-    out = await run.answer("Пока не думали.")  # understood again: nothing is left to ask
-    assert "__interrupt__" not in out and out["turns"] == 3
-    marks = [(e["area"], e["previous"], e["step"]) for e in events_of(ctx, "question")]
-    assert marks == [
-        ("integrations", None, 0),
-        ("integrations", "not_understood", 1),
-        ("goals", "ok", 0),
-    ]
-    assert out["answer_marks"] == ["not_understood", "ok", "ok"]
-    assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["saturated"]
-    assert len(prompts) == 4  # the last call only marked the answer, no question was asked
-
-
-async def test_an_interview_saved_before_the_answer_marks_goes_on(
-    brief_context: Callable[..., RunContext],
-) -> None:
-    ctx = brief_context(max_turns=2, max_iter=0)
-    state = initial_state(ctx.project.graph, "interview")
-    del state["answer_marks"]  # type: ignore[misc]  # a checkpoint written before T-317
-    run = Interview(ctx, state)
-    await run.start()
-    out = await run.answer("Записываются по телефону.")
-    assert out["__interrupt__"][0].value["turn"] == 2
-
-
-async def test_an_answer_that_told_something_counts_as_understood_whatever_the_mark(
-    brief_context: Callable[..., RunContext],
-) -> None:
-    actor = {"ref": "admin", "name": "Администратор", "sources": ["TURN-0002"]}
-    analyst = recording([{"actors": [actor]}, {"requirements": []}], [])
-    asks = [
-        {"text": "Кто работает с записью?", "area": "stakeholders"},
-        {"text": "Чего вы хотите добиться?", "area": "goals", "previous": "not_understood"},
-    ]
-    models = stub_models() | {"analyst": analyst, "interviewer": recording(asks, [])}
-    ctx = brief_context(models=models, max_turns=2, max_iter=0)
-    run = interview(ctx, need=NO_NEED | {"stakeholders": 2, "goals": 1})
-    await run.start()
-    out = await run.answer("Администратор и врачи.")
-    second = events_of(ctx, "question")[1]
-    assert (second["previous"], second["marked"], second["step"]) == ("ok", "not_understood", 0)
-    assert out["answer_marks"] == ["ok"]

@@ -50,9 +50,10 @@ async def test_live_interview_asks_by_coverage_and_counts_the_answers(tmp_path: 
         for line in (root / "reports" / "interview-events.jsonl").read_text("utf-8").splitlines()
     ]
     calls = [e for e in events if e["type"] == "llm_call"]
-    roles = [c["role"] for c in calls if c["role"] in ("interviewer", "analyst")]
-    order = [r for i, r in enumerate(roles) if i == 0 or roles[i - 1] != r]  # a retry is one step
-    assert order[:2] == ["analyst", "interviewer"]  # the brief first
+    assert [c["role"] for c in calls if c["role"] in ("interviewer", "analyst")][:2] == [
+        "analyst",  # the brief first
+        "interviewer",
+    ]
     ladder = {s.provider for s in load_roles().ladder("analyst", "free")}  # 429 -> the next model
     assert {c["provider"] for c in calls if c["role"] == "analyst"} <= ladder
     graph = FileStore(root).load().graph

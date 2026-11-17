@@ -134,8 +134,6 @@ class Result:
     errors: int = 0
     it_level: str = "3"  # T-316: the client's IT level, 0-3 or «persona»
     not_understood: int = 0  # answers «I do not understand» (T-316)
-    vague: int = 0  # answers the interviewer marked vague (T-317)
-    step3_told: int = 0  # told anew on a question with options, step 3 (T-317)
     llm_calls: int = 0  # the run and the judge
     input_tokens: int = 0
     output_tokens: int = 0
@@ -414,8 +412,6 @@ def _result(
         end=row.end,
         it_level=row.it_level,
         not_understood=row.not_understood,
-        vague=row.vague,
-        step3_told=row.step3_told,
         llm_calls=row.llm_calls + len(judge),
         input_tokens=row.input_tokens + sum(s.input_tokens for s in judge),
         output_tokens=row.output_tokens + sum(s.output_tokens for s in judge),

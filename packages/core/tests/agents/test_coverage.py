@@ -3,16 +3,7 @@
 from typing import Any
 
 from reqgraph.agents.analyst import AnalystDraft, to_patch
-from reqgraph.agents.coverage import (
-    answer_yields,
-    closed_areas,
-    coverage_of,
-    facts_by_area,
-    gaps,
-    language_step,
-    language_steps,
-    rephrase,
-)
+from reqgraph.agents.coverage import answer_yields, closed_areas, coverage_of, facts_by_area, gaps
 from reqgraph.agents.state import AREAS, Coverage
 from reqgraph.graph import ArtifactGraph, GraphPatch
 
@@ -176,42 +167,3 @@ def test_an_area_the_brief_covered_is_asked_once_before_a_gap_is_asked_again() -
     assert [g[0] for g in next_gaps(state)] == ["goals", "nfr"]
     state["asked_areas"] = ["nfr", "goals"]
     assert [g[0] for g in next_gaps(state)] == ["nfr"]  # goals was asked and is covered
-
-
-NU = "not_understood"
-
-
-def test_the_language_step_rises_with_each_answer_not_understood_in_the_area() -> None:
-    asked = ["nfr", "nfr", "nfr", "data"]
-    assert language_steps(asked, [NU, NU, "ok"]) == [0, 1, 2, 0]
-    assert language_step(asked, [NU, NU, "ok", "ok"], "nfr") == 2
-    assert language_step(["nfr"] * 4, [NU] * 4, "nfr") == 3  # three is the last step
-
-
-def test_after_two_areas_not_understood_a_new_area_starts_in_simple_words() -> None:
-    asked = ["nfr", "integrations", "data"]
-    assert language_steps(asked, [NU, NU]) == [0, 0, 1]
-    assert language_step(asked, [NU, NU, "ok"], "goals") == 1
-    assert language_step(asked, [NU, NU, "ok"], "nfr") == 1  # only one other area lost the client
-
-
-def test_an_answer_not_understood_keeps_its_area_open_until_step_three() -> None:
-    graph = answered(3, {"requirements": []})  # nothing told in any answer
-    assert closed_areas(graph, ["nfr"] * 3, [NU, NU, NU]) == set()
-    assert closed_areas(graph, ["nfr"] * 3, [NU, "ok"]) == {"nfr"}  # understood, nothing to tell
-    # the mark of the latest answer comes with the next question: pending keeps the area open
-    assert closed_areas(graph, ["nfr"] * 3, [NU, NU]) == {"nfr"}
-    assert closed_areas(graph, ["nfr"] * 3, [NU, NU], pending=True) == set()
-    four = answered(4, {"requirements": []})
-    assert closed_areas(four, ["nfr"] * 4, [NU] * 4) == {"nfr"}  # not understood at step 3
-    assert closed_areas(four, ["nfr"] * 4, [NU] * 3, pending=True) == {"nfr"}
-
-
-def test_an_empty_latest_answer_may_be_asked_again_in_simpler_words() -> None:
-    graph = answered(2, {"requirements": []})
-    assert rephrase(graph, ["nfr", "data"], ["ok"]) == ("data", 1)
-    assert rephrase(graph, ["data", "data"], [NU]) == ("data", 2)
-    assert rephrase(graph, ["nfr", "data"], ["ok", "ok"]) is None  # its mark is known already
-    assert rephrase(graph, ["nfr", None], ["ok"]) is None  # M1: no area
-    told = answered(2, {"requirements": [nfr("a", "reliability", source="TURN-0006")]})
-    assert rephrase(told, ["nfr", "nfr"], ["ok"]) is None  # the answer told something
