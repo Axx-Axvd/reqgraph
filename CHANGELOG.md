@@ -157,6 +157,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- The coverage interviewer (M2) no longer ends the interview by coverage before every enabled area got a
+  question (T-318). The brief's paragraphs count toward coverage, so on a rich brief all thresholds were met after
+  a few answers and the interview stopped at the 3rd-4th question, against the T-305 rule «ask each area at least
+  once, even if the brief covered it». Measurement: `evals/reports/results-2026-11-17-cheap-m2stop-{before,after}.*`.
 - TZ (T-314): a constraint goes to the TZ sections by its type (time, budget, legal, tech) that the Analyst sets,
   not by words of its text: «stored in Russia» landed nowhere, «on the university servers» in two sections.
 - Analyst (T-313): atomic FRs — the prompt says one function, one FR, with an example of a list of functions
