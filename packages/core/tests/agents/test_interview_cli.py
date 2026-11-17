@@ -59,8 +59,11 @@ async def test_a_paused_interview_goes_on_after_a_restart(tmp_path: Path) -> Non
     saved = json.loads((root / "reports" / "run-summary.json").read_text(encoding="utf-8"))
     assert saved["turns"] == 2 and saved["requirements"] == 15  # the stub adds 5 on every pass
     events = (root / "reports" / "interview-events.jsonl").read_text(encoding="utf-8")
-    roles = [json.loads(e)["role"] for e in events.splitlines() if '"llm_call"' in e]
-    assert roles.count("interviewer") == 3 and roles.count("analyst") == 3  # brief + 2 answers
+    calls = [json.loads(e) for e in events.splitlines() if '"llm_call"' in e]
+    prompts = [c.get("prompt") for c in calls if c["role"] == "interviewer"]
+    assert prompts.count("interviewer/ask") == 3 and prompts.count("interviewer/mark") == 2
+    roles = [c["role"] for c in calls]
+    assert roles.count("analyst") == 3  # brief + 2 answers
     assert saved["llm_calls"] == len(roles)  # both sessions are counted
     transcript = (root / "interview" / "transcript.jsonl").read_text(encoding="utf-8")
     assert "Напоминать за сутки" in transcript

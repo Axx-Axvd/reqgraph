@@ -14,12 +14,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from reqgraph.agents.common import start
 from reqgraph.agents.coverage import (
     NOT_UNDERSTOOD,
+    again,
+    clarify,
     coverage_of,
     facts_by_area,
     language_step,
     latest_told_nothing,
     queue,
-    rephrase,
 )
 from reqgraph.agents.prompts import load_prompt
 from reqgraph.agents.reviewer import fingerprints
@@ -45,18 +46,28 @@ class ReferenceProject(RuntimeError):
 
 
 class Question(BaseModel):
-    """The interviewer's output. Coverage itself is counted by code (coverage.py), the area only
-    says what the question aims at (events, the efficiency metric of 09_eval)."""
+    """The interviewer's output. Coverage itself is counted by code (coverage.py); the coverage
+    interviewer (M2) asks about the area the code picked, so its area here is ignored (T-317)."""
 
     model_config = ConfigDict(frozen=True, extra="ignore")
 
     text: str = Field(min_length=1, description="один вопрос заказчику")
     area: Area | None = Field(default=None, description="область покрытия, о которой вопрос")
     done: bool = Field(default=False, description="только без трекера: вопросов больше нет")
-    previous: Literal["ok", "vague", "not_understood"] | None = Field(
-        default=None,
-        description="как заказчик ответил на прошлый вопрос: понял, расплывчато, не понял",
+
+
+class Mark(BaseModel):
+    """How the client answered the latest question (T-317): a call of its own before the question,
+    so the code knows it when it picks the next area."""
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    previous: Literal["ok", "vague", "not_understood"] = Field(
+        default="ok", description="как заказчик ответил: понял, расплывчато, не понял"
     )
+
+
+Mode = Literal["new", "rephrase", "clarify"]
 
 
 def run_project(ctx: RunContext, state: RunState) -> Project:
@@ -105,39 +116,67 @@ def _turns(graph: ArtifactGraph) -> list[InterviewTurn]:
     return [n for n in graph.nodes_of("TURN") if isinstance(n, InterviewTurn)]
 
 
-def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
-    """The prompt and the template name: with the coverage tracker (M2) or without it (M1)."""
+def _context(state: RunState) -> dict[str, Any]:
     turns = _turns(state["graph"])
-    asked = [t.text for t in turns if t.role == "agent"]
     assumptions = [
         f"{n.id}: {getattr(n, 'statement', '')}"
         for kind in ("BR", "UR", "FR", "NFR", "CON")
         for n in state["graph"].nodes_of(kind)
         if n.assumption
     ]
-    name = "interviewer/ask" if ctx.interviewer == "coverage" else "interviewer/ask_free"
-    found = next_gaps(state)
-    marks = state.get("answer_marks", [])
-    again = rephrase(state["graph"], state["asked_areas"], marks) if tracked(ctx) else None
-    areas = [area for area, _, _ in found[:3]]
-    if again and again[0] not in areas:
-        areas.append(again[0])
-    facts = facts_by_area(state["graph"], areas)
-    steps = {area: language_step(state["asked_areas"], marks, area) for area in areas}
-    prompt = load_prompt(name).render(
-        gaps=found,
+    return {
+        "recent": turns[-RECENT_TURNS:],
+        "asked": [t.text for t in turns if t.role == "agent"],
+        "assumptions": assumptions[:10],
+        "turn": state["turns"] + 1,
+    }
+
+
+def render_question(
+    state: RunState, ctx: RunContext, choice: tuple[str, int, Mode] | None = None
+) -> tuple[str, str]:
+    """The prompt and the template name: about the area the code picked (M2) or free (M1)."""
+    values = _context(state) | {"max_turns": ctx.max_turns}
+    if choice is None:
+        return load_prompt("interviewer/ask_free").render(**values), "interviewer/ask_free"
+    area, step, mode = choice
+    facts = facts_by_area(state["graph"], [area])[area][-FACTS_SHOWN:]
+    asked_before = area in {a for a in state["asked_areas"] if a is not None}
+    prompt = load_prompt("interviewer/ask").render(
+        **values,
+        area=area,
+        step=step,
+        mode=mode,
+        facts=facts,
+        asked_before=asked_before,
         coverage=state["coverage"],
-        facts={area: facts[area][-FACTS_SHOWN:] for area in areas},
-        asked_before={area for area in state["asked_areas"] if area is not None},
-        steps=steps,
-        rephrase={"area": again[0], "step": again[1]} if again else None,
-        recent=turns[-RECENT_TURNS:],
-        asked=asked,
-        assumptions=assumptions[:10],
-        turn=state["turns"] + 1,
-        max_turns=ctx.max_turns,
     )
-    return prompt, name
+    return prompt, "interviewer/ask"
+
+
+def render_mark(state: RunState) -> str:
+    """The latest question and the client's answer to it, for the mark (T-317)."""
+    turns = _turns(state["graph"])
+    question = next(t.text for t in reversed(turns) if t.role == "agent")
+    return load_prompt("interviewer/mark").render(question=question, answer=turns[-1].text)
+
+
+def choose_area(state: RunState, marks: list[str | None]) -> tuple[str, int, Mode] | None:
+    """The area of the next question, picked by code (T-317, the second attempt): the latest area
+    again a step simpler if the client did not understand, the latest area once more if the answer
+    was vague, else the first of the queue; None — nothing is left to ask."""
+    asked = state["asked_areas"]
+    redo = again(state["graph"], asked, marks)
+    if redo:
+        return redo[0], redo[1], "rephrase"
+    vague = clarify(asked, marks)
+    if vague:
+        return vague, language_step(asked, marks, vague), "clarify"
+    found = next_gaps({**state, "answer_marks": marks})
+    if not found:
+        return None
+    area = found[0][0]
+    return area, language_step(asked, marks, area), "new"
 
 
 def next_gaps(state: RunState) -> list[tuple[str, int, int]]:
@@ -171,32 +210,25 @@ async def interviewer(state: RunState, runtime: Runtime[RunContext]) -> dict[str
             "question": questions[state["turns"]],
             "asked_areas": [*state["asked_areas"], None],
         }
-    prompt, name = render_question(state, ctx)
-    template = load_prompt(name)
-    try:
-        question, budget = await ctx.ask(
-            "interviewer", prompt, Question, state["budget"], template=template
-        )
-    except BudgetExceeded:
-        ctx.events.emit("stop", reason="budget", node="interviewer")
-        return {"stop": "budget"}
-    if question.done and ctx.interviewer == "free":
-        ctx.events.emit("interview_end", reason="interviewer", turns=state["turns"])
-        return {"budget": budget, "question": None, "interview_done": True}
+    if not tracked(ctx):
+        return await _ask_free(state, ctx)
+    budget = state["budget"]
     asked_before = state["asked_areas"]
-    marks = state.get("answer_marks", [])
+    marks = list(state.get("answer_marks", []))
     previous = marked = None
-    if tracked(ctx) and len(marks) < len(asked_before):  # the mark of the latest answer
-        marked = question.previous or "ok"
-        previous = marked
-        if marked == NOT_UNDERSTOOD and not latest_told_nothing(state["graph"], asked_before):
-            previous = "ok"  # an answer that told something new was understood
-        marks = [*marks, *[None] * (len(asked_before) - len(marks) - 1), previous]
-    if previous is not None and previous != NOT_UNDERSTOOD:
-        reason = finished(
-            state["coverage"], queue(state["coverage"], state["graph"], asked_before, marks)
-        )
-        if reason:  # the empty answer was understood: its area closes and nothing is left
+    try:
+        if len(marks) < len(asked_before):  # the mark of the latest answer, by its own call
+            template = load_prompt("interviewer/mark")
+            mark, budget = await ctx.ask(
+                "interviewer", render_mark(state), Mark, budget, template=template
+            )
+            marked = previous = mark.previous
+            if marked == NOT_UNDERSTOOD and not latest_told_nothing(state["graph"], asked_before):
+                previous = "ok"  # an answer that told something new was understood
+            marks = [*marks, *[None] * (len(asked_before) - len(marks) - 1), previous]
+        choice = choose_area(state, marks)
+        if choice is None:  # the answer was understood and nothing is left to ask
+            reason = finished(state["coverage"], [])
             ctx.events.emit("interview_end", reason=reason, turns=state["turns"], previous=previous)
             return {
                 "budget": budget,
@@ -204,21 +236,49 @@ async def interviewer(state: RunState, runtime: Runtime[RunContext]) -> dict[str
                 "interview_done": True,
                 "answer_marks": marks,
             }
-    step = language_step(asked_before, marks, question.area) if question.area else 0
+        prompt, name = render_question(state, ctx, choice)
+        question, budget = await ctx.ask(
+            "interviewer", prompt, Question, budget, template=load_prompt(name)
+        )
+    except BudgetExceeded:
+        ctx.events.emit("stop", reason="budget", node="interviewer")
+        return {"stop": "budget"}
+    area, step, mode = choice
     ctx.events.emit(
         "question",
         turn=state["turns"] + 1,
-        area=question.area,
+        area=area,
         previous=previous,
         step=step,
+        mode=mode,
         **({"marked": marked} if marked != previous else {}),  # the model's own mark, kept
     )
-    asked = [*asked_before, question.area]
     return {
         "question": question.text,
         "budget": budget,
-        "asked_areas": asked,
+        "asked_areas": [*asked_before, area],
         "answer_marks": marks,
+    }
+
+
+async def _ask_free(state: RunState, ctx: RunContext) -> dict[str, Any]:
+    """M1: the model asks what it likes and decides when to stop; no marks, no areas."""
+    prompt, name = render_question(state, ctx)
+    try:
+        question, budget = await ctx.ask(
+            "interviewer", prompt, Question, state["budget"], template=load_prompt(name)
+        )
+    except BudgetExceeded:
+        ctx.events.emit("stop", reason="budget", node="interviewer")
+        return {"stop": "budget"}
+    if question.done:
+        ctx.events.emit("interview_end", reason="interviewer", turns=state["turns"])
+        return {"budget": budget, "question": None, "interview_done": True}
+    ctx.events.emit("question", turn=state["turns"] + 1, area=question.area)
+    return {
+        "question": question.text,
+        "budget": budget,
+        "asked_areas": [*state["asked_areas"], question.area],
     }
 
 

@@ -29,6 +29,7 @@ REQUIREMENT_KINDS = ("BR", "UR", "FR", "NFR", "CON")
 KIND_AREA = {"BR": "goals", "CON": "constraints", "ACT": "stakeholders", "NFR": "nfr"}
 CLOSE_AFTER = 1  # answers about an area that told nothing new: the area is closed
 NOT_UNDERSTOOD = "not_understood"  # the interviewer's mark of an answer (T-317)
+VAGUE = "vague"
 LAST_STEP = 3  # language steps: 0 as is, 1 plain words, 2 his own case, 3 options to choose from
 LOST_AREAS = 2  # areas not understood after which a new area starts in plain words
 
@@ -164,21 +165,40 @@ def latest_told_nothing(graph: ArtifactGraph, asked_areas: Sequence[str | None])
     return bool(answered) and answered[-1][2]
 
 
-def rephrase(
-    graph: ArtifactGraph, asked_areas: Sequence[str | None], marks: Sequence[str | None]
+def again(
+    graph: ArtifactGraph,
+    asked_areas: Sequence[str | None],
+    marks: Sequence[str | None],
+    *,
+    pending: bool = False,
 ) -> tuple[str, int] | None:
-    """The area of the latest answer and the step to ask it again at, if that answer told nothing,
-    its mark has not come yet and a simpler step is left: the interviewer decides from the answer
-    whether the client did not understand (T-317)."""
+    """The area of the latest answer to ask again and the step to ask it at (T-317): the answer
+    told nothing, was marked «not understood» (with pending: is not marked yet) and a simpler step
+    is left. The coverage of the area does not matter: an area the brief covered is asked again
+    too (the second attempt)."""
     answered = _answered(graph, asked_areas)
     if not answered:
         return None
     k, area, nothing = answered[-1]
-    if area is None or not nothing or k < len(marks):
+    if area is None or not nothing or k != len(asked_areas) - 1:
+        return None
+    mark = marks[k] if k < len(marks) else None
+    if mark != NOT_UNDERSTOOD and not (mark is None and pending):
         return None
     if language_steps(asked_areas, marks)[k] >= LAST_STEP:
         return None
     return area, language_step(asked_areas[: k + 1], [*marks[:k], NOT_UNDERSTOOD], area)
+
+
+def clarify(asked_areas: Sequence[str | None], marks: Sequence[str | None]) -> str | None:
+    """The area of the latest answer if it was vague, and the question was not a clarification
+    already: a vague answer is clarified once (T-317)."""
+    k = len(asked_areas) - 1
+    if k < 0 or len(marks) <= k or asked_areas[k] is None or marks[k] != VAGUE:
+        return None
+    if k > 0 and asked_areas[k - 1] == asked_areas[k] and marks[k - 1] == VAGUE:
+        return None
+    return asked_areas[k]
 
 
 def gaps(coverage: Coverage) -> list[tuple[str, int, int]]:
@@ -196,9 +216,11 @@ def queue(
     *,
     pending: bool = False,
 ) -> list[tuple[str, int, int]]:
-    """What to ask about, in order: gaps never asked (the emptiest first), then areas the brief
-    covered but nobody asked about, then gaps asked before. Closed areas drop out."""
+    """What to ask about, in order: an area to ask again (T-317), gaps never asked (the emptiest
+    first), then areas the brief covered but nobody asked about, then gaps asked before. Closed
+    areas drop out."""
     closed = closed_areas(graph, asked_areas, marks, pending=pending)
+    redo = again(graph, asked_areas, marks, pending=pending)
     asked = {a for a in asked_areas if a is not None}
     short = [g for g in gaps(coverage) if g[0] not in closed]
     covered = [
@@ -206,4 +228,9 @@ def queue(
         for a, n in coverage.need.items()
         if n > 0 and coverage.got.get(a, 0) >= n and a not in asked and a not in closed
     ]
-    return [g for g in short if g[0] not in asked] + covered + [g for g in short if g[0] in asked]
+    order = [g for g in short if g[0] not in asked] + covered + [g for g in short if g[0] in asked]
+    if redo is None:
+        return order
+    area = redo[0]
+    first = (area, coverage.got.get(area, 0), coverage.need.get(area, 0))
+    return [first, *(g for g in order if g[0] != area)]

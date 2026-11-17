@@ -61,14 +61,14 @@ async def test_a_dialog_with_the_simulator_is_recorded(tmp_path: Path) -> None:
     )
     assert row.error == "" and row.turns == 2 and row.end == "limit"
     assert (row.revealed, row.hidden) == (1, 25)  # H-013 once; 5 of 30 are in the brief
-    assert row.off_topic == 0  # H-013 is about exceptions, as the question
+    assert row.off_topic == 1  # H-013 is about exceptions; the code asked about scenarios first
     assert row.empty == 1  # the second answer only repeats H-013
     assert (row.revealed_typical, row.revealed_unique) == (0, 1)  # H-013 is unique (T-308)
     assert "stakeholder=function/" in row.models and "interviewer=test/test" in row.models
     assert row.sim_temperature == 0.7 and row.seed == 43  # roles.yaml seed + the repeat
     assert "interviewer/ask=" in row.prompt_hashes
     dialog = (tmp_path / "dialogs" / "dev-01-cooperative-r1.md").read_text(encoding="utf-8")
-    assert f"**Интервьюер:** {QUESTION}" in dialog and "H-013 (exceptions) — рассказал" in dialog
+    assert f"**Интервьюер:** {QUESTION}" in dialog and "H-013 (exceptions) ⚠ — рассказал" in dialog
     assert "## Не рассказано" in dialog and "H-001 (goals)" in dialog
     assert (tmp_path / "runs" / "dev-01-cooperative-r1" / "reqgraph.yaml").is_file()
     assert not (tmp_path / "runs" / "dev-01-cooperative-r1" / ".reqgraph").exists()
@@ -109,5 +109,5 @@ async def test_the_dialog_shows_the_language_step_and_the_interviewers_mark(tmp_
         0,
     )  # the first answer, marked with the second question
     dialog = (tmp_path / "dialogs" / "dev-01-cooperative-r1.md").read_text(encoding="utf-8")
-    assert "## Вопрос 1 (exceptions, ступень 0)" in dialog
+    assert "## Вопрос 1 (scenarios, ступень 0)" in dialog
     assert dialog.count("интервьюер отметил ответ: расплывчато") == 1

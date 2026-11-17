@@ -39,7 +39,7 @@ async def test_a_session_goes_one_turn_per_call_and_resumes_in_a_new_call(
     session = await human.start("dev-01", root=tmp_path, max_turns=3, models=agents())
     assert session.pending is not None
     assert (session.pending.turn, session.pending.question) == (1, QUESTION)
-    assert session.pending.area == "exceptions"
+    assert session.pending.area == "scenarios"  # the code picks the area (T-317)
 
     # a new call, as from a new process: the session is read from its folder
     again = human.load(session.folder)
@@ -53,7 +53,7 @@ async def test_a_session_goes_one_turn_per_call_and_resumes_in_a_new_call(
         {
             "number": 1,
             "question": QUESTION,
-            "area": "exceptions",
+            "area": "scenarios",
             "answer": "Отменить можно за 3 часа до приёма.",
             "told": ["H-013"],
         }
@@ -104,7 +104,7 @@ async def test_the_page_documents_and_a_turn_from_the_page(tmp_path: Path) -> No
     session = await human.start("dev-01", root=tmp_path, max_turns=5, models=agents())
     docs = human.page_docs(session)
     assert docs["pilot/state"]["status"] == "asking" and docs["pilot/state"]["card"]["areas"]
-    assert docs["turns/0001"] == {"turn": 1, "question": QUESTION, "area": "exceptions"}
+    assert docs["turns/0001"] == {"turn": 1, "question": QUESTION, "area": "scenarios"}
     with pytest.raises(RuntimeError, match="вопрос 2"):
         await human.from_page(session.folder, {"turn": 2, "answer": "x"}, models=agents())
     page_turn = {"turn": 1, "question": QUESTION, "answer": "За 3 часа.", "told": ["H-013"]}

@@ -34,6 +34,26 @@ def recording(answers: list[dict[str, Any]], prompts: list[str]) -> FunctionMode
     return FunctionModel(fn)
 
 
+def interviewer(
+    marks: list[str], asks: list[dict[str, Any]], prompts: list[str], mark_prompts: list[str]
+) -> FunctionModel:
+    """The coverage interviewer: the mark of the latest answer, then the question (T-317); each
+    list answers in turn, its last item repeats."""
+
+    def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        prompt = str(messages[-1].parts[-1].content)  # type: ignore[union-attr]
+        seen, items = (mark_prompts, marks) if MARK in prompt else (prompts, asks)
+        seen.append(prompt)
+        item = items[min(len(seen) - 1, len(items) - 1)]
+        data = {"previous": item} if isinstance(item, str) else item
+        return ModelResponse(parts=[TextPart(json.dumps(data, ensure_ascii=False))])
+
+    return FunctionModel(fn)
+
+
+MARK = "# Отметка ответа"
+
+
 class Interview:
     """One interview over an in-memory checkpointer, answered step by step."""
 
@@ -133,10 +153,10 @@ async def test_question_events_name_the_area_but_keep_no_texts(
     brief_context: Callable[..., RunContext],
 ) -> None:
     models = stub_models() | {
-        "interviewer": TestModel(custom_output_args={"text": QUESTION, "area": "exceptions"})
+        "interviewer": TestModel(custom_output_args={"text": QUESTION, "area": "goals"})
     }
     ctx = brief_context(models=models, max_turns=1)
-    run = interview(ctx)
+    run = interview(ctx, need=NO_NEED | {"exceptions": 1})  # the code picks the area (T-317)
     await run.start()
     await run.answer("Если врач заболел, регистратор обзванивает пациентов.")
     (question,) = events_of(ctx, "question")
@@ -146,6 +166,7 @@ async def test_question_events_name_the_area_but_keep_no_texts(
         "area": "exceptions",
         "previous": None,
         "step": 0,
+        "mode": "new",
     }
     text = json.dumps(events_of(ctx, "coverage") + events_of(ctx, "answer"), ensure_ascii=False)
     assert "заболел" not in text and QUESTION not in text
@@ -193,7 +214,7 @@ async def test_the_interviewer_sees_what_is_known_of_the_area_it_asks_about(
 ) -> None:
     prompts: list[str] = []
     asks = [{"text": "Чего вы хотите добиться?", "area": "goals"}]
-    models = stub_models(analyst=DRAFT) | {"interviewer": recording(asks, prompts)}
+    models = stub_models(analyst=DRAFT) | {"interviewer": interviewer(["ok"], asks, prompts, [])}
     ctx = brief_context(models=models, max_turns=2, max_iter=0)
     run = interview(ctx, need=NO_NEED | {"goals": 2})
     await run.start()
@@ -269,35 +290,70 @@ async def test_a_client_who_did_not_understand_is_asked_again_in_simpler_words(
     brief_context: Callable[..., RunContext],
 ) -> None:
     prompts: list[str] = []
+    marks: list[str] = []
     asks = [
         {"text": "Нужна ли интеграция с 1С?", "area": "integrations"},
-        {
-            "text": "Нужно, чтобы записи сами попадали в 1С?",
-            "area": "integrations",
-            "previous": "not_understood",
-        },
-        {"text": "Чего вы хотите добиться?", "area": "goals", "previous": "ok"},
+        {"text": "Нужно, чтобы записи сами попадали в 1С?", "area": "goals"},  # the code decides
+        {"text": "Чего вы хотите добиться?", "area": "goals"},
     ]
-    models = stub_models(analyst={"requirements": []}) | {"interviewer": recording(asks, prompts)}
+    model = interviewer(["not_understood", "ok", "ok"], asks, prompts, marks)
+    models = stub_models(analyst={"requirements": []}) | {"interviewer": model}
     ctx = brief_context(models=models, max_turns=10, max_iter=0)
-    run = interview(ctx, need=NO_NEED | {"integrations": 1, "goals": 1})
-    await run.start()
+    run = interview(ctx, need=NO_NEED | {"integrations": 2, "goals": 1})
+    out = await run.start()
+    assert not marks  # nothing to mark before the first question
     out = await run.answer("Не понимаю, что такое интеграция.")
     assert out["__interrupt__"][0].value["turn"] == 2  # the area is not closed: asked again
-    assert "не понял" in prompts[1] and "integrations" in prompts[1]
+    assert "Не понимаю, что такое интеграция." in marks[0]
+    assert "integrations" in prompts[1] and "ступени 1" in prompts[1]
     out = await run.answer("Да, хорошо бы.")  # understood, nothing new: integrations closes
     assert out["__interrupt__"][0].value["turn"] == 3
     out = await run.answer("Пока не думали.")  # understood again: nothing is left to ask
     assert "__interrupt__" not in out and out["turns"] == 3
-    marks = [(e["area"], e["previous"], e["step"]) for e in events_of(ctx, "question")]
-    assert marks == [
-        ("integrations", None, 0),
-        ("integrations", "not_understood", 1),
-        ("goals", "ok", 0),
+    asked = [(e["area"], e["previous"], e["step"], e["mode"]) for e in events_of(ctx, "question")]
+    assert asked == [
+        ("integrations", None, 0, "new"),
+        ("integrations", "not_understood", 1, "rephrase"),
+        ("goals", "ok", 0, "new"),
     ]
     assert out["answer_marks"] == ["not_understood", "ok", "ok"]
     assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["saturated"]
-    assert len(prompts) == 4  # the last call only marked the answer, no question was asked
+    assert (len(prompts), len(marks)) == (3, 3)  # the last answer was only marked
+
+
+async def test_an_area_the_brief_covered_is_asked_again_when_not_understood(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    con = {**DRAFT["requirements"][-1], "assumption": False, "sources": ["TURN-0001"]}
+    analyst = recording([{"requirements": [con]}, {"requirements": []}], [])  # the brief tells it
+    asks = [{"text": "Есть ли сроки или бюджет?", "area": "constraints"}]
+    model = interviewer(["not_understood", "ok"], asks, [], [])
+    models = stub_models() | {"analyst": analyst, "interviewer": model}
+    ctx = brief_context(models=models, max_turns=10, max_iter=0)
+    run = interview(ctx, brief=BRIEF, need=NO_NEED | {"constraints": 1})
+    await run.start()
+    out = await run.answer("А что значит «ограничения»?")
+    assert out["__interrupt__"][0].value["turn"] == 2  # covered, but not understood: asked again
+    out = await run.answer("Нет, ничего такого.")
+    assert "__interrupt__" not in out
+    assert [e["area"] for e in events_of(ctx, "question")] == ["constraints", "constraints"]
+    assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["coverage"]
+
+
+async def test_a_vague_answer_is_clarified_once_then_the_queue_goes_on(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    analyst = recording([{"requirements": []}], [])
+    asks = [{"text": "Какие требования к скорости?", "area": "goals"}]  # the area is ignored
+    model = interviewer(["vague", "vague", "ok"], asks, [], [])
+    models = stub_models() | {"analyst": analyst, "interviewer": model}
+    ctx = brief_context(models=models, max_turns=4, max_iter=0)
+    run = interview(ctx, need=NO_NEED | {"nfr": 2, "data": 1})
+    await run.start()
+    await run.answer("Быстро.")
+    await run.answer("Ну, очень быстро.")
+    asked = [(e["area"], e["mode"]) for e in events_of(ctx, "question")]
+    assert asked[:3] == [("nfr", "new"), ("nfr", "clarify"), ("data", "new")]
 
 
 async def test_an_interview_saved_before_the_answer_marks_goes_on(
@@ -317,11 +373,9 @@ async def test_an_answer_that_told_something_counts_as_understood_whatever_the_m
 ) -> None:
     actor = {"ref": "admin", "name": "Администратор", "sources": ["TURN-0002"]}
     analyst = recording([{"actors": [actor]}, {"requirements": []}], [])
-    asks = [
-        {"text": "Кто работает с записью?", "area": "stakeholders"},
-        {"text": "Чего вы хотите добиться?", "area": "goals", "previous": "not_understood"},
-    ]
-    models = stub_models() | {"analyst": analyst, "interviewer": recording(asks, [])}
+    asks = [{"text": "Кто работает с записью?", "area": "stakeholders"}]
+    model = interviewer(["not_understood"], asks, [], [])
+    models = stub_models() | {"analyst": analyst, "interviewer": model}
     ctx = brief_context(models=models, max_turns=2, max_iter=0)
     run = interview(ctx, need=NO_NEED | {"stakeholders": 2, "goals": 1})
     await run.start()
@@ -329,3 +383,15 @@ async def test_an_answer_that_told_something_counts_as_understood_whatever_the_m
     second = events_of(ctx, "question")[1]
     assert (second["previous"], second["marked"], second["step"]) == ("ok", "not_understood", 0)
     assert out["answer_marks"] == ["ok"]
+
+
+async def test_the_free_interviewer_marks_nothing(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    marks: list[str] = []
+    model = interviewer(["ok"], [{"text": QUESTION}], [], marks)
+    ctx = brief_context(models=stub_models() | {"interviewer": model}, interviewer="free")
+    run = interview(ctx, need=NO_NEED | {"goals": 1})
+    await run.start()
+    await run.answer("Записываются по телефону.")
+    assert not marks

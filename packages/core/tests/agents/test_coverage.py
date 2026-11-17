@@ -4,14 +4,16 @@ from typing import Any
 
 from reqgraph.agents.analyst import AnalystDraft, to_patch
 from reqgraph.agents.coverage import (
+    again,
     answer_yields,
+    clarify,
     closed_areas,
     coverage_of,
     facts_by_area,
     gaps,
     language_step,
     language_steps,
-    rephrase,
+    queue,
 )
 from reqgraph.agents.state import AREAS, Coverage
 from reqgraph.graph import ArtifactGraph, GraphPatch
@@ -207,11 +209,37 @@ def test_an_answer_not_understood_keeps_its_area_open_until_step_three() -> None
     assert closed_areas(four, ["nfr"] * 4, [NU] * 3, pending=True) == {"nfr"}
 
 
-def test_an_empty_latest_answer_may_be_asked_again_in_simpler_words() -> None:
+def test_an_empty_latest_answer_not_understood_is_asked_again_a_step_simpler() -> None:
     graph = answered(2, {"requirements": []})
-    assert rephrase(graph, ["nfr", "data"], ["ok"]) == ("data", 1)
-    assert rephrase(graph, ["data", "data"], [NU]) == ("data", 2)
-    assert rephrase(graph, ["nfr", "data"], ["ok", "ok"]) is None  # its mark is known already
-    assert rephrase(graph, ["nfr", None], ["ok"]) is None  # M1: no area
+    assert again(graph, ["nfr", "data"], ["ok", NU]) == ("data", 1)
+    assert again(graph, ["data", "data"], [NU, NU]) == ("data", 2)
+    assert again(graph, ["nfr", "data"], ["ok", "ok"]) is None  # understood: nothing to re-ask
+    assert again(graph, ["nfr", "data"], ["ok"]) is None  # not marked yet
+    assert again(graph, ["nfr", "data"], ["ok"], pending=True) == ("data", 1)
+    assert again(graph, ["nfr", None], ["ok", NU]) is None  # M1: no area
     told = answered(2, {"requirements": [nfr("a", "reliability", source="TURN-0006")]})
-    assert rephrase(told, ["nfr", "nfr"], ["ok"]) is None  # the answer told something
+    assert again(told, ["nfr", "nfr"], ["ok", NU]) is None  # the answer told something
+    four = answered(4, {"requirements": []})
+    assert again(four, ["nfr"] * 4, [NU] * 4) is None  # not understood at step 3: closed
+
+
+def test_an_area_covered_by_the_brief_is_asked_again_when_not_understood() -> None:
+    """T-317, the second attempt: the coverage of an area does not stop a re-ask."""
+    graph = answered(2, {"requirements": []})
+    need = {**dict.fromkeys(AREAS, 0), "rules": 1, "data": 1}
+    counted = Coverage(got={**dict.fromkeys(AREAS, 0), "rules": 3, "data": 0}, need=need)
+    assert [g[0] for g in queue(counted, graph, ["nfr", "rules"], ["ok", "ok"])] == ["data"]
+    assert [g[0] for g in queue(counted, graph, ["nfr", "rules"], ["ok", NU])] == ["rules", "data"]
+    # the coverage node does not know the mark yet: the area stays until it is marked
+    assert [g[0] for g in queue(counted, graph, ["nfr", "rules"], ["ok"], pending=True)] == [
+        "rules",
+        "data",
+    ]
+
+
+def test_a_vague_answer_is_clarified_once() -> None:
+    assert clarify(["nfr", "data"], ["ok", "vague"]) == "data"
+    assert clarify(["nfr", "data"], ["ok", "ok"]) is None
+    assert clarify(["data", "data"], ["vague", "vague"]) is None  # the clarification was vague too
+    assert clarify(["nfr", "data"], ["ok"]) is None  # not marked yet
+    assert clarify(["nfr", None], ["ok", "vague"]) is None  # M1: no area
