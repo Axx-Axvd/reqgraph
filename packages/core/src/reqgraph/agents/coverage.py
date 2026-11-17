@@ -9,6 +9,7 @@ An area is saturated when the client has nothing more to tell about it (T-305): 
 yields no new requirement closes its area.
 Every area is asked at least once before any is asked again, even one the brief already covered:
 the brief gives the topic, the client knows more about it.
+Reached coverage ends the interview only after that (T-318): a rich brief alone does not.
 """
 
 from collections import Counter
