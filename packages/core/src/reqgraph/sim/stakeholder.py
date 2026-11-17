@@ -22,8 +22,10 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic_ai.models import Model
 
+from reqgraph.graph.store.config import Area
 from reqgraph.llm.prompts import Prompt, read_prompt
 from reqgraph.llm.router import CallStats, structured
+from reqgraph.sim.jargon import explained, unknown_terms
 from reqgraph.sim.scenario import HiddenRequirement, Scenario
 
 Character = Literal["cooperative", "vague", "contradictory"]
@@ -82,6 +84,7 @@ class Stakeholder:
     seed: int = 42
     profile: str | None = None
     model: Model | None = None  # a stub in tests; else the stakeholder ladder of roles.yaml
+    it_level: int | None = None  # T-316: 0-3 for the run; None — the persona's level, by area
     revealed: set[str] = field(default_factory=set)
     mentioned: set[str] = field(default_factory=set)  # told in general words (vague)
     wrong: list[str] = field(default_factory=list)  # told with a wrong number, not corrected yet
@@ -96,30 +99,35 @@ class Stakeholder:
         """The client's answer to one question; history — earlier (question, answer) pairs."""
         recent = list(history)[-RECENT:]
         known = self.revealed | self.brief  # what the brief says is told already, not news
-        selection, select_stats = await self._ask(
-            "stakeholder/select",
-            Selection,
-            question=question,
-            recent=recent[-RECENT_SELECT:],
-            untold=[r for r in self.items.values() if r.id not in known],
-            told=[r for r in self.items.values() if r.id in known],
-            max_items=MAX_ITEMS,
-        )
+        stats: list[CallStats] = []
+        selection: Selection | None = None
+        # T-316: IT words above the client's level; an area the client knows better may lift it
+        unknown = unknown_terms(question, self.level())
+        if unknown and self._knows_some_area_better():
+            selection, select_stats = await self._select(question, recent, known)
+            stats.append(select_stats)
+            areas = {self.items[i].area for i in selection.ids if i in self.items}
+            level = max((self.level(a) for a in areas), default=self.level())
+            unknown = unknown_terms(question, level)
+        partly = bool(unknown) and explained(question)
+        if unknown and not partly:  # not understood: nothing told, the client asks what it means
+            reply, reply_stats = await self._reply(question, recent, [], not_understood=unknown)
+            self.log.append(
+                {"turn": len(self.log) + 1, "picked": [], "told": [], "not_understood": unknown}
+            )
+            return SimAnswer(reply.text, [], [*stats, reply_stats])
+        if selection is None:
+            selection, select_stats = await self._select(question, recent, known)
+            stats.append(select_stats)
         picked = [i for i in dict.fromkeys(selection.ids) if i in self.items]
         fresh = [i for i in picked if i not in known]
         picked = (fresh or picked)[:MAX_ITEMS]  # a repeat only when nothing new is asked (T-309)
-        told = self._modes(picked, selection.details)
+        told = self._modes(picked, selection.details, general_only=partly)
         told += self._correction(told, {self.items[i].area for i in picked})
-        reply, reply_stats = await self._ask(
-            "stakeholder/reply",
-            Reply,
-            question=question,
-            recent=recent,
-            persona=self.scenario.persona,
-            brief=self.scenario.brief,
-            character=self.character,
-            told=[(self.items[t.id], t.mode) for t in told],
+        reply, reply_stats = await self._reply(
+            question, recent, [(self.items[t.id], t.mode) for t in told]
         )
+        stats.append(reply_stats)
         told = _checked(told, reply.text, self.items, named=reply.wrong_number)
         for t in told:
             if t.mode in ("tell", "detail", "correct"):
@@ -128,18 +136,67 @@ class Stakeholder:
                 self.mentioned.add(t.id)
             elif t.mode == "wrong":
                 self.wrong.append(t.id)
-        answer = SimAnswer(reply.text, told, [select_stats, reply_stats])
-        self.log.append(
-            {
-                "turn": len(self.log) + 1,
-                "picked": picked,
-                "told": [{"id": t.id, "mode": t.mode} for t in told],
-                "details": selection.details,
-            }
-        )
+        answer = SimAnswer(reply.text, told, stats)
+        entry: dict[str, Any] = {
+            "turn": len(self.log) + 1,
+            "picked": picked,
+            "told": [{"id": t.id, "mode": t.mode} for t in told],
+            "details": selection.details,
+        }
+        if partly:
+            entry["partly"] = unknown
+        self.log.append(entry)
         return answer
 
-    def _modes(self, picked: list[str], details: bool) -> list[Told]:
+    def level(self, area: Area | None = None) -> int:
+        """How much of IT the client understands (T-316): the level of the run, else the persona's,
+        in this area if the persona has one for it."""
+        if self.it_level is not None:
+            return self.it_level
+        persona = self.scenario.persona
+        return persona.it_by_area.get(area, persona.it_level) if area else persona.it_level
+
+    def _knows_some_area_better(self) -> bool:
+        if self.it_level is not None:
+            return False
+        persona = self.scenario.persona
+        return any(v > persona.it_level for v in persona.it_by_area.values())
+
+    async def _select(
+        self, question: str, recent: Sequence[tuple[str, str]], known: set[str]
+    ) -> tuple[Selection, CallStats]:
+        return await self._ask(
+            "stakeholder/select",
+            Selection,
+            question=question,
+            recent=list(recent)[-RECENT_SELECT:],
+            untold=[r for r in self.items.values() if r.id not in known],
+            told=[r for r in self.items.values() if r.id in known],
+            max_items=MAX_ITEMS,
+        )
+
+    async def _reply(
+        self,
+        question: str,
+        recent: Sequence[tuple[str, str]],
+        told: Sequence[tuple[HiddenRequirement, Mode]],
+        *,
+        not_understood: Sequence[str] = (),
+    ) -> tuple[Reply, CallStats]:
+        return await self._ask(
+            "stakeholder/reply",
+            Reply,
+            question=question,
+            recent=recent,
+            persona=self.scenario.persona,
+            brief=self.scenario.brief,
+            character=self.character,
+            told=list(told),
+            it_level=self.level(),
+            not_understood=list(not_understood),
+        )
+
+    def _modes(self, picked: list[str], details: bool, general_only: bool = False) -> list[Told]:
         told = []
         for item_id in picked:
             if item_id in self.revealed:  # asked again: the client says the same, not «no idea»
@@ -149,10 +206,11 @@ class Stakeholder:
                 self.wrong.remove(item_id)
                 told.append(Told(item_id, "correct"))
                 continue
-            if self.character == "vague" and item_id not in self.mentioned and not details:
-                told.append(Told(item_id, "general"))
-            elif self.character == "vague" and item_id in self.mentioned:
+            if item_id in self.mentioned:  # said in general words before: now the details
                 told.append(Told(item_id, "detail"))
+            elif general_only or (self.character == "vague" and not details):
+                # a vague client, or one who half understood the question (T-316)
+                told.append(Told(item_id, "general"))
             elif (
                 self.character == "contradictory"
                 and _has_number(self.items[item_id])
@@ -216,4 +274,6 @@ def summary(sim: Stakeholder) -> Mapping[str, int]:
         "revealed": sum(r.id in sim.revealed for r in hidden),
         "mentioned_only": len(sim.mentioned - sim.revealed),
         "wrong_left": len(sim.wrong),
+        "not_understood": sum(1 for e in sim.log if e.get("not_understood")),
+        "partly_understood": sum(1 for e in sim.log if e.get("partly")),
     }

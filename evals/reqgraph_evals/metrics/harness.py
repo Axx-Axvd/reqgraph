@@ -76,10 +76,17 @@ class RunInputs:
     character: Character
     method: Method = "M2"
     repeat: int = 1
+    it_level: int | None = 3  # T-316: the client's IT level, 0-3; None — the persona's own
 
     @property
     def name(self) -> str:
-        return f"{self.scenario}-{self.character}-{self.method}-r{self.repeat}"
+        suffix = interview.level_suffix(self.it_level)
+        return f"{self.scenario}-{self.character}{suffix}-{self.method}-r{self.repeat}"
+
+    @property
+    def case(self) -> str:
+        """The case of one interview: every method of the matrix runs it."""
+        return interview.case_key(self.scenario, self.character, self.repeat, self.it_level)
 
 
 @dataclass
@@ -125,6 +132,8 @@ class Result:
     trace_coverage: float = 0.0
     orphan_rate: float = 0.0
     errors: int = 0
+    it_level: str = "3"  # T-316: the client's IT level, 0-3 or «persona»
+    not_understood: int = 0  # answers «I do not understand» (T-316)
     llm_calls: int = 0  # the run and the judge
     input_tokens: int = 0
     output_tokens: int = 0
@@ -218,7 +227,7 @@ def run_task(
 
     async def task(inputs: RunInputs) -> RunOutput:
         options = METHODS[inputs.method]
-        case = f"{inputs.scenario}-{inputs.character}-r{inputs.repeat}"
+        case = inputs.case
         if options.one_shot:
             row = await oneshot.run_one_shot(
                 inputs.scenario,
@@ -229,6 +238,7 @@ def run_task(
                 models=models,
                 root=root,
                 keep=runs / inputs.method,
+                it_level=inputs.it_level,
             )
             return RunOutput(row, runs / inputs.method / case)
         questions = len(questionnaire()) if options.interviewer == "questionnaire" else max_turns
@@ -249,6 +259,7 @@ def run_task(
             root=root,
             dialogs=None if dialogs is None else dialogs / inputs.method,  # a case per method
             keep=runs / inputs.method,
+            it_level=inputs.it_level,
         )
         return RunOutput(row, runs / inputs.method / case)
 
@@ -259,7 +270,7 @@ def saved_task(rows: Mapping[str, interview.Row], runs: Path) -> Task:
     """The task of a case from a saved run: the interview CSV row and the kept project folder."""
 
     async def task(inputs: RunInputs) -> RunOutput:
-        key = f"{inputs.scenario}-{inputs.character}-r{inputs.repeat}"
+        key = inputs.case
         return RunOutput(rows[key], runs / key)
 
     return task
@@ -399,6 +410,8 @@ def _result(
         embedding_model=collected.embedding_model,
         turns=row.turns,
         end=row.end,
+        it_level=row.it_level,
+        not_understood=row.not_understood,
         llm_calls=row.llm_calls + len(judge),
         input_tokens=row.input_tokens + sum(s.input_tokens for s in judge),
         output_tokens=row.output_tokens + sum(s.output_tokens for s in judge),
@@ -457,7 +470,8 @@ def read_interview_rows(path: Path) -> dict[str, interview.Row]:
                 else:
                     data[name] = value
             row = interview.Row(**data)
-            rows[f"{row.scenario}-{row.character}-r{row.repeat}"] = row
+            level = None if row.it_level == "persona" else int(row.it_level or 3)
+            rows[interview.case_key(row.scenario, row.character, row.repeat, level)] = row
     return rows
 
 
@@ -501,7 +515,13 @@ def _mean(values: Sequence[float]) -> float:
 def methods_markdown(results: Sequence[Result]) -> list[str]:
     """Means of every method over its runs without an error, money and time over all of them,
     and bar charts (Mermaid, GitHub draws them), methods in the order of METHODS (T-406)."""
-    order = [m for m in METHODS if any(r.method == m for r in results)]
+    levels = sorted({r.it_level for r in results})
+
+    def label(r: Result) -> str:  # several IT levels (T-316): a row per method and level
+        return r.method if len(levels) == 1 else f"{r.method} · ИТ {r.it_level}"
+
+    present = {(r.method, r.it_level): r for r in results}
+    order = [label(present[m, lvl]) for m in METHODS for lvl in levels if (m, lvl) in present]
     lines = [
         "## Сводка по методам",
         "",
@@ -514,7 +534,7 @@ def methods_markdown(results: Sequence[Result]) -> list[str]:
     recalls: dict[str, int] = {}
     money: dict[str, float] = {}
     for method in order:
-        runs = [r for r in results if r.method == method]
+        runs = [r for r in results if label(r) == method]
         clean = [r for r in runs if not r.error]
         money[method] = sum(r.cost_usd for r in runs)
         minutes = round(sum(r.minutes for r in runs), 2)

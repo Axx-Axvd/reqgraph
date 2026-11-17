@@ -243,6 +243,9 @@ def interview_cmd(
     profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
     interviewer: Annotated[str, typer.Option(help="coverage (M2) или free (M1)")] = "coverage",
     max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
+    it_level: Annotated[
+        str, typer.Option(help="понимание ИТ у заказчика (T-316): 0-3 или persona")
+    ] = "3",
     out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
     tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
 ) -> None:
@@ -271,6 +274,7 @@ def interview_cmd(
                             max_turns=max_turns,
                             dialogs=out / "dialogs" / stem,
                             keep=keep,
+                            it_level=_it_levels(it_level)[0],
                         )
                     )
                 )
@@ -328,6 +332,20 @@ def metrics_cmd(
     _metrics_out(results, pairs, out, stem)
 
 
+def _it_levels(text: str) -> list[int | None]:
+    """--it-level: 0-3 or «persona» (the persona's own levels, by area) — T-316."""
+    levels: list[int | None] = []
+    for part in (p.strip() for p in text.split(",") if p.strip()):
+        if part == "persona":
+            levels.append(None)
+        elif part in {"0", "1", "2", "3"}:
+            levels.append(int(part))
+        else:
+            typer.echo(f"--it-level: {part} — нужно 0, 1, 2, 3 или persona", err=True)
+            raise typer.Exit(2)
+    return levels or [3]
+
+
 @app.command("matrix")
 def matrix_cmd(
     scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
@@ -342,6 +360,13 @@ def matrix_cmd(
         ),
     ] = "M2",
     repeat: Annotated[int, typer.Option(min=1, help="повторов")] = 1,
+    it_level: Annotated[
+        str,
+        typer.Option(
+            help="понимание ИТ у заказчика (T-316): 0-3 через запятую, persona — уровни персоны; "
+            "3 — как до T-316"
+        ),
+    ] = "3",
     profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
     max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
     out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
@@ -382,12 +407,14 @@ def matrix_cmd(
         typer.echo(f"--methods: нет методов {', '.join(unknown)}", err=True)
         raise typer.Exit(2)
 
+    levels = _it_levels(it_level)
     cases = [
-        harness.RunInputs(s.strip(), c.strip(), m.strip(), r)  # type: ignore[arg-type]
+        harness.RunInputs(s.strip(), c.strip(), m.strip(), r, lvl)  # type: ignore[arg-type]
         for s in scenarios.split(",")
         if s.strip()
         for c in characters.split(",")
         if c.strip()
+        for lvl in levels
         for m in methods.split(",")
         if m.strip()
         for r in range(1, repeat + 1)

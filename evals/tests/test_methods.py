@@ -213,3 +213,41 @@ async def test_a_case_that_failed_runs_again_on_resume(tmp_path: Path) -> None:
     )
     assert calls == ["dev-01-cooperative-M2-r1"] and results[0].error == ""
     assert harness._read_progress(progress)[failed.run][0].error == ""  # the later line wins
+
+
+async def test_the_matrix_runs_each_it_level_as_its_own_case(tmp_path: Path) -> None:
+    """T-316: the IT level is an axis of the matrix; level 3 keeps the old case names."""
+    from pydantic_ai.models.test import TestModel
+
+    jargon = "Нужен ли пациенту личный кабинет?"  # step 1: a client at step 0 does not understand
+    models = agents() | {
+        "interviewer": TestModel(custom_output_args={"text": jargon, "area": "scenarios"})
+    }
+    cases = [harness.RunInputs("dev-01", "cooperative", "M2", 1, it_level=lvl) for lvl in (0, 3)]
+    task = harness.run_task(
+        max_turns=2,
+        runs=tmp_path / "runs",
+        dialogs=tmp_path / "dialogs",
+        models=models,
+        sim_model=simulator(["H-013"]),
+    )
+    results, _ = await harness.evaluate(
+        cases, task, judge_model=judge_first(), embedder=TestEmbeddingModel()
+    )
+    by = {r.it_level: r for r in results}
+    assert [r.run for r in results] == ["dev-01-cooperative-it0-M2-r1", "dev-01-cooperative-M2-r1"]
+    assert by["0"].not_understood == 2 and by["3"].not_understood == 0
+    assert (tmp_path / "runs" / "M2" / "dev-01-cooperative-it0-r1").is_dir()
+    dialog = tmp_path / "dialogs" / "M2" / "dev-01-cooperative-it0-r1.md"
+    assert "не понял" in dialog.read_text(encoding="utf-8")
+    path = tmp_path / "r.csv"
+    harness.write_results(results, path)
+    assert "it_level" in path.read_text(encoding="utf-8").splitlines()[0]
+
+
+def test_the_matrix_refuses_an_unknown_it_level() -> None:
+    from reqgraph_evals.cli import app
+    from typer.testing import CliRunner
+
+    refused = CliRunner().invoke(app, ["matrix", "--scenarios", "dev-01", "--it-level", "5"])
+    assert refused.exit_code == 2 and "0, 1, 2, 3 или persona" in refused.output

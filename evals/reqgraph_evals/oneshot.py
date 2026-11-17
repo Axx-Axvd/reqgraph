@@ -29,7 +29,7 @@ from reqgraph.llm.prompts import read_prompt
 from reqgraph.llm.router import structured
 from reqgraph.sim.stakeholder import Character
 
-from reqgraph_evals.interview import Row
+from reqgraph_evals.interview import Row, case_key
 from reqgraph_evals.scenario import SCENARIOS, load_scenario
 
 ROLE = "analyst"
@@ -81,11 +81,13 @@ async def run_one_shot(
     models: Mapping[str, Model] | None = None,
     root: Path = SCENARIOS,
     keep: Path | None = None,
+    it_level: int | None = 3,
 ) -> Row:
     """One request for the case whose M1 run is kept in `source`; the project goes to `keep`."""
     scenario = load_scenario(scenario_id, root)
     cfg = load_roles()
     row = Row(scenario_id, character, repeat, "one-shot", "B1", package_version=version("reqgraph"))
+    row.it_level = "persona" if it_level is None else str(it_level)  # the level of the M1 interview
     row.temperature = cfg.temperature(ROLE)
     row.seed = (cfg.defaults.seed or 0) + repeat
     if not source.is_dir():
@@ -170,7 +172,7 @@ async def run_one_shot(
             len(graph.nodes_of(kind)) for kind in ("BR", "UR", "FR", "NFR", "CON")
         )
         if keep is not None:
-            target = keep / f"{scenario_id}-{character}-r{repeat}"
+            target = keep / case_key(scenario_id, character, repeat, it_level)
             shutil.rmtree(target, ignore_errors=True)
             shutil.copytree(folder, target, ignore=shutil.ignore_patterns(".reqgraph"))
     return row
