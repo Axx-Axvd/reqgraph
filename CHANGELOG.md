@@ -8,12 +8,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
-- The coverage interviewer (M2) re-asks a client who did not understand (T-317). It marks every answer
-  (`previous`: ok, vague, not_understood); an answer not understood no longer closes its area: the area is asked
-  again a step simpler (as is → no IT terms → a case from the client's own business → 2–3 options with «or is it
-  different for you?»), per area, from step 1 once two areas lost the client; not understood at step 3 closes
-  it. The code counts «not understood» only for an answer that told nothing new. Events: `previous`, `step`
-  and the model's own `marked`; dialogs show the step; results.csv: `vague`, `step3_told`. M1, B1-B3 unchanged.
 - Embeddings of the cheap profile through OpenRouter (`openrouter/google/gemini-embedding-001`): the same model
   as Google AI Studio's free tier, paid per token ($0.15 per 1M), without the daily quota that held the matrix to
   one scenario a day (author's decision of 2026-11-10). Vectors are the same (cosine 1.0 on a cached text).
