@@ -157,6 +157,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- The simulator (T-317, the author's decision of 2026-11-17): an example explains a jargon term only next to it
+  (a marker at most 8 words after the term in the same sentence, or a bracket or a dash right after it); an
+  example elsewhere in the question no longer makes every term understood.
 - The coverage interviewer (M2) no longer ends the interview by coverage before every enabled area got a
   question (T-318). The brief's paragraphs count toward coverage, so on a rich brief all thresholds were met after
   a few answers and the interview stopped at the 3rd-4th question, against the T-305 rule «ask each area at least

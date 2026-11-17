@@ -25,7 +25,7 @@ from pydantic_ai.models import Model
 from reqgraph.graph.store.config import Area
 from reqgraph.llm.prompts import Prompt, read_prompt
 from reqgraph.llm.router import CallStats, structured
-from reqgraph.sim.jargon import explained, unknown_terms
+from reqgraph.sim.jargon import explained_terms, unknown_terms
 from reqgraph.sim.scenario import HiddenRequirement, Scenario
 
 Character = Literal["cooperative", "vague", "contradictory"]
@@ -109,7 +109,8 @@ class Stakeholder:
             areas = {self.items[i].area for i in selection.ids if i in self.items}
             level = max((self.level(a) for a in areas), default=self.level())
             unknown = unknown_terms(question, level)
-        partly = bool(unknown) and explained(question)
+        # T-317: understood in general words only when every unknown term is explained next to it
+        partly = bool(unknown) and set(unknown) <= explained_terms(question, unknown)
         if unknown and not partly:  # not understood: nothing told, the client asks what it means
             reply, reply_stats = await self._reply(question, recent, [], not_understood=unknown)
             self.log.append(

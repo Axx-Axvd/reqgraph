@@ -1,7 +1,7 @@
 """How much the simulated client understands of IT (T-316): a scale, not «knows / does not»."""
 
 import pytest
-from reqgraph.sim.jargon import explained, unknown_terms
+from reqgraph.sim.jargon import explained_terms, unknown_terms
 from reqgraph.sim.scenario import Persona
 from reqgraph.sim.stakeholder import Stakeholder, summary
 
@@ -55,9 +55,22 @@ def test_each_step_understands_more() -> None:
     assert unknown_terms(q, 2) == ["отказоустойчивость"]
 
 
-def test_an_example_counts_as_an_explanation() -> None:
-    assert explained("Нужна ли интеграция, например чтобы заказы сами попадали в 1С?")
-    assert not explained("Нужна ли интеграция с 1С?")
+def test_an_example_counts_as_an_explanation_only_next_to_the_term() -> None:
+    def clear(question: str) -> set[str]:
+        return explained_terms(question, unknown_terms(question, 0))
+
+    assert clear("Нужна ли интеграция, например чтобы заказы сами попадали в 1С?") == {"интеграция"}
+    assert clear("Нужна ли интеграция с 1С?") == set()
+    # T-317, the decision of 2026-11-17: an example elsewhere in the question explains nothing
+    assert clear("Какие интеграции нужны? Например, как вы сейчас записываете клиентов.") == set()
+    far = (
+        "Нужна ли интеграция с вашей бухгалтерией и складом, которые вы сейчас ведёте отдельно "
+        "в разных программах, например в 1С?"
+    )
+    assert clear(far) == set()
+    assert clear("Нужен ли личный кабинет (ваша страница на сайте)?") == {"личный кабинет"}
+    assert clear("Нужен ли личный кабинет — ваша страница на сайте?") == {"личный кабинет"}
+    assert clear("Нужна ли интеграция, то есть связь с 1С, и через какой API?") == {"интеграция"}
 
 
 def test_a_persona_has_a_level_and_levels_by_area() -> None:
@@ -92,6 +105,14 @@ async def test_a_term_with_an_example_is_understood_in_general_words_only() -> N
     assert answer.revealed == [] and sim.log[-1]["partly"] == ["личный кабинет"]
     again = await sim.answer("А за сколько часов до приёма можно отменить запись?")
     assert [(t.id, t.mode) for t in again.told] == [("H-001", "detail")]  # asked again: told
+
+
+async def test_an_example_away_from_the_term_leaves_it_not_understood() -> None:
+    client = Client(["H-001"])
+    sim = Stakeholder(SCENARIO, it_level=0, model=client.model())
+    answer = await sim.answer("Какие правила отмены нужны в личном кабинете? Например, вечером.")
+    assert client.selects == [] and answer.told == []
+    assert sim.log[-1]["not_understood"] == ["личный кабинет"]
 
 
 async def test_the_level_of_the_area_counts_when_the_persona_has_one() -> None:
