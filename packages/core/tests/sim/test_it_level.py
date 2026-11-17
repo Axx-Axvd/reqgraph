@@ -24,6 +24,30 @@ def test_jargon_is_found_by_stem_and_case_and_ordinary_words_are_not() -> None:
     assert unknown_terms(plain, 0) == []
 
 
+def test_words_with_an_everyday_sense_are_jargon_only_in_it_phrases() -> None:
+    """Author's decision of 17.11: «нагрузка», «доступность», «роль», «аудит» and others."""
+    everyday = (
+        "Какая нагрузка на персонал в праздники? Важна ли доступность цен и какую роль играет "
+        "администратор? Бывает ли нештатная ситуация, аудит бухгалтерии, справочник цен, "
+        "импорт муки или экспорт продукции?"
+    )
+    assert unknown_terms(everyday, 0) == []
+    it = (
+        "Какая нагрузка на сервер, доступность сайта, роли пользователей и аудит действий? "
+        "Нужны ли метрики и транзакции?"
+    )
+    assert unknown_terms(it, 0) == [
+        "роли и права",
+        "сервер",
+        "аудит",
+        "доступность системы",
+        "нагрузка",
+        "транзакция",
+        "метрики",
+    ]
+    assert unknown_terms(it, 2) == []  # «транзакция» and «метрики» moved from step 3 to 2
+
+
 def test_each_step_understands_more() -> None:
     q = "Нужен ли личный кабинет пациента, роли и права доступа и отказоустойчивость?"
     assert unknown_terms(q, 0) == ["личный кабинет", "роли и права", "отказоустойчивость"]
