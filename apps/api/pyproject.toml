@@ -1,11 +1,21 @@
-# FastAPI service (api + worker). Stub until T-501: no dependencies yet.
+# FastAPI service (api + worker): REST for the web app (T-501), the job worker comes in T-502.
 [project]
 name = "reqgraph-api"
 version = "0.1.0"
-description = "reqgraph HTTP API and worker (stub until T-501)"
+description = "reqgraph HTTP API and worker"
 license = "MIT"
 requires-python = ">=3.12,<3.13"
-dependencies = ["reqgraph"]
+dependencies = [
+    "reqgraph",
+    "fastapi==0.162.0",  # REST and the OpenAPI description the web types are generated from
+    "uvicorn==0.54.0",  # the ASGI server that runs it (Render, docker compose)
+    "pydantic-settings==2.16.2",  # settings from environment variables
+    "pyjwt[crypto]==2.15.1",  # Supabase access tokens: JWKS (ES256, RS256), HS256 for the local CLI
+    "psycopg[binary,pool]==3.3.7",  # Postgres (Supabase) driver and connection pool; LGPL, used unmodified
+]
+
+[project.scripts]
+reqgraph-api = "reqgraph_api.__main__:main"
 
 [tool.uv.sources]
 reqgraph = { workspace = true }
