@@ -1,5 +1,5 @@
 """Command line: ``reqgraph-evals probe | rescore | analyst | modeler | uml | standards | repair |
-scenarios | interview | metrics | matrix | label | agreement | human``."""
+scenarios | interview | metrics | matrix | label | agreement | human | pure``."""
 
 import asyncio
 import json
@@ -521,6 +521,84 @@ def agreement_cmd(
         text, encoding="utf-8"
     )
     typer.echo(text)
+
+
+pure_app = typer.Typer(
+    no_args_is_help=True,
+    help="Свой подсчёт на наборе PURE (T-308): доля типовых требований в настоящих документах.",
+)
+app.add_typer(pure_app, name="pure")
+PureFolder = Annotated[
+    Path, typer.Argument(help="папка с документами PURE", exists=True, file_okay=False)
+]
+PureLabels = Annotated[Path, typer.Argument(help="CSV меток", exists=True, dir_okay=False)]
+
+
+@pure_app.command("sample")
+def pure_sample_cmd(
+    folder: PureFolder,
+    docs: Annotated[str, typer.Option(help="документы через запятую, имя без расширения")],
+    out: Annotated[Path, typer.Option(help="CSV для разметки")],
+    n: Annotated[int, typer.Option(min=1, help="требований из документа")] = 15,
+    seed: Annotated[int, typer.Option(help="seed выборки")] = 42,
+) -> None:
+    """Случайные требования каждого документа в CSV без их текста."""
+    from reqgraph_evals import pure
+
+    names = [d.strip() for d in docs.split(",") if d.strip()]
+    found = pure.texts(folder, names)
+    for name, reqs in found.items():
+        typer.echo(f"{name}: найдено требований {len(reqs)}")
+    rows = pure.write_sample(found, n=n, seed=seed, out=out)
+    typer.echo(f"в выборке {len(rows)} -> {out}")
+
+
+@pure_app.command("show")
+def pure_show_cmd(labels: PureLabels, folder: PureFolder) -> None:
+    """Тексты требований выборки — только в терминал, для разметки."""
+    from reqgraph_evals import pure
+
+    rows = pure.read_labels(labels)
+    found = pure.texts(folder, sorted({r["doc"] for r in rows}))
+    for r in rows:
+        text = found[r["doc"]][int(r["pos"]) - 1].text
+        typer.echo(f"{r['doc']} #{r['pos']} [{r['section']}] {text}")
+
+
+@pure_app.command("report")
+def pure_report_cmd(
+    labels: PureLabels,
+    out: Annotated[Path | None, typer.Option(help="отчёт Markdown")] = None,
+) -> None:
+    """Доля типовых: всего с интервалом Уилсона, по документам и по видам требований."""
+    from reqgraph_evals import pure
+
+    text = pure.report_markdown(pure.report(labels))
+    if out is not None:
+        out.write_text(text, encoding="utf-8")
+    typer.echo(text)
+
+
+@pure_app.command("check")
+def pure_check_cmd(
+    labels: PureLabels,
+    folder: PureFolder,
+    share: Annotated[float, typer.Option(min=0.01, max=1.0, help="доля для второй разметки")] = 0.2,
+) -> None:
+    """Вторая разметка части меток (первые скрыты), затем совпадение и каппа Коэна."""
+    from reqgraph_evals import pure
+
+    rows = pure.read_labels(labels)
+    found = pure.texts(folder, sorted({r["doc"] for r in rows}))
+
+    def text_of(key: tuple[str, int]) -> str:
+        return found[key[0]][key[1] - 1].text
+
+    result = pure.check(labels, text_of, input, share=share, echo=typer.echo)
+    typer.echo(
+        f"проверено {result['checked']}: совпадение {result['agreement']:.0%}, "
+        f"каппа {result['kappa']} -> {pure.check_path(labels)}"
+    )
 
 
 human_app = typer.Typer(

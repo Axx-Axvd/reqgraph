@@ -8,6 +8,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- `reqgraph-evals pure sample|show|report|check` (T-308): a seeded sample of requirements from documents of the
+  PURE dataset (text by pdftotext and LibreOffice, the documents stay outside the repository), the share of typical
+  requirements with the Wilson interval, by document and by kind, and a second labelling with Cohen's kappa.
+  Labels of 180 requirements from 12 documents: `evals/reports/labels/pure-groups-2026-11-18.csv`.
 - Embeddings of the cheap profile through OpenRouter (`openrouter/google/gemini-embedding-001`): the same model
   as Google AI Studio's free tier, paid per token ($0.15 per 1M), without the daily quota that held the matrix to
   one scenario a day (author's decision of 2026-11-10). Vectors are the same (cosine 1.0 on a cached text).
