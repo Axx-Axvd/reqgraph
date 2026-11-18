@@ -8,6 +8,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- The API (T-501, `apps/api`, `reqgraph-api serve | openapi`): projects, runs, interview answers, cancel, run
+  events, the graph by revision, exports and `/health` on FastAPI. Supabase Auth tokens are checked by the project's
+  JWKS; reads run as `authenticated` with the token's claims, so the RLS policies apply; runs and answers are queued
+  as jobs for the worker (T-502). Migration `20261119000001_api.sql`: `projects.config`, `graph_revisions.files` and
+  `layout`, the `jobs` table. `PgStore` keeps a project as FileStore does. `schemas/openapi.json` and the web types
+  `apps/web/src/lib/api-types.ts` (openapi-typescript) are generated and checked in CI.
 - `reqgraph-evals pure sample|show|report|check` (T-308): a seeded sample of requirements from documents of the
   PURE dataset (text by pdftotext and LibreOffice, the documents stay outside the repository), the share of typical
   requirements with the Wilson interval, by document and by kind, and a second labelling with Cohen's kappa.
