@@ -3,7 +3,15 @@
 from typing import Any
 
 from reqgraph.agents.analyst import AnalystDraft, to_patch
-from reqgraph.agents.coverage import answer_yields, closed_areas, coverage_of, facts_by_area, gaps
+from reqgraph.agents.coverage import (
+    answer_yields,
+    area_yields,
+    closed_areas,
+    coverage_of,
+    facts_by_area,
+    gaps,
+    queue,
+)
 from reqgraph.agents.state import AREAS, Coverage
 from reqgraph.graph import ArtifactGraph, GraphPatch
 
@@ -126,14 +134,49 @@ def test_an_answer_yields_what_was_first_told_in_it() -> None:
     assert answer_yields(graph) == [1, 1, 0]  # the third answer told nothing new
 
 
-def test_an_answer_without_news_closes_its_area() -> None:
+def test_two_answers_without_news_close_their_area() -> None:
+    """T-319: one empty answer leaves the area open (a misunderstood question, a bad one)."""
     graph = answered(3, {"requirements": [nfr("a", "reliability", source="TURN-0006")]})
     assert answer_yields(graph) == [0, 1, 0]
     assert closed_areas(graph, ["nfr", "data", "nfr"]) == {"nfr"}
-    assert closed_areas(graph, ["nfr", "data", "goals"]) == {"nfr", "goals"}
+    assert closed_areas(graph, ["nfr", "data", "goals"]) == set()
     assert closed_areas(graph, [None, "data", None]) == set()  # M1: questions without an area
     # areas of earlier sessions without turns in the graph: the latest questions pair with answers
     assert closed_areas(graph, ["goals", "goals", "nfr", "data", "nfr"]) == {"nfr"}
+
+
+def test_area_yields_list_what_each_answer_told_by_area() -> None:
+    items = [
+        nfr("a", "reliability", source="TURN-0004"),
+        nfr("b", "security", source="TURN-0008"),
+        nfr("c", "usability", source="TURN-0008"),
+    ]
+    graph = answered(3, {"requirements": items})
+    assert area_yields(graph, ["goals", "data", "goals"]) == {"goals": [1, 2], "data": [0]}
+    assert area_yields(graph, [None, "data", None]) == {"data": [0]}
+
+
+def test_an_open_area_that_reached_its_need_is_asked_again_the_richest_first() -> None:
+    """T-319: a reached need does not end the interview; areas whose latest answer told the most
+    come first, an area with one empty answer stays at the end."""
+    items = [
+        nfr("a", "reliability", source="TURN-0004"),
+        nfr("b", "security", source="TURN-0008"),
+        nfr("c", "usability", source="TURN-0008"),
+    ]
+    graph = answered(3, {"requirements": items})
+    need = {**dict.fromkeys(AREAS, 0), "goals": 1, "data": 1, "nfr": 1}
+    coverage = Coverage(got={**dict.fromkeys(AREAS, 0), "goals": 1, "data": 1, "nfr": 3}, need=need)
+    assert [g[0] for g in queue(coverage, graph, ["goals", "data", "nfr"])] == [
+        "nfr",  # its answer told 2
+        "goals",  # 1
+        "data",  # nothing yet: open, last
+    ]
+    graph4 = answered(4, {"requirements": items})  # a fourth answer, about data, told nothing
+    assert [g[0] for g in queue(coverage, graph4, ["goals", "data", "nfr", "data"])] == [
+        "nfr",
+        "goals",
+    ]
 
 
 def test_facts_by_area_list_what_the_client_told() -> None:
@@ -145,14 +188,18 @@ def test_facts_by_area_list_what_the_client_told() -> None:
     assert facts["constraints"] == []  # an assumption of the Analyst is not a fact
 
 
-def test_an_area_whose_answer_told_nothing_drops_out() -> None:
+def test_an_area_whose_two_answers_told_nothing_drops_out() -> None:
     from reqgraph.agents.nodes import next_gaps
     from reqgraph.agents.state import initial_state
 
     state = initial_state(answered(2, {"requirements": []}), "interview")
     first = [g[0] for g in next_gaps(state)]
-    state["asked_areas"] = ["nfr", "scenarios"]  # both answers told nothing
-    assert [g[0] for g in next_gaps(state)] == [a for a in first if a not in ("nfr", "scenarios")]
+    state["asked_areas"] = ["nfr", "nfr"]  # both answers told nothing
+    assert [g[0] for g in next_gaps(state)] == [a for a in first if a != "nfr"]
+    state["asked_areas"] = ["nfr", "scenarios"]  # one empty answer each: both stay, asked last
+    assert [g[0] for g in next_gaps(state)] == [
+        a for a in first if a not in ("nfr", "scenarios")
+    ] + ["scenarios", "nfr"]
 
 
 def test_an_area_the_brief_covered_is_asked_once_before_a_gap_is_asked_again() -> None:
@@ -166,4 +213,5 @@ def test_an_area_the_brief_covered_is_asked_once_before_a_gap_is_asked_again() -
     state["asked_areas"] = ["nfr"]  # the brief told the goal, nfr was asked and is still short
     assert [g[0] for g in next_gaps(state)] == ["goals", "nfr"]
     state["asked_areas"] = ["nfr", "goals"]
-    assert [g[0] for g in next_gaps(state)] == ["nfr"]  # goals was asked and is covered
+    # goals was asked and is covered, but its answer told something: still open, after the gap
+    assert [g[0] for g in next_gaps(state)] == ["nfr", "goals"]
