@@ -281,6 +281,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- The coverage interviewer (M2) goes deeper (T-319): an area closes after two answers that told nothing new, not
+  after one; a reached threshold no longer ends the interview while an area asked before is still open. Open
+  areas whose threshold is met are asked again after the gaps, the one whose latest answer told the most first.
+  On dev-01…03 (27 interviews against 54 before) every interview used the 20-question limit; interview recall
+  rose from 47.2% to 58.3% at IT levels 0-1 and from 60.9% to 69.2% at level 3, at $0.08 per interview instead of
+  $0.055. Measurement: `evals/reports/results-2026-11-18-cheap-t319-after.*` against
+  `results-2026-11-17-cheap-t317-{before,before2}.*`.
+
 - Dev references (T-312): the facts of the brief (`in_brief`) say only what the brief says — dev-01 H-011, dev-03
   H-051 and H-052 lose details the brief does not give, dev-02 H-034 keeps the brief's 120 orders and the
   300 visitors become a new hidden H-045. Interview recall on dev-02 before and after is not comparable
