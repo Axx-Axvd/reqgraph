@@ -8,6 +8,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- The project's results on the web app (T-505): a «Граф» tab — the requirements graph in React Flow with a dagre
+  layout, a kinds filter and a node panel; the BPMN scheme of a process in bpmn-js (view only), compiled by the
+  API from the process DSL (`GET /projects/{id}/processes/{pid}/bpmn`); a «Проверки» tab — the CI report's
+  findings, a click opens the node on the graph or the step on its scheme and highlights it; a «Выгрузка» tab —
+  SRS, TZ by GOST 34.602 and 19.201 (md, docx), ReqIF and scheme pictures made by `POST /projects/{id}/exports`
+  into the private Storage bucket `exports` and downloaded through signed links. The worker keeps the whole CI
+  report (`graph_revisions.ci_report`); `GET /projects/{id}/report` computes it offline for older revisions.
+  Migration `20261122000001_exports.sql`: `ci_report`, the bucket and its owner-only read policy (pgTAP test),
+  one `exports` row per file. New web dependencies: `@xyflow/react`, `@dagrejs/dagre` (MIT), `bpmn-js`
+  (bpmn.io license, watermark kept). API settings `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `EXPORT_OFFLINE`.
 - The web app's first pages (T-504, `apps/web`): sign-in (GitHub, magic link) with the personal data disclaimer,
   projects, a project page and the interview chat — turns from `interview_turns` (RLS), Supabase Realtime with a
   2-second API poll as the fallback, the agents' progress and topic coverage from run events, answer, done and
@@ -310,6 +320,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   ADR-016 (DOCX export via pandoc); ADR-015 (Streamlit demo) recorded as rejected.
 
 ### Changed
+
+- `ExportOut` of the API has the file's Storage `path` and its `name` within the export (T-505).
 
 - The API sets a run to `running` as soon as it takes an answer (T-504): the chat hides the form at once and a
   second answer to the same question is refused.
