@@ -10,12 +10,12 @@ ROLES = ["interviewer", "analyst", "modeler", "standards", "reviewer", "stakehol
 
 def test_bundled_roles_yaml_loads() -> None:
     cfg = load_roles()
-    assert set(cfg.profiles) == {"free", "cheap", "local"}
+    assert set(cfg.profiles) == {"free", "cheap", "local", "byok"}
     assert cfg.defaults.retries >= 1
     assert cfg.budget.run_usd > 0
 
 
-@pytest.mark.parametrize("profile", ["free", "cheap", "local"])
+@pytest.mark.parametrize("profile", ["free", "cheap", "local", "byok"])
 @pytest.mark.parametrize("role", ROLES)
 def test_every_role_resolves_in_every_profile(profile: str, role: str) -> None:
     steps = load_roles().ladder(role, profile)
@@ -60,7 +60,7 @@ def family(model: str) -> str:
     raise AssertionError(f"неизвестное семейство модели {model}: добавьте в FAMILIES")
 
 
-@pytest.mark.parametrize("profile", ["free", "cheap"])
+@pytest.mark.parametrize("profile", ["free", "cheap", "byok"])
 def test_simulator_and_judge_are_another_family_than_agents(profile: str) -> None:
     """CLAUDE.md: the simulator and the judge must not share a family with the agents."""
     cfg = load_roles()
@@ -129,7 +129,7 @@ def test_the_simulated_client_has_its_own_temperature(tmp_path: Path) -> None:
         load_roles(bad)
 
 
-@pytest.mark.parametrize("profile", ["free", "cheap", "local"])
+@pytest.mark.parametrize("profile", ["free", "cheap", "local", "byok"])
 def test_every_profile_has_an_embedding_model(profile: str) -> None:
     step = load_roles().embedding(profile)
     assert step.provider in load_roles().providers
@@ -169,3 +169,11 @@ def test_model_settings_give_extra_body_to_one_model() -> None:
     data["model_settings"] = {"nowhere/model": {"extra_body": {}}}
     with pytest.raises(ValueError, match="nowhere"):
         RolesConfig.model_validate(data)
+
+
+def test_the_byok_profile_runs_every_role_on_openrouter_only() -> None:
+    """T-503, author's decision 19.11: a user's own key pays for every call of the run; no step
+    falls back to a provider whose key is ours."""
+    cfg = load_roles()
+    for role in [*ROLES, "*", "modeler_views"]:
+        assert {s.provider for s in cfg.ladder(role, "byok")} == {"openrouter"}, role

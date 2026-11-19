@@ -9,8 +9,11 @@ import asyncio
 import logging
 import os
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Literal
 
 from pydantic_ai import Agent
@@ -96,10 +99,29 @@ class RunBudget:
         self.spent_tokens += stats.input_tokens + stats.output_tokens
 
 
+# Keys of one run (T-503, a demo user's own OpenRouter key): key_env -> key, set by the worker for
+# the run's task only (a ContextVar does not leak into other tasks); never logged, never stored.
+_NO_KEYS: Mapping[str, str] = MappingProxyType({})
+_RUN_KEYS: ContextVar[Mapping[str, str]] = ContextVar("reqgraph_run_keys", default=_NO_KEYS)
+
+
+@contextmanager
+def provider_keys(keys: Mapping[str, str]) -> Iterator[None]:
+    """Calls inside use these keys (provider name -> key) instead of the environment's."""
+    cfg = _config()
+    by_env = {cfg.providers[name].key_env: key for name, key in keys.items() if key}
+    token = _RUN_KEYS.set({k: v for k, v in by_env.items() if k is not None})
+    try:
+        yield
+    finally:
+        _RUN_KEYS.reset(token)
+
+
 def api_key(provider: Provider) -> str:
     if provider.key_env is None:
         return "ollama"
-    return os.environ.get(provider.key_env) or PLACEHOLDER_KEY
+    own = _RUN_KEYS.get().get(provider.key_env)
+    return own or os.environ.get(provider.key_env) or PLACEHOLDER_KEY
 
 
 def base_url(provider: Provider) -> str:
