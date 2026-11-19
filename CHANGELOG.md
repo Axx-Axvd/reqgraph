@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- The web app's first pages (T-504, `apps/web`): sign-in (GitHub, magic link) with the personal data disclaimer,
+  projects, a project page and the interview chat — turns from `interview_turns` (RLS), Supabase Realtime with a
+  2-second API poll as the fallback, the agents' progress and topic coverage from run events, answer, done and
+  cancel; the runs left today; the user's own OpenRouter key in the tab's memory only. API calls through
+  `openapi-fetch` on the generated types. Playwright e2e «sign in → project → 3 answers → done»: with a mocked API
+  (`pnpm -C apps/web e2e:mock`) and on `supabase start` with the API and its worker on stub models
+  (`REQGRAPH_STUB_MODELS=1`, local databases only) in the new CI job `e2e`.
 - Public demo limits (T-503): 3 runs per user per day (a day is Moscow time), the 4th is 429 with a clear text
   and `Retry-After`; when all users' paid spend today reaches $0.50, new runs go to the free profile; admins have
   no limits; `GET /usage`. A user's own OpenRouter key (`X-OpenRouter-Key`, BYOK): runs on the new `byok` profile
@@ -304,6 +311,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- The API sets a run to `running` as soon as it takes an answer (T-504): the chat hides the form at once and a
+  second answer to the same question is refused.
 - The coverage interviewer (M2) goes deeper (T-319): an area closes after two answers that told nothing new, not
   after one; a reached threshold no longer ends the interview while an area asked before is still open. Open
   areas whose threshold is met are asked again after the gaps, the one whose latest answer told the most first.

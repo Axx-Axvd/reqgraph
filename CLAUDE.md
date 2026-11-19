@@ -35,6 +35,7 @@
 - uv run pytest packages/core/tests/agents/test_interview_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету живого интервью
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
+- PW_CHROMIUM_PATH=/opt/pw-browsers/chromium pnpm -C apps/web e2e:mock   # e2e сайта с подменой API и Supabase (без сервисов); полный e2e — `pnpm -C apps/web e2e` на `supabase start`, гоняется в CI (T-504)
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
 - uv run reqgraph-api serve         # API (T-501) и исполнитель задач (T-502, WORKER_ENABLED): DATABASE_URL, SUPABASE_JWKS_URL, CORS_ORIGINS из окружения; лимиты демо (T-503): DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP, PROJECT_PROFILE; /docs — описание адресов

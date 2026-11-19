@@ -7,14 +7,19 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "gen:api": "openapi-typescript ../../schemas/openapi.json -o src/lib/api-types.ts"
+    "gen:api": "openapi-typescript ../../schemas/openapi.json -o src/lib/api-types.ts",
+    "e2e": "playwright test",
+    "e2e:mock": "playwright test -c playwright.mock.config.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.119.0",
     "next": "16.4.2",
+    "openapi-fetch": "0.17.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
