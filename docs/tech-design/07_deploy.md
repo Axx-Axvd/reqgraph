@@ -99,6 +99,8 @@ flowchart LR
 | `SUPABASE_JWT_AUD` | api | ожидаемая аудитория токена, по умолчанию `authenticated` |
 | `SUPABASE_JWT_SECRET` | api (local) | только локальный Supabase CLI с подписью HS256; в проде не задаётся |
 | `CORS_ORIGINS` | api | домены сайта через запятую (Vercel, `http://localhost:3000`) |
+| `WORKER_ENABLED` | api | исполнитель задач в процессе API (по умолчанию да, ADR-009); `reqgraph-api worker` — отдельно |
+| `WORKER_POLL_SECONDS, JOB_STALE_SECONDS` | api | пауза при пустой очереди (2 с) и срок, после которого задача без продления считается брошенной (120 с) |
 | `OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY` | api, evals | провайдеры моделей |
 | `REQGRAPH_PROFILE, REQGRAPH_RUN_BUDGET_USD` | api, cli | профиль моделей и бюджет прогона |
 | `OLLAMA_BASE_URL` | api, cli (local) | офлайн-профиль `local` (Ollama) |

@@ -121,7 +121,7 @@ reqgraph/
 ├── apps/api/                  # FastAPI
 │   ├── app/main.py  deps.py  auth.py  settings.py
 │   ├── app/routers/           # projects.py runs.py graph.py exports.py
-│   ├── app/worker.py          # очередь jobs, запуск LangGraph
+│   ├── reqgraph_api/worker/   # очередь jobs, запуск LangGraph, чекпоинты в lg (T-502)
 │   └── Dockerfile
 ├── apps/web/                  # Next.js
 │   ├── app/(auth)/login  app/projects/[id]/{interview,graph,models,ci,export}
