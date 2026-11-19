@@ -30,8 +30,8 @@ repos:
         language: system
         types_or: [python, pyi]
       - id: mypy
-        name: mypy (packages/core, evals)
-        entry: uv run mypy packages/core evals/reqgraph_evals
+        name: mypy (packages/core, evals, apps/api)
+        entry: uv run mypy packages/core evals/reqgraph_evals apps/api
         language: system
         pass_filenames: false
         files: ^(packages/core|evals)/

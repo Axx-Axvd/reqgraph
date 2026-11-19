@@ -96,6 +96,9 @@ flowchart LR
 | `SUPABASE_SERVICE_ROLE_KEY` | api | запись прогонов и ревизий; никогда не попадает в браузер |
 | `DATABASE_URL` | api | Supavisor session pooler :5432 |
 | `SUPABASE_JWKS_URL` | api | проверка JWT пользователя |
+| `SUPABASE_JWT_AUD` | api | ожидаемая аудитория токена, по умолчанию `authenticated` |
+| `SUPABASE_JWT_SECRET` | api (local) | только локальный Supabase CLI с подписью HS256; в проде не задаётся |
+| `CORS_ORIGINS` | api | домены сайта через запятую (Vercel, `http://localhost:3000`) |
 | `OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY` | api, evals | провайдеры моделей |
 | `REQGRAPH_PROFILE, REQGRAPH_RUN_BUDGET_USD` | api, cli | профиль моделей и бюджет прогона |
 | `OLLAMA_BASE_URL` | api, cli (local) | офлайн-профиль `local` (Ollama) |

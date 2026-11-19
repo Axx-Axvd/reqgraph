@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(17);
+select plan(21);
 
 -- Two users; the auth trigger creates their profiles.
 insert into auth.users (id, email, aud, role)
@@ -33,6 +33,9 @@ values ('00000000-0000-4000-8000-0000000a7001', 'agent', 'вопрос'),
 insert into public.exports (project_id, rev, format, storage_path)
 values ('00000000-0000-4000-8000-00000000a0a1', 1, 'srs-docx', 'a/srs.docx'),
        ('00000000-0000-4000-8000-00000000b0b1', 1, 'srs-docx', 'b/srs.docx');
+insert into public.jobs (run_id, kind)
+values ('00000000-0000-4000-8000-0000000a7001', 'start'),
+       ('00000000-0000-4000-8000-0000000b7001', 'start');
 insert into public.usage_daily (user_id, day, runs)
 values ('00000000-0000-4000-8000-0000000000a1', current_date, 1),
        ('00000000-0000-4000-8000-0000000000b1', current_date, 1);
@@ -57,6 +60,8 @@ select is((select count(*)::int from public.run_events), 1, 'события чу
 select is((select count(*)::int from public.interview_turns), 1, 'реплики чужого интервью не видны');
 select is((select count(*)::int from public.exports), 1, 'выгрузки чужого проекта не видны');
 select is((select count(*)::int from public.usage_daily), 1, 'чужой расход не виден');
+select is((select count(*)::int from public.jobs), 0, 'очередь задач пользователю не видна, даже своя (T-501)');
+select is((select config from public.projects limit 1), '{}'::jsonb, 'настройки своего проекта видны (T-501)');
 
 select lives_ok($$insert into public.projects (owner_id, name)
                   values ('00000000-0000-4000-8000-0000000000a1', 'alice second')$$,
@@ -70,6 +75,9 @@ delete from public.projects where id = '00000000-0000-4000-8000-00000000b0b1';
 select throws_ok($$insert into public.runs (project_id, kind, status)
                    values ('00000000-0000-4000-8000-00000000a0a1', 'interview', 'queued')$$,
                  '42501', null, 'прогоны пишет только backend');
+select throws_ok($$insert into public.jobs (run_id, kind)
+                   values ('00000000-0000-4000-8000-0000000a7001', 'resume')$$,
+                 '42501', null, 'задачи в очередь ставит только backend (T-501)');
 
 -- Act as anon.
 reset role;
@@ -88,6 +96,8 @@ select is((select name from public.projects where id = '00000000-0000-4000-8000-
 delete from public.projects where id = '00000000-0000-4000-8000-00000000a0a1';
 select is((select count(*)::int from public.run_events where run_id = '00000000-0000-4000-8000-0000000a7001'),
           0, 'удаление проекта каскадно удаляет прогоны и события');
+select is((select count(*)::int from public.jobs where run_id = '00000000-0000-4000-8000-0000000a7001'),
+          0, 'и задачи его прогонов в очереди (T-501)');
 
 select * from finish();
 rollback;

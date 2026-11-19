@@ -30,7 +30,7 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy packages/core evals/reqgraph_evals
+      - run: uv run mypy packages/core evals/reqgraph_evals apps/api
       - run: uv run pytest -q --cov
       - name: pre-commit hooks
         if: matrix.os == 'ubuntu-latest'
@@ -54,6 +54,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm -C apps/web lint
+      - name: web API types match schemas/openapi.json (T-501)
+        if: matrix.os == 'ubuntu-latest'
+        run: pnpm -C apps/web gen:api && git diff --exit-code -- apps/web/src/lib/api-types.ts
       - run: pnpm -C apps/web build
 
   db:
@@ -73,6 +76,15 @@ jobs:
         run: pnpm db:reset
       - name: RLS tests (pgTAP)
         run: pnpm db:test
+      # T-501: the API tests that need a database, against the local Supabase Postgres.
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: API tests with the database
+        env:
+          REQGRAPH_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: uv run pytest apps/api/tests -m pg -q -p no:cacheprovider
 
   # One stable check name for branch protection, whatever the matrix looks like.
   ci:

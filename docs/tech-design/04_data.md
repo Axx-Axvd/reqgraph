@@ -170,6 +170,7 @@ erDiagram
   projects ||--o{ exports : has
   runs ||--o{ run_events : emits
   runs ||--o{ interview_turns : has
+  runs ||--o{ jobs : queues
   profiles {
     uuid id PK "= auth.uid"
     text display_name
@@ -191,6 +192,7 @@ erDiagram
     text_arr standards
     text_arr langs
     int head_rev
+    jsonb config "reqgraph.yaml целиком (T-501)"
     timestamptz created_at
   }
   graph_revisions {
@@ -198,6 +200,8 @@ erDiagram
     uuid project_id FK
     int rev "unique(project_id, rev)"
     jsonb graph
+    jsonb files "тексты файлов моделей, как прочитаны (T-501)"
+    jsonb layout "узел -> файл (T-501)"
     jsonb ci_summary
     text author "agent|user"
     timestamptz created_at
@@ -234,6 +238,15 @@ erDiagram
     jsonb payload
     timestamptz ts
   }
+  jobs {
+    bigint id PK
+    uuid run_id FK
+    text kind "start|resume|cancel"
+    jsonb payload
+    text status "queued|running|done|failed"
+    int attempts
+    timestamptz locked_at
+  }
   interview_turns {
     bigint id PK
     uuid run_id FK
@@ -242,7 +255,7 @@ erDiagram
     jsonb coverage
   }
 ```
-Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. RLS: всё через `projects.owner_id = auth.uid()`. У `runs` счётчики и фильтры — колонки, остальные параметры воспроизводимости — в `config` (решение автора 23.10, T-004). Бакет Storage `exports` и его политики — в T-501. Миграции: `supabase/migrations/`, тест RLS: `supabase/tests/rls_test.sql`.
+Служебная схема `lg` (checkpoints, checkpoint_blobs, checkpoint_writes) создаётся `PostgresSaver.setup()`; `thread_id = run_id`. RLS: всё через `projects.owner_id = auth.uid()`. У `runs` счётчики и фильтры — колонки, остальные параметры воспроизводимости — в `config` (решение автора 23.10, T-004). Бакет Storage `exports` и его политики в T-501 не сделаны: `supabase db start` в CI поднимает Postgres без схемы Storage, а файлы выгрузок пишет экспорт в воркере; предложение — перенести в T-505 (ждёт решения автора). Очередь `jobs` (ADR-009, T-501): API ставит задачу `start` при запуске прогона, `resume` с ответом заказчика, `cancel`; пользователям таблица не видна (RLS без политик), воркер (T-502) берёт задачи через `FOR UPDATE SKIP LOCKED`. Проект в базе — `PgStore` (`apps/api`): `projects.config` + ревизия (граф, файлы, раскладка) — тот же `Project`, что FileStore читает из папки. Миграции: `supabase/migrations/`, тест RLS: `supabase/tests/rls_test.sql`.
 
 *рис.7 - таблицы public и служебная схема lg для чекпоинтов LangGraph*
 
