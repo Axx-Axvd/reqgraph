@@ -124,9 +124,10 @@ reqgraph/
 │   ├── reqgraph_api/worker/   # очередь jobs, запуск LangGraph, чекпоинты в lg (T-502)
 │   └── Dockerfile
 ├── apps/web/                  # Next.js
-│   ├── app/(auth)/login  app/projects/[id]/{interview,graph,models,ci,export}
-│   ├── components/            # InterviewChat BpmnViewer TraceGraph CIReport
-│   └── lib/                   # supabase.ts api.ts types.ts (из schemas/)
+│   ├── src/app/login  auth/callback  projects  projects/[id]  projects/[id]/interview   # T-504; graph, ci, export — T-505
+│   ├── src/components/        # Shell Disclaimer InterviewChat (T-504); BpmnViewer TraceGraph CIReport — T-505
+│   ├── src/lib/               # supabase.ts api.ts (openapi-fetch) api-types.ts (из schemas/openapi.json) own-key.tsx
+│   └── e2e/                   # Playwright: с подменой API (e2e:mock) и на локальном стеке (e2e, CI)
 ├── supabase/
 │   ├── migrations/            # 0001_init.sql 0002_rls.sql 0003_quotas.sql ...
 │   ├── seed.sql  config.toml

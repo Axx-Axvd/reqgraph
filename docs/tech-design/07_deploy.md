@@ -92,7 +92,7 @@ flowchart LR
 
 | Переменная | Где | Назначение |
 |---|---|---|
-| `SUPABASE_URL, SUPABASE_ANON_KEY` | web | клиент supabase-js (Auth, Realtime) |
+| `NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY` | web | клиент supabase-js (вход, Realtime, чтение реплик под RLS); только anon-ключ (T-504) |
 | `SUPABASE_SERVICE_ROLE_KEY` | api | запись прогонов и ревизий; никогда не попадает в браузер |
 | `DATABASE_URL` | api | Supavisor session pooler :5432 |
 | `SUPABASE_JWKS_URL` | api | проверка JWT пользователя |
@@ -110,12 +110,13 @@ flowchart LR
 | `DEMO_TIMEZONE` | api | когда начинается новый день лимитов; `Europe/Moscow` (решение автора 19.11) |
 | `PROJECT_PROFILE` | api | модели новых проектов: `free` в разработке, `cheap` в публичном демо |
 | `NEXT_PUBLIC_API_URL` | web | адрес API на Render |
+| `REQGRAPH_STUB_MODELS` | api (e2e) | `1` — исполнитель на моделях-заглушках для e2e сайта; только с базой на `127.0.0.1` или `localhost`, иначе исполнитель не запускается; в проде не задаётся (T-504) |
 
 ## CI/CD
 
 | Workflow | Когда | Что делает |
 |---|---|---|
-| `ci.yml` | push, PR | ruff, mypy, pytest без сети (кассеты), сборка web, проверка миграций на локальном Supabase |
+| `ci.yml` | push, PR | ruff, mypy, pytest без сети (кассеты), сборка web, проверка миграций и тесты API на локальном Supabase; e2e сайта: `supabase start`, API с исполнителем на заглушках, Playwright — вход, проект, 3 ответа интервью (T-504) |
 | `migrate.yml` | push в main с изменениями supabase/ | supabase db push в staging, затем в prod по ручному подтверждению |
 | `keepalive.yml` | cron раз в 3 дня | GET /health (select 1) — проект Supabase не засыпает |
 | `Render, Vercel` | push в main | автодеплой из GitHub; превью на PR |

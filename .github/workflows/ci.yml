@@ -1,4 +1,5 @@
-# CI: ruff, mypy, pytest (no network), web lint and build, migrations + RLS tests. Runs on every push and PR.
+# CI: ruff, mypy, pytest (no network), web lint and build, migrations + RLS tests, the web e2e.
+# Runs on every push and PR.
 # Branch protection for main requires the single aggregate check "ci" (see the last job).
 name: ci
 
@@ -86,15 +87,79 @@ jobs:
           REQGRAPH_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: uv run pytest apps/api/tests -m pg -q -p no:cacheprovider
 
+  # T-504: the web app end to end — local Supabase (database, auth, realtime, REST), the API with
+  # its worker on stub models (no network, no money), the built site, Playwright in Chromium.
+  e2e:
+    name: e2e (web + api + supabase)
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: start Supabase without the services the test does not use
+        run: pnpm supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+      - name: Supabase settings for the API, the site and the test
+        run: |
+          pnpm --silent supabase status -o env > supabase.env
+          set -a; . ./supabase.env; set +a
+          anon="${ANON_KEY:-$PUBLISHABLE_KEY}"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$anon"
+            echo "NEXT_PUBLIC_API_URL=http://127.0.0.1:8000"
+            echo "E2E_SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "DATABASE_URL=$DB_URL"
+            echo "SUPABASE_JWKS_URL=$API_URL/auth/v1/.well-known/jwks.json"
+            echo "SUPABASE_JWT_SECRET=$JWT_SECRET"
+          } >> "$GITHUB_ENV"
+          rm supabase.env
+      - name: start the API with the worker on stub models
+        env:
+          REQGRAPH_STUB_MODELS: "1"
+          CORS_ORIGINS: http://127.0.0.1:3000
+          WORKER_POLL_SECONDS: "0.5"
+        run: |
+          nohup uv run reqgraph-api serve --port 8000 > api.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:8000/health && exit 0
+            sleep 1
+          done
+          cat api.log
+          exit 1
+      - run: pnpm -C apps/web exec playwright install --with-deps chromium
+      - name: e2e — create a project and answer 3 questions
+        run: pnpm -C apps/web e2e
+      - name: reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports
+          path: |
+            apps/web/playwright-report
+            api.log
+          retention-days: 7
+
   # One stable check name for branch protection, whatever the matrix looks like.
   ci:
     if: always()
-    needs: [python, web, db]
+    needs: [python, web, db, e2e]
     runs-on: ubuntu-latest
     steps:
       - name: all jobs must succeed
         run: |
-          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}, db: ${{ needs.db.result }}"
+          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}, db: ${{ needs.db.result }}, e2e: ${{ needs.e2e.result }}"
           test "${{ needs.python.result }}" = "success"
           test "${{ needs.web.result }}" = "success"
           test "${{ needs.db.result }}" = "success"
+          test "${{ needs.e2e.result }}" = "success"
