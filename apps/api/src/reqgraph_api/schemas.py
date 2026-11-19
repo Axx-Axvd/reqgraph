@@ -42,6 +42,7 @@ class RunOut(BaseModel):
     iteration: int
     cost_usd: float
     error: str | None
+    byok: bool = Field(description="прогон на своём ключе OpenRouter (T-503)")
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
@@ -99,3 +100,12 @@ class ExportOut(BaseModel):
 class Health(BaseModel):
     status: Literal["ok", "degraded"]
     database: bool
+
+
+class UsageOut(BaseModel):
+    """The demo limits of the signed-in user today (T-503); a day is Moscow time."""
+
+    runs_today: int
+    runs_limit: int | None = Field(description="None — без лимита (администратор)")
+    cost_today_usd: float
+    unlimited: bool

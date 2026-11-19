@@ -8,6 +8,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Public demo limits (T-503): 3 runs per user per day (a day is Moscow time), the 4th is 429 with a clear text
+  and `Retry-After`; when all users' paid spend today reaches $0.50, new runs go to the free profile; admins have
+  no limits; `GET /usage`. A user's own OpenRouter key (`X-OpenRouter-Key`, BYOK): runs on the new `byok` profile
+  of `roles.yaml` outside the demo limits, the key is held in the process memory for the worker and given only
+  to that run's calls (`reqgraph.llm.router.provider_keys`), never stored. The worker adds each step's tokens and
+  dollars to the owner's daily counter. Migration `20261121000001_demo_limits.sql`.
 - The worker (T-502, `reqgraph_api/worker`, `reqgraph-api worker`; it also starts with the API, `WORKER_ENABLED`):
   takes jobs from the `jobs` queue (`FOR UPDATE SKIP LOCKED`, the jobs of one run in order, a heartbeat, an
   abandoned job is taken again, 3 attempts), runs the core's run graph with LangGraph checkpoints in Postgres

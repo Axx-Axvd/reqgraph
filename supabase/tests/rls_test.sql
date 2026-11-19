@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(22);
+select plan(24);
 
 -- Two users; the auth trigger creates their profiles.
 insert into auth.users (id, email, aud, role)
@@ -62,6 +62,8 @@ select is((select count(*)::int from public.exports), 1, 'выгрузки чу�
 select is((select count(*)::int from public.usage_daily), 1, 'чужой расход не виден');
 select is((select count(*)::int from public.jobs), 0, 'очередь задач пользователю не видна, даже своя (T-501)');
 select ok(not has_schema_privilege('authenticated', 'lg', 'usage'), 'чекпоинты прогонов (схема lg) пользователю недоступны (T-502)');
+select ok(not has_function_privilege('authenticated', 'public.demo_spent_today(text)', 'execute'),
+          'общий расход демо пользователю недоступен (T-503)');
 select is((select config from public.projects limit 1), '{}'::jsonb, 'настройки своего проекта видны (T-501)');
 
 select lives_ok($$insert into public.projects (owner_id, name)
@@ -99,6 +101,10 @@ select is((select count(*)::int from public.run_events where run_id = '00000000-
           0, 'удаление проекта каскадно удаляет прогоны и события');
 select is((select count(*)::int from public.jobs where run_id = '00000000-0000-4000-8000-0000000a7001'),
           0, 'и задачи его прогонов в очереди (T-501)');
+
+select ok((select column_default from information_schema.columns
+            where table_schema = 'public' and table_name = 'usage_daily' and column_name = 'day')
+           like '%Europe/Moscow%', 'день расхода по умолчанию — по Москве (T-503)');
 
 select * from finish();
 rollback;

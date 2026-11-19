@@ -278,3 +278,97 @@ async def test_cancel_a_waiting_and_a_running_run(
     assert await asyncio.wait_for(task, 10)
     assert (await client.get(f"/runs/{running}", headers=headers)).json()["status"] == "cancelled"
     assert not await run_once(database, busy, STALE)  # the cancel job is done as well
+
+
+OWN_KEY = "sk-or-test-own-key-abcdef123456"
+
+
+def key_seen(seen: list[str]) -> FunctionModel:
+    """A model that records the OpenRouter key its call would be sent with."""
+    from reqgraph.llm.config import load_roles
+    from reqgraph.llm.router import api_key
+
+    def fn(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        seen.append(api_key(load_roles().providers["openrouter"]))
+        return ModelResponse(parts=[TextPart('{"ops": []}')])
+
+    return FunctionModel(fn)
+
+
+def everything(database_url: str) -> str:
+    """Every row of every table in public, lg and auth as text: where a leaked key would be."""
+    with psycopg.connect(database_url) as conn:
+        tables = conn.execute(
+            "select table_schema, table_name from information_schema.tables "
+            "where table_schema in ('public', 'lg', 'auth') and table_type = 'BASE TABLE'"
+        ).fetchall()
+        parts = []
+        for schema, name in tables:
+            for (row,) in conn.execute(f'select t::text from "{schema}"."{name}" t').fetchall():
+                parts.append(row)
+    return "\n".join(parts)
+
+
+async def test_a_run_on_an_own_key_calls_models_with_it_and_stores_it_nowhere(
+    client: AsyncClient,
+    token: Token,
+    new_user: Callable[[], UUID],
+    make_runner: Callable[..., Runner],
+    database: Database,
+    database_url: str,
+) -> None:
+    user = new_user()
+    headers = {"Authorization": f"Bearer {token(user)}", "X-OpenRouter-Key": OWN_KEY}
+    project = await client.post(
+        "/projects", json={"name": "Клиника", "brief": BRIEF}, headers=headers
+    )
+    pid = project.json()["id"]
+    made = await client.post(f"/projects/{pid}/runs", json={"kind": "brief"}, headers=headers)
+    run_id = made.json()["run"]["id"]
+    seen: list[str] = []
+    runner = make_runner(analyst=key_seen(seen))
+    runner.keys = client._transport.app.state.keys  # type: ignore[attr-defined]  # one process
+    assert await run_once(database, runner, STALE)
+    assert seen and set(seen) == {OWN_KEY}
+    assert (await client.get(f"/runs/{run_id}", headers=headers)).json()["status"] == "succeeded"
+    assert OWN_KEY not in everything(database_url)
+    usage = rows(database_url, "select runs, tokens_in from usage_daily where user_id = %s", [user])
+    assert usage == []  # the user pays: not our counter
+
+
+async def test_without_the_key_in_memory_an_own_key_run_never_falls_back_to_our_models(
+    client: AsyncClient,
+    token: Token,
+    new_user: Callable[[], UUID],
+    make_runner: Callable[..., Runner],
+    database: Database,
+    database_url: str,
+) -> None:
+    """After a restart the key is gone: the run fails with a text, no model is called."""
+    headers = {"Authorization": f"Bearer {token(new_user())}", "X-OpenRouter-Key": OWN_KEY}
+    run_id = await start(client, headers, "brief")
+    analyst = Counter()
+    assert await run_once(database, make_runner(analyst=analyst.model()), STALE)  # new key store
+    assert analyst.calls == 0
+    run = (await client.get(f"/runs/{run_id}", headers=headers)).json()
+    assert run["status"] == "failed" and "ключ OpenRouter" in run["error"]
+    events = rows(database_url, "select type from run_events where run_id = %s", [run_id])
+    assert ("key_required",) in events
+
+
+async def test_our_runs_add_their_tokens_to_the_owners_counter(
+    client: AsyncClient,
+    token: Token,
+    new_user: Callable[[], UUID],
+    make_runner: Callable[..., Runner],
+    database: Database,
+    database_url: str,
+) -> None:
+    user = new_user()
+    headers = auth(token, user)
+    await start(client, headers, "brief")
+    assert await run_once(database, make_runner(), STALE)
+    [(runs, tokens)] = rows(
+        database_url, "select runs, tokens_in from usage_daily where user_id = %s", [user]
+    )
+    assert runs == 1 and tokens > 0

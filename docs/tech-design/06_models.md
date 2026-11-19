@@ -113,6 +113,10 @@ profiles:
     "*":         [openrouter/deepseek/deepseek-v4-flash, gemini/gemini-3.5-flash-lite]
     stakeholder: [openrouter/qwen/qwen3.8-27b]
     judge:       [openrouter/qwen/qwen3.8-27b]
+  byok:                                    # демо со своим ключом OpenRouter (T-503): всё на ключе пользователя
+    "*":         [openrouter/deepseek/deepseek-v4-flash]
+    stakeholder: [openrouter/qwen/qwen3.8-27b]
+    judge:       [openrouter/qwen/qwen3.8-27b]
   local: {"*": [ollama/qwen3:4b]}
 defaults: {temperature: 0.2, timeout_s: 60, retries: 2, seed: 42}
 budget:   {run_usd: 0.50, run_tokens: 800000}   # -> pydantic-ai UsageLimits

@@ -354,6 +354,11 @@
       },
       "RunOut": {
         "properties": {
+          "byok": {
+            "description": "прогон на своём ключе OpenRouter (T-503)",
+            "title": "Byok",
+            "type": "boolean"
+          },
           "cost_usd": {
             "title": "Cost Usd",
             "type": "number"
@@ -437,11 +442,49 @@
           "iteration",
           "cost_usd",
           "error",
+          "byok",
           "created_at",
           "started_at",
           "finished_at"
         ],
         "title": "RunOut",
+        "type": "object"
+      },
+      "UsageOut": {
+        "description": "The demo limits of the signed-in user today (T-503); a day is Moscow time.",
+        "properties": {
+          "cost_today_usd": {
+            "title": "Cost Today Usd",
+            "type": "number"
+          },
+          "runs_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None — без лимита (администратор)",
+            "title": "Runs Limit"
+          },
+          "runs_today": {
+            "title": "Runs Today",
+            "type": "integer"
+          },
+          "unlimited": {
+            "title": "Unlimited",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "runs_today",
+          "runs_limit",
+          "cost_today_usd",
+          "unlimited"
+        ],
+        "title": "UsageOut",
         "type": "object"
       },
       "ValidationError": {
@@ -764,7 +807,7 @@
     },
     "/projects/{project_id}/runs": {
       "post": {
-        "description": "A queued run and its start job; the worker (T-502) takes it from the queue.",
+        "description": "A queued run and its start job; the worker (T-502) takes it from the queue. Demo limits\n(T-503): runs per day and the daily cap; with an own key — none.",
         "operationId": "create_run_projects__project_id__runs_post",
         "parameters": [
           {
@@ -775,6 +818,26 @@
               "format": "uuid",
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "свой ключ OpenRouter (BYOK): прогон за счёт пользователя, без лимитов демо; на сервере не сохраняется",
+            "in": "header",
+            "name": "X-OpenRouter-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 8,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "свой ключ OpenRouter (BYOK): прогон за счёт пользователя, без лимитов демо; на сервере не сохраняется",
+              "title": "X-Openrouter-Key"
             }
           }
         ],
@@ -808,6 +871,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "description": "лимит демо на сегодня исчерпан"
           }
         },
         "security": [
@@ -871,7 +937,7 @@
     },
     "/runs/{run_id}/answer": {
       "post": {
-        "description": "The answer to the waiting interview question, or done: true to end the interview.",
+        "description": "The answer to the waiting interview question, or done: true to end the interview; a run on\nthe user's own key needs the key again (the server keeps it only in memory).",
         "operationId": "answer_runs__run_id__answer_post",
         "parameters": [
           {
@@ -882,6 +948,26 @@
               "format": "uuid",
               "title": "Run Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "свой ключ OpenRouter (BYOK): прогон за счёт пользователя, без лимитов демо; на сервере не сохраняется",
+            "in": "header",
+            "name": "X-OpenRouter-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "minLength": 8,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "свой ключ OpenRouter (BYOK): прогон за счёт пользователя, без лимитов демо; на сервере не сохраняется",
+              "title": "X-Openrouter-Key"
             }
           }
         ],
@@ -1049,6 +1135,33 @@
           }
         ],
         "summary": "Get Events",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/usage": {
+      "get": {
+        "description": "Runs and dollars of the signed-in user today and the demo limit (a day is Moscow time).",
+        "operationId": "get_usage_usage_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Usage",
         "tags": [
           "runs"
         ]

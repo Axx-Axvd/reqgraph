@@ -10,6 +10,7 @@ from reqgraph import __version__
 
 from reqgraph_api.auth import TokenVerifier
 from reqgraph_api.db import Database, make_pool
+from reqgraph_api.keys import RunKeys
 from reqgraph_api.routes import health, projects, runs
 from reqgraph_api.settings import Settings
 
@@ -19,13 +20,15 @@ DESCRIPTION = (
 )
 
 
-async def start_worker(db: Database, settings: Settings, stop: asyncio.Event) -> None:
+async def start_worker(
+    db: Database, settings: Settings, stop: asyncio.Event, keys: RunKeys | None = None
+) -> None:
     """The worker loop next to the API (one process on Render Free, ADR-009)."""
     from reqgraph_api.worker.loop import run_worker
     from reqgraph_api.worker.runner import Runner
 
     assert settings.database_url is not None
-    runner = Runner(db, settings.database_url)
+    runner = Runner(db, settings.database_url, keys=keys or RunKeys(), tz=settings.demo_timezone)
     await run_worker(
         db, runner, stop, poll=settings.worker_poll_seconds, stale=settings.job_stale_seconds
     )
@@ -49,7 +52,9 @@ def create_app(
         stop = asyncio.Event()
         worker = None
         if settings.worker_enabled and settings.database_url and app.state.db is not None:
-            worker = asyncio.create_task(start_worker(app.state.db, settings, stop))  # ADR-009
+            worker = asyncio.create_task(  # ADR-009: in the API process, sharing its keys
+                start_worker(app.state.db, settings, stop, app.state.keys)
+            )
         try:
             yield
         finally:
@@ -65,6 +70,8 @@ def create_app(
         title="reqgraph API", version=__version__, description=DESCRIPTION, lifespan=lifespan
     )
     app.state.db = database
+    app.state.settings = settings
+    app.state.keys = RunKeys()
     app.state.verifier = verifier or TokenVerifier.from_settings(settings)
     if settings.origins():
         app.add_middleware(

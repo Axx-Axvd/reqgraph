@@ -45,6 +45,10 @@ profiles:
     "*": [openrouter/deepseek/deepseek-v4-flash, gemini/gemini-3.5-flash-lite]
     stakeholder: [openrouter/qwen/qwen3.8-27b]   # was Llama 3.3 70B and GLM-5.3 Flash: weaker in
     judge: [openrouter/qwen/qwen3.8-27b]         # the probe of 2026-11-02 (52% and 37% against 74%)
+  byok:                              # the demo with a user's own OpenRouter key (T-503, author 19.11):
+    "*": [openrouter/deepseek/deepseek-v4-flash]   # every call on the user's key, no reserve on ours
+    stakeholder: [openrouter/qwen/qwen3.8-27b]     # not used by the demo; kept for the family rule
+    judge: [openrouter/qwen/qwen3.8-27b]
   local:                             # offline stand and smoke tests
     "*": [ollama/qwen3:4b]
 
@@ -62,6 +66,7 @@ role_settings:                       # differences from the defaults, by role
 embeddings:                          # recall: matching found requirements to the hidden ones (T-304)
   free: gemini/gemini-embedding-001  # Google AI Studio, free; 3072 numbers per text
   cheap: openrouter/google/gemini-embedding-001  # the same model, paid per token, no daily quota (author 10.11)
+  byok: openrouter/google/gemini-embedding-001
   local: ollama/nomic-embed-text
 
 prices:                              # USD per 1M tokens, openrouter.ai 2026-11-02; genai-prices lacks them

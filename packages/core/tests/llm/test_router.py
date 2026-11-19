@@ -294,3 +294,36 @@ async def test_other_errors_and_too_many_429_are_not_waited_out(
     assert router.rate_limited(ModelHTTPError(429, "a", retry_after=3600)) is None  # a daily limit
     mixed = FallbackExceptionGroup("x", [ModelHTTPError(429, "a"), ModelHTTPError(500, "b")])
     assert router.rate_limited(mixed) is None
+
+
+def test_a_key_of_the_run_overrides_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """T-503: a user's own OpenRouter key goes only to that run's calls, then is gone."""
+    monkeypatch.setenv("OPENROUTER_API_KEY", "server-key")
+    openrouter = load_roles().providers["openrouter"]
+    groq = load_roles().providers["groq"]
+    with router.provider_keys({"openrouter": "user-key"}):
+        assert router.api_key(openrouter) == "user-key"
+        assert router.api_key(groq) != "user-key"  # other providers keep the server's keys
+        model = router._build_model(Step.parse("openrouter/deepseek/deepseek-v4-flash"))
+        assert model.client.api_key == "user-key"  # type: ignore[attr-defined]
+    assert router.api_key(openrouter) == "server-key"
+
+
+async def test_the_key_stays_in_its_own_task(monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    openrouter = load_roles().providers["openrouter"]
+    seen: dict[str, str] = {}
+
+    async def run(name: str, key: str | None) -> None:
+        if key is None:
+            await asyncio.sleep(0.01)
+            seen[name] = router.api_key(openrouter)
+            return
+        with router.provider_keys({"openrouter": key}):
+            await asyncio.sleep(0.02)
+            seen[name] = router.api_key(openrouter)
+
+    await asyncio.gather(run("byok", "user-key"), run("ours", None))
+    assert seen == {"byok": "user-key", "ours": "placeholder"}

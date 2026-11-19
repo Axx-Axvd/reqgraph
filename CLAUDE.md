@@ -37,7 +37,7 @@
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
-- uv run reqgraph-api serve         # API (T-501) и исполнитель задач (T-502, WORKER_ENABLED): DATABASE_URL, SUPABASE_JWKS_URL, CORS_ORIGINS из окружения; /docs — описание адресов
+- uv run reqgraph-api serve         # API (T-501) и исполнитель задач (T-502, WORKER_ENABLED): DATABASE_URL, SUPABASE_JWKS_URL, CORS_ORIGINS из окружения; лимиты демо (T-503): DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP, PROJECT_PROFILE; /docs — описание адресов
 - uv run reqgraph-api worker        # только исполнитель задач: прогоны из очереди jobs, чекпоинты в схеме lg, продолжение после перезапуска
 - uv run reqgraph-api openapi --out schemas/openapi.json && pnpm -C apps/web gen:api   # описание API и типы для сайта после правки адресов
 - REQGRAPH_TEST_DATABASE_URL=<postgres> uv run pytest apps/api/tests -m pg   # тесты API с базой: Supabase с миграциями или голый Postgres (заглушка auth и миграции — сами)

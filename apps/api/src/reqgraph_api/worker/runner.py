@@ -26,9 +26,11 @@ from reqgraph.agents.run import summarize
 from reqgraph.agents.runtime import RunContext, checkpoint_serde
 from reqgraph.agents.state import BudgetState, Mode, RunState
 from reqgraph.graph.store.formats import BRIEF_FILE
+from reqgraph.llm.router import provider_keys
 
 from reqgraph_api import store
 from reqgraph_api.db import Database
+from reqgraph_api.keys import RunKeys
 from reqgraph_api.worker import queue
 from reqgraph_api.worker.events import PgEvents
 
@@ -37,6 +39,11 @@ FINISHED = ("succeeded", "failed", "cancelled")
 
 class RunError(RuntimeError):
     """The run cannot go on (no brief, no project): it fails at once, without retries."""
+
+
+class KeyMissing(RuntimeError):
+    """A run on the user's own key, but the key is not in memory (the process restarted): the
+    question waits for the key to come again with the answer; our models are never used instead."""
 
 
 @asynccontextmanager
@@ -61,6 +68,8 @@ class Runner:
         default_factory=dict
     )  # RunContext overrides (tests, offline)
     poll: float = 5.0  # how often a running step looks for a cancel and renews its lock
+    keys: RunKeys = field(default_factory=RunKeys)  # users' own keys by run (T-503), in memory only
+    tz: str = "Europe/Moscow"  # the day of the demo counters (T-503)
 
     async def setup(self) -> None:
         async with checkpointer(self.url) as saver:
@@ -85,6 +94,15 @@ class Runner:
             error = step.exception()
             if error is None:
                 await queue.finish(conn, job["id"], "done")
+            elif isinstance(error, KeyMissing):
+                await queue.finish(conn, job["id"], "failed", str(error))
+                await conn.execute(
+                    "insert into public.run_events (run_id, type, payload) "
+                    "values (%s, 'key_required', '{}')",
+                    [job["run_id"]],
+                )
+                if job["kind"] == "start":
+                    await queue.fail_run(conn, job["run_id"], str(error))
             elif isinstance(error, RunError):
                 await queue.finish(conn, job["id"], "failed", str(error))
                 await queue.fail_run(conn, job["run_id"], str(error))
@@ -136,21 +154,61 @@ class Runner:
             settings["max_turns"] = int(run["config"]["max_turns"])
         if run["model_profile"]:
             settings["profile"] = run["model_profile"]
+        keys: dict[str, str] = {}
+        if run["byok"]:
+            key = self.keys.get(run["id"])
+            if key is None:
+                raise KeyMissing(
+                    "ключ OpenRouter не дошёл до исполнителя (сервер перезапускался): "
+                    + (
+                        "запустите прогон снова"
+                        if job["kind"] == "start"
+                        else "ответьте снова с ключом"
+                    )
+                )
+            keys["openrouter"] = key
         events = PgEvents(self.db, run["id"])
         ctx = RunContext.for_project(
             project, store=None, events=events, **(settings | dict(self.options))
         )
         config: Any = {"configurable": {"thread_id": str(run["id"])}}
         try:
-            async with checkpointer(self.url) as saver:
-                graph = build_graph(checkpointer=saver)
-                result = await self._advance(graph, config, ctx, job, run, project.files)
+            with provider_keys(keys):  # only this run's task sees the key (a ContextVar)
+                async with checkpointer(self.url) as saver:
+                    graph = build_graph(checkpointer=saver)
+                    result = await self._advance(graph, config, ctx, job, run, project.files)
         finally:
             await events.close()
+            if not run["byok"]:
+                await self._count(run["project_id"], events.spent)
         if "__interrupt__" in result:
             await self._ask(run["id"], result)
         else:
             await self._finish(ctx, run, project, result)
+
+    async def _count(self, project_id: UUID, spent: Mapping[str, float]) -> None:
+        """The step's tokens and dollars to the owner's demo counter of today (T-503); runs on
+        the user's own key are not ours to count."""
+        if not any(spent.values()):
+            return
+        async with self.db.as_service() as conn:
+            await conn.execute(
+                "insert into public.usage_daily "
+                "(user_id, day, runs, tokens_in, tokens_out, cost_usd) "
+                "select owner_id, (now() at time zone %(tz)s)::date, 0, %(i)s, %(o)s, %(c)s "
+                "from public.projects where id = %(p)s "
+                "on conflict (user_id, day) do update set "
+                "tokens_in = usage_daily.tokens_in + excluded.tokens_in, "
+                "tokens_out = usage_daily.tokens_out + excluded.tokens_out, "
+                "cost_usd = usage_daily.cost_usd + excluded.cost_usd",
+                {
+                    "tz": self.tz,
+                    "i": int(spent["input_tokens"]),
+                    "o": int(spent["output_tokens"]),
+                    "c": spent["cost_usd"],
+                    "p": project_id,
+                },
+            )
 
     async def _advance(
         self,

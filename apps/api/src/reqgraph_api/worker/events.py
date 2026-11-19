@@ -21,11 +21,15 @@ class PgEvents:
         self.db, self.run_id = db, run_id
         self._queue: asyncio.Queue[Event] = asyncio.Queue()
         self._task: asyncio.Task[None] | None = None
+        self.spent = {"input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0}  # this step's calls
 
     def emit(self, type: str, **payload: Any) -> None:
         if self._task is None:
             self._task = asyncio.get_running_loop().create_task(self._write())
         clean = json.loads(json.dumps(payload, ensure_ascii=False, default=str))
+        if type == "llm_call":
+            for name in self.spent:
+                self.spent[name] += clean.get(name) or 0
         self._queue.put_nowait((type, clean))
 
     async def _write(self) -> None:
