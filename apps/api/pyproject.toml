@@ -1,4 +1,4 @@
-# FastAPI service (api + worker): REST for the web app (T-501), the job worker comes in T-502.
+# FastAPI service (api + worker): REST for the web app (T-501) and the job worker (T-502).
 [project]
 name = "reqgraph-api"
 version = "0.1.0"
@@ -12,6 +12,7 @@ dependencies = [
     "pydantic-settings==2.16.2",  # settings from environment variables
     "pyjwt[crypto]==2.15.1",  # Supabase access tokens: JWKS (ES256, RS256), HS256 for the local CLI
     "psycopg[binary,pool]==3.3.7",  # Postgres (Supabase) driver and connection pool; LGPL, used unmodified
+    "langgraph-checkpoint-postgres==3.2.0",  # run checkpoints in Postgres (schema lg): resume after a restart (T-502)
 ]
 
 [project.scripts]
