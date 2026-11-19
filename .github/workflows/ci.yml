@@ -132,6 +132,7 @@ jobs:
           CORS_ORIGINS: http://127.0.0.1:3000
           WORKER_POLL_SECONDS: "0.5"
           EXPORT_OFFLINE: "1"  # no Kroki from CI: documents without scheme pictures
+          DEMO_RUNS_PER_DAY: "20"  # one test user runs 4+ times (interview and brief, desktop and phone)
         run: |
           nohup uv run reqgraph-api serve --port 8000 > api.log 2>&1 &
           for i in $(seq 1 60); do
