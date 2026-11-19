@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     worker_enabled: bool = True  # ADR-009: the worker runs in the API process (T-502)
     worker_poll_seconds: float = 2.0  # an empty queue is checked again after this
     job_stale_seconds: int = 120  # a running job without a heartbeat this long was abandoned
+    demo_runs_per_day: int = 3  # T-503: runs per user per day (admins and own keys: no limit)
+    demo_daily_usd_cap: float = (
+        0.50  # all users' paid spend today; above it new runs use free models
+    )
+    demo_timezone: str = "Europe/Moscow"  # when a new day starts (author's decision 19.11)
+    project_profile: str = "free"  # models of new projects (roles.yaml); the public demo: cheap
 
     def origins(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

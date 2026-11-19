@@ -104,7 +104,8 @@ export interface paths {
         put?: never;
         /**
          * Create Run
-         * @description A queued run and its start job; the worker (T-502) takes it from the queue.
+         * @description A queued run and its start job; the worker (T-502) takes it from the queue. Demo limits
+         *     (T-503): runs per day and the daily cap; with an own key — none.
          */
         post: operations["create_run_projects__project_id__runs_post"];
         delete?: never;
@@ -141,7 +142,8 @@ export interface paths {
         put?: never;
         /**
          * Answer
-         * @description The answer to the waiting interview question, or done: true to end the interview.
+         * @description The answer to the waiting interview question, or done: true to end the interview; a run on
+         *     the user's own key needs the key again (the server keeps it only in memory).
          */
         post: operations["answer_runs__run_id__answer_post"];
         delete?: never;
@@ -179,6 +181,26 @@ export interface paths {
          * @description Events after a given id: the fallback when Realtime is not available (07_deploy).
          */
         get: operations["get_events_runs__run_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Usage
+         * @description Runs and dollars of the signed-in user today and the demo limit (a day is Moscow time).
+         */
+        get: operations["get_usage_usage_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -366,6 +388,11 @@ export interface components {
         };
         /** RunOut */
         RunOut: {
+            /**
+             * Byok
+             * @description прогон на своём ключе OpenRouter (T-503)
+             */
+            byok: boolean;
             /** Cost Usd */
             cost_usd: number;
             /**
@@ -398,6 +425,23 @@ export interface components {
              * @enum {string}
              */
             status: "queued" | "running" | "waiting_input" | "succeeded" | "failed" | "cancelled";
+        };
+        /**
+         * UsageOut
+         * @description The demo limits of the signed-in user today (T-503); a day is Moscow time.
+         */
+        UsageOut: {
+            /** Cost Today Usd */
+            cost_today_usd: number;
+            /**
+             * Runs Limit
+             * @description None — без лимита (администратор)
+             */
+            runs_limit: number | null;
+            /** Runs Today */
+            runs_today: number;
+            /** Unlimited */
+            unlimited: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -593,7 +637,10 @@ export interface operations {
     create_run_projects__project_id__runs_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description свой ключ OpenRouter (BYOK): прогон за счёт пользователя, без лимитов демо; на сервере не сохраняется */
+                "X-OpenRouter-Key"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -622,6 +669,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description лимит демо на сегодня исчерпан */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -659,7 +713,10 @@ export interface operations {
     answer_runs__run_id__answer_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description свой ключ OpenRouter (BYOK): прогон за счёт пользователя, без лимитов демо; на сервере не сохраняется */
+                "X-OpenRouter-Key"?: string | null;
+            };
             path: {
                 run_id: string;
             };
@@ -753,6 +810,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_usage_usage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageOut"];
                 };
             };
         };

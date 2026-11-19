@@ -18,7 +18,8 @@ BRIEF_FILE = "brief.md"  # as in a FileStore folder (reqgraph init)
 STANDARDS: list[Any] = ["iso29148", "gost34_602"]
 PROJECT = "id, name, head_rev, standards, created_at"
 RUN = (
-    "id, project_id, kind, status, iteration, cost_usd::float as cost_usd, error, created_at, "
+    "id, project_id, kind, status, iteration, cost_usd::float as cost_usd, error, byok, "
+    "created_at, "
     "started_at, finished_at"
 )
 JOB = "id, run_id, kind, status, created_at"
@@ -42,17 +43,19 @@ async def get_project(conn: Conn, project_id: UUID) -> DictRow | None:
     return await _one(conn, f"select {PROJECT} from public.projects where id = %s", [project_id])
 
 
-def new_config(name: str, project_id: UUID) -> ProjectConfig:
+def new_config(name: str, project_id: UUID, profile: str = "free") -> ProjectConfig:
     slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or "project"
     info = ProjectInfo(id=f"{slug}-{project_id.hex[:6]}", name=name, standards=STANDARDS)
-    return ProjectConfig(project=info, models=ModelsConfig(profile="free"))
+    return ProjectConfig(project=info, models=ModelsConfig.model_validate({"profile": profile}))
 
 
-async def create_project(conn: Conn, owner: UUID, name: str, brief: str | None) -> DictRow:
+async def create_project(
+    conn: Conn, owner: UUID, name: str, brief: str | None, profile: str = "free"
+) -> DictRow:
     """The project (under RLS: owner_id must be the user) and its revision 0 — an empty graph
     and the brief as brief.md."""
     project_id = uuid4()
-    config = new_config(name, project_id)
+    config = new_config(name, project_id, profile)
     row = await _one(
         conn,
         f"insert into public.projects (id, owner_id, name, standards, config) "
@@ -73,22 +76,32 @@ async def create_project(conn: Conn, owner: UUID, name: str, brief: str | None) 
     return row
 
 
+async def project_config(conn: Conn, project_id: UUID) -> ProjectConfig | None:
+    """The project's settings under RLS; None — no such project of the user."""
+    row = await _one(conn, "select config from public.projects where id = %s", [project_id])
+    return None if row is None else ProjectConfig.model_validate(row["config"])
+
+
 async def create_run(
-    conn: Conn, project_id: UUID, kind: str, brief: str | None, max_turns: int | None
-) -> tuple[DictRow, DictRow] | None:
-    """A queued run and its start job in one transaction; None — no such project of the user."""
-    project = await _one(conn, "select config from public.projects where id = %s", [project_id])
-    if project is None:
-        return None
-    config = ProjectConfig.model_validate(project["config"])
+    conn: Conn,
+    project_id: UUID,
+    config: ProjectConfig,
+    kind: str,
+    brief: str | None,
+    max_turns: int | None,
+    *,
+    profile: str,
+    byok: bool,
+) -> tuple[DictRow, DictRow]:
+    """A queued run and its start job, in the backend role (after limits.admit)."""
     settings = {"max_turns": max_turns or config.interview.max_turns}
     payload: dict[str, Any] = {"brief": brief} if brief else {}
     await elevate(conn)
     run = await _one(
         conn,
-        f"insert into public.runs (project_id, kind, model_profile, config) "
-        f"values (%s, %s, %s, %s) returning {RUN}",
-        [project_id, kind, config.models.profile, Jsonb(settings)],
+        f"insert into public.runs (project_id, kind, model_profile, config, byok) "
+        f"values (%s, %s, %s, %s, %s) returning {RUN}",
+        [project_id, kind, profile, Jsonb(settings), byok],
     )
     assert run is not None
     job = await _one(

@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from reqgraph_api import repo
 from reqgraph_api.auth import CurrentUser
@@ -20,9 +20,12 @@ async def list_projects(user: CurrentUser, db: Db) -> list[ProjectOut]:
 
 
 @router.post("", response_model=ProjectOut, status_code=201)
-async def create_project(body: ProjectIn, user: CurrentUser, db: Db) -> ProjectOut:
+async def create_project(
+    body: ProjectIn, user: CurrentUser, db: Db, request: Request
+) -> ProjectOut:
     async with db.as_user(user) as conn:
-        row = await repo.create_project(conn, user.id, body.name, body.brief)
+        profile = request.app.state.settings.project_profile
+        row = await repo.create_project(conn, user.id, body.name, body.brief, profile)
     return ProjectOut.model_validate(row)
 
 
