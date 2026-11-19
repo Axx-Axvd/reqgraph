@@ -93,7 +93,9 @@ class GraphOut(BaseModel):
 class ExportOut(BaseModel):
     id: UUID
     rev: int
-    format: str
+    format: str = Field(description="md, docx, reqif, svg")
+    path: str = Field(description="путь в бакете Storage exports: <проект>/<ревизия>/<файл>")
+    name: str = Field(description="файл внутри выгрузки ревизии, например srs.docx, img/PRC-01.svg")
     created_at: datetime
 
 

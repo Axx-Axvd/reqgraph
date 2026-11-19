@@ -151,6 +151,13 @@ async def test_an_interview_through_the_api_ends_in_a_new_graph_revision(
     graph = (await client.get(f"/projects/{pid}/graph", headers=headers)).json()
     assert graph["rev"] == 1 and graph["author"] == "agent"
     assert graph["ci_summary"]["run_id"] == run_id and "headline" in graph["ci_summary"]
+    report = (await client.get(f"/projects/{pid}/report", headers=headers)).json()
+    kept = rows(
+        database_url,
+        "select ci_report from graph_revisions where project_id = %s and rev = 1",
+        [pid],
+    )
+    assert kept[0][0] == report and report["checks"]  # T-505: the whole report, kept by the worker
     assert "TURN-0001" in graph["graph"]["nodes"]  # the brief and the dialog are in the graph
     events = (await client.get(f"/runs/{run_id}/events", headers=headers)).json()
     kinds = [e["type"] for e in events]
