@@ -8,6 +8,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- The worker (T-502, `reqgraph_api/worker`, `reqgraph-api worker`; it also starts with the API, `WORKER_ENABLED`):
+  takes jobs from the `jobs` queue (`FOR UPDATE SKIP LOCKED`, the jobs of one run in order, a heartbeat, an
+  abandoned job is taken again, 3 attempts), runs the core's run graph with LangGraph checkpoints in Postgres
+  (`langgraph-checkpoint-postgres`, schema `lg`), so a run goes on after a restart without redoing finished
+  nodes; writes run events, interview turns, a new graph revision with `ci_summary` and the run's counters;
+  cancels waiting and running runs. Migration `20261120000001_worker.sql`: schema `lg`, `jobs.error`,
+  `jobs.finished_at`.
 - The API (T-501, `apps/api`, `reqgraph-api serve | openapi`): projects, runs, interview answers, cancel, run
   events, the graph by revision, exports and `/health` on FastAPI. Supabase Auth tokens are checked by the project's
   JWKS; reads run as `authenticated` with the token's claims, so the RLS policies apply; runs and answers are queued

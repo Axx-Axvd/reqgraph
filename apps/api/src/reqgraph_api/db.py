@@ -50,6 +50,13 @@ class Database:
             await conn.execute("set local role authenticated")
             yield conn
 
+    @asynccontextmanager
+    async def as_service(self) -> AsyncIterator[Conn]:
+        """A transaction as the backend (the worker): service_role, RLS does not apply."""
+        async with self.pool.connection() as conn, conn.transaction():
+            await elevate(conn)
+            yield conn
+
     async def ping(self) -> bool:
         async with self.pool.connection() as conn:
             row = await (await conn.execute("select 1 as ok")).fetchone()
