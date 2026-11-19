@@ -7,7 +7,7 @@ license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "reqgraph",
-    "fastapi==0.162.0",  # REST and the OpenAPI description the web types are generated from
+    "fastapi==0.163.1",  # REST and the OpenAPI description the web types are generated from
     "uvicorn==0.54.0",  # the ASGI server that runs it (Render, docker compose)
     "pydantic-settings==2.16.2",  # settings from environment variables
     "pyjwt[crypto]==2.15.1",  # Supabase access tokens: JWKS (ES256, RS256), HS256 for the local CLI
