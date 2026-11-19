@@ -150,7 +150,14 @@ async def answer(conn: Conn, run: DictRow, text: str | None, done: bool) -> Dict
     )
     if pending is not None:
         raise Conflict("ответ на этот вопрос уже принят")
-    return await _job(conn, run["id"], "resume", {"done": True} if done else {"answer": text})
+    job = await _job(conn, run["id"], "resume", {"done": True} if done else {"answer": text})
+    # the answer is taken: the run works again (T-504: the chat hides the form at once; the worker
+    # sets waiting_input at the next question)
+    await conn.execute(
+        "update public.runs set status = 'running' where id = %s and status = 'waiting_input'",
+        [run["id"]],
+    )
+    return job
 
 
 async def cancel(conn: Conn, run: DictRow) -> DictRow:

@@ -102,7 +102,9 @@ async def test_an_answer_is_taken_only_while_the_run_waits_and_only_once(
     )
     assert taken.status_code == 202 and taken.json()["kind"] == "resume"
     again = await client.post(url, json={"done": True}, headers=headers)
-    assert again.status_code == 409 and "уже принят" in again.json()["detail"]
+    assert again.status_code == 409 and "running" in again.json()["detail"]
+    status = (await client.get(f"/runs/{run['id']}", headers=headers)).json()["status"]
+    assert status == "running"  # the answer is taken: the chat hides the form at once (T-504)
     with psycopg.connect(database_url) as conn:
         payload = conn.execute(
             "select payload from jobs where run_id = %s and kind = 'resume'", [run["id"]]

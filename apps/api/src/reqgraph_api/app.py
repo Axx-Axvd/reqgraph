@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from reqgraph import __version__
 
+from reqgraph_api import stub_models
 from reqgraph_api.auth import TokenVerifier
 from reqgraph_api.db import Database, make_pool
 from reqgraph_api.keys import RunKeys
@@ -28,7 +29,17 @@ async def start_worker(
     from reqgraph_api.worker.runner import Runner
 
     assert settings.database_url is not None
-    runner = Runner(db, settings.database_url, keys=keys or RunKeys(), tz=settings.demo_timezone)
+    options: dict[str, object] = {}
+    if stub_models.enabled():  # the web e2e test (T-504): never with a remote database
+        stub_models.check_local(settings.database_url)
+        options = {"models": stub_models.models(), "offline": True, "max_iter": 0}
+    runner = Runner(
+        db,
+        settings.database_url,
+        options=options,
+        keys=keys or RunKeys(),
+        tz=settings.demo_timezone,
+    )
     await run_worker(
         db, runner, stop, poll=settings.worker_poll_seconds, stale=settings.job_stale_seconds
     )

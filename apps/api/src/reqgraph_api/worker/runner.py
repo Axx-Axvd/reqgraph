@@ -103,6 +103,12 @@ class Runner:
                 )
                 if job["kind"] == "start":
                     await queue.fail_run(conn, job["run_id"], str(error))
+                else:  # the question waits for the answer again, now with the key
+                    await conn.execute(
+                        "update public.runs set status = 'waiting_input' "
+                        "where id = %s and status = 'running'",
+                        [job["run_id"]],
+                    )
             elif isinstance(error, RunError):
                 await queue.finish(conn, job["id"], "failed", str(error))
                 await queue.fail_run(conn, job["run_id"], str(error))

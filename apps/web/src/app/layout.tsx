@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+
+import { OwnKeyProvider } from "@/lib/own-key";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,7 +13,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ru">
-      <body>{children}</body>
+      <body>
+        <OwnKeyProvider>{children}</OwnKeyProvider>
+      </body>
     </html>
   );
 }
