@@ -21,6 +21,7 @@ reqgraph-evals = { workspace = true }
 dev = [
     "mypy==2.4.0",
     "pre-commit==4.7.0",
+    "httpx==0.28.1",  # API tests through ASGITransport (T-501), already locked via pydantic-ai
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
     "pytest-recording==0.14.0",
@@ -55,16 +56,19 @@ module = ["lxml", "lxml.*", "networkx", "networkx.*", "pydbml", "pydbml.*", "pm4
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["packages/core/tests", "evals/tests"]
+testpaths = ["packages/core/tests", "evals/tests", "apps/api/tests"]
 # Network is blocked by allowing connections only to localhost: asyncio event loops need a
 # local socket pair (TCP 127.0.0.1 on Windows), so --disable-socket would break async tests.
 addopts = "--strict-markers --allow-hosts=127.0.0.1,::1 -ra"
 xfail_strict = true
+markers = [
+    "pg: needs Postgres with the Supabase migrations (REQGRAPH_TEST_DATABASE_URL or a local PostgreSQL 16+); skipped without it",
+]
 # pydbml 1.2.1 still calls the old pyparsing API (escChar=...); not our code, nothing to fix here
 filterwarnings = ["ignore::pyparsing.warnings.PyparsingDeprecationWarning:pydbml.*"]
 
 [tool.coverage.run]
-source = ["reqgraph", "reqgraph_evals"]
+source = ["reqgraph", "reqgraph_evals", "reqgraph_api"]
 branch = true
 
 [tool.coverage.report]

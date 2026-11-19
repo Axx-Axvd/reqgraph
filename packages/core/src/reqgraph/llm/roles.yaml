@@ -61,7 +61,7 @@ role_settings:                       # differences from the defaults, by role
 
 embeddings:                          # recall: matching found requirements to the hidden ones (T-304)
   free: gemini/gemini-embedding-001  # Google AI Studio, free; 3072 numbers per text
-  cheap: gemini/gemini-embedding-001
+  cheap: openrouter/google/gemini-embedding-001  # the same model, paid per token, no daily quota (author 10.11)
   local: ollama/nomic-embed-text
 
 prices:                              # USD per 1M tokens, openrouter.ai 2026-11-02; genai-prices lacks them

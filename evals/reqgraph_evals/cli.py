@@ -1,5 +1,5 @@
 """Command line: ``reqgraph-evals probe | rescore | analyst | modeler | uml | standards | repair |
-scenarios | interview | metrics | matrix | label | agreement | human``."""
+scenarios | interview | metrics | matrix | label | agreement | human | pure``."""
 
 import asyncio
 import json
@@ -243,6 +243,9 @@ def interview_cmd(
     profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
     interviewer: Annotated[str, typer.Option(help="coverage (M2) или free (M1)")] = "coverage",
     max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
+    it_level: Annotated[
+        str, typer.Option(help="понимание ИТ у заказчика (T-316): 0-3 или persona")
+    ] = "3",
     out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
     tag: Annotated[str, typer.Option(help="суффикс имени файла")] = "",
 ) -> None:
@@ -271,6 +274,7 @@ def interview_cmd(
                             max_turns=max_turns,
                             dialogs=out / "dialogs" / stem,
                             keep=keep,
+                            it_level=_it_levels(it_level)[0],
                         )
                     )
                 )
@@ -328,6 +332,20 @@ def metrics_cmd(
     _metrics_out(results, pairs, out, stem)
 
 
+def _it_levels(text: str) -> list[int | None]:
+    """--it-level: 0-3 or «persona» (the persona's own levels, by area) — T-316."""
+    levels: list[int | None] = []
+    for part in (p.strip() for p in text.split(",") if p.strip()):
+        if part == "persona":
+            levels.append(None)
+        elif part in {"0", "1", "2", "3"}:
+            levels.append(int(part))
+        else:
+            typer.echo(f"--it-level: {part} — нужно 0, 1, 2, 3 или persona", err=True)
+            raise typer.Exit(2)
+    return levels or [3]
+
+
 @app.command("matrix")
 def matrix_cmd(
     scenarios: Annotated[str, typer.Option(help="сценарии через запятую")] = ",".join(analyst.DEV),
@@ -342,6 +360,13 @@ def matrix_cmd(
         ),
     ] = "M2",
     repeat: Annotated[int, typer.Option(min=1, help="повторов")] = 1,
+    it_level: Annotated[
+        str,
+        typer.Option(
+            help="понимание ИТ у заказчика (T-316): 0-3 через запятую, persona — уровни персоны; "
+            "3 — как до T-316"
+        ),
+    ] = "3",
     profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
     max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
     out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
@@ -352,6 +377,15 @@ def matrix_cmd(
     allow_over_5: Annotated[
         bool, typer.Option("--allow-over-5", help="разрешить лимит больше $5 (потолок $20 в месяц)")
     ] = False,
+    resume: Annotated[
+        Path | None,
+        typer.Option(
+            help="продолжить остановленный запуск: его файл reports/results-*.progress.jsonl; "
+            "готовые случаи не запускаются заново (те же сценарии, методы и параметры)",
+            exists=True,
+            dir_okay=False,
+        ),
+    ] = None,
 ) -> None:
     """Прогнать интервью с симулятором и сразу посчитать метрики (pydantic-evals): results-*.csv.
     Новые прогоны не начинаются, когда потрачен --max-usd: каждый пропущенный — строка с причиной.
@@ -373,22 +407,29 @@ def matrix_cmd(
         typer.echo(f"--methods: нет методов {', '.join(unknown)}", err=True)
         raise typer.Exit(2)
 
+    levels = _it_levels(it_level)
     cases = [
-        harness.RunInputs(s.strip(), c.strip(), m.strip(), r)  # type: ignore[arg-type]
+        harness.RunInputs(s.strip(), c.strip(), m.strip(), r, lvl)  # type: ignore[arg-type]
         for s in scenarios.split(",")
         if s.strip()
         for c in characters.split(",")
         if c.strip()
+        for lvl in levels
         for m in methods.split(",")
         if m.strip()
         for r in range(1, repeat + 1)
     ]
     stem = f"results-{date.today().isoformat()}-{profile}{'-' + tag if tag else ''}"
-    runs = REPORTS.parent / "runs" / date.today().isoformat() / "matrix"
+    if resume is not None:
+        stem = resume.name.removesuffix(".progress.jsonl")
+    progress = (resume.parent if resume is not None else out) / f"{stem}.progress.jsonl"
+    runs = REPORTS.parent / "runs" / "matrix" / stem  # B1 reads the M1 runs of the same launch
     task = harness.run_task(
         profile=profile, max_turns=max_turns, runs=runs, dialogs=out / "dialogs" / stem
     )
-    results, pairs = asyncio.run(harness.evaluate(cases, task, profile=profile, max_usd=max_usd))
+    results, pairs = asyncio.run(
+        harness.evaluate(cases, task, profile=profile, max_usd=max_usd, progress=progress)
+    )
     _metrics_out(results, pairs, out, stem)
     skipped = sum(r.error.startswith(harness.LIMIT_SPENT) for r in results)
     spent = sum(r.cost_usd for r in results)
@@ -480,6 +521,84 @@ def agreement_cmd(
         text, encoding="utf-8"
     )
     typer.echo(text)
+
+
+pure_app = typer.Typer(
+    no_args_is_help=True,
+    help="Свой подсчёт на наборе PURE (T-308): доля типовых требований в настоящих документах.",
+)
+app.add_typer(pure_app, name="pure")
+PureFolder = Annotated[
+    Path, typer.Argument(help="папка с документами PURE", exists=True, file_okay=False)
+]
+PureLabels = Annotated[Path, typer.Argument(help="CSV меток", exists=True, dir_okay=False)]
+
+
+@pure_app.command("sample")
+def pure_sample_cmd(
+    folder: PureFolder,
+    docs: Annotated[str, typer.Option(help="документы через запятую, имя без расширения")],
+    out: Annotated[Path, typer.Option(help="CSV для разметки")],
+    n: Annotated[int, typer.Option(min=1, help="требований из документа")] = 15,
+    seed: Annotated[int, typer.Option(help="seed выборки")] = 42,
+) -> None:
+    """Случайные требования каждого документа в CSV без их текста."""
+    from reqgraph_evals import pure
+
+    names = [d.strip() for d in docs.split(",") if d.strip()]
+    found = pure.texts(folder, names)
+    for name, reqs in found.items():
+        typer.echo(f"{name}: найдено требований {len(reqs)}")
+    rows = pure.write_sample(found, n=n, seed=seed, out=out)
+    typer.echo(f"в выборке {len(rows)} -> {out}")
+
+
+@pure_app.command("show")
+def pure_show_cmd(labels: PureLabels, folder: PureFolder) -> None:
+    """Тексты требований выборки — только в терминал, для разметки."""
+    from reqgraph_evals import pure
+
+    rows = pure.read_labels(labels)
+    found = pure.texts(folder, sorted({r["doc"] for r in rows}))
+    for r in rows:
+        text = found[r["doc"]][int(r["pos"]) - 1].text
+        typer.echo(f"{r['doc']} #{r['pos']} [{r['section']}] {text}")
+
+
+@pure_app.command("report")
+def pure_report_cmd(
+    labels: PureLabels,
+    out: Annotated[Path | None, typer.Option(help="отчёт Markdown")] = None,
+) -> None:
+    """Доля типовых: всего с интервалом Уилсона, по документам и по видам требований."""
+    from reqgraph_evals import pure
+
+    text = pure.report_markdown(pure.report(labels))
+    if out is not None:
+        out.write_text(text, encoding="utf-8")
+    typer.echo(text)
+
+
+@pure_app.command("check")
+def pure_check_cmd(
+    labels: PureLabels,
+    folder: PureFolder,
+    share: Annotated[float, typer.Option(min=0.01, max=1.0, help="доля для второй разметки")] = 0.2,
+) -> None:
+    """Вторая разметка части меток (первые скрыты), затем совпадение и каппа Коэна."""
+    from reqgraph_evals import pure
+
+    rows = pure.read_labels(labels)
+    found = pure.texts(folder, sorted({r["doc"] for r in rows}))
+
+    def text_of(key: tuple[str, int]) -> str:
+        return found[key[0]][key[1] - 1].text
+
+    result = pure.check(labels, text_of, input, share=share, echo=typer.echo)
+    typer.echo(
+        f"проверено {result['checked']}: совпадение {result['agreement']:.0%}, "
+        f"каппа {result['kappa']} -> {pure.check_path(labels)}"
+    )
 
 
 human_app = typer.Typer(

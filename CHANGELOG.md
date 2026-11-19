@@ -8,6 +8,35 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- The API (T-501, `apps/api`, `reqgraph-api serve | openapi`): projects, runs, interview answers, cancel, run
+  events, the graph by revision, exports and `/health` on FastAPI. Supabase Auth tokens are checked by the project's
+  JWKS; reads run as `authenticated` with the token's claims, so the RLS policies apply; runs and answers are queued
+  as jobs for the worker (T-502). Migration `20261119000001_api.sql`: `projects.config`, `graph_revisions.files` and
+  `layout`, the `jobs` table. `PgStore` keeps a project as FileStore does. `schemas/openapi.json` and the web types
+  `apps/web/src/lib/api-types.ts` (openapi-typescript) are generated and checked in CI.
+- `reqgraph-evals pure sample|show|report|check` (T-308): a seeded sample of requirements from documents of the
+  PURE dataset (text by pdftotext and LibreOffice, the documents stay outside the repository), the share of typical
+  requirements with the Wilson interval, by document and by kind, and a second labelling with Cohen's kappa.
+  Labels of 180 requirements from 12 documents: `evals/reports/labels/pure-groups-2026-11-18.csv`.
+- Embeddings of the cheap profile through OpenRouter (`openrouter/google/gemini-embedding-001`): the same model
+  as Google AI Studio's free tier, paid per token ($0.15 per 1M), without the daily quota that held the matrix to
+  one scenario a day (author's decision of 2026-11-10). Vectors are the same (cosine 1.0 on a cached text).
+- The simulated client's understanding of IT (T-316): a 0-3 scale (not related to IT, a confident user, has
+  ordered IT projects, a specialist), a level per persona and per area (`it_level`, `it_by_area` in
+  `persona.yaml`, both optional; 3 by default, as before). A term of `sim/jargon.yaml` above the level without an
+  example is not understood: nothing is told and the client asks what it means; with an example the client
+  answers in general words only. `reqgraph-evals matrix|interview --it-level`; the level and the «not
+  understood» answers go to results.csv and the dialogs. Level 3 behaves as the simulator did.
+  The dictionary after the author's review of 2026-11-17 (65 terms): words with an everyday sense («нагрузка»,
+  «доступность», «роль», «аудит») count only in IT phrases; the before-measurement is
+  `evals/reports/results-2026-11-17-cheap-t316-before-v3.*`.
+- `reqgraph-evals matrix --resume <progress.jsonl>` (T-406): each finished case is written to a progress file
+  as it ends; a launch stopped by a container restart goes on from it, skips the saved cases and runs the
+  failed ones again. Needed for the dev matrix on the cheap profile, run one scenario a day for the
+  embeddings quota.
+- B1 one-shot prompt (T-405): states the step types, the start event and foreign keys by table name, as the
+  Modeler's prompt does; before, every B1 process and ERD of the smoke runs was dropped on format (author's
+  decision of 2026-11-04). The kept B1 project holds the model's raw answer (`reports/oneshot.json`).
 - The pilot «a person instead of the simulator» (T-306): `reqgraph-evals human card|start|answer|finish|page` —
   a person answers the interviewer from the scenario's card (persona, brief, the cooperative simulator's rules,
   hidden requirements by area), one turn per call, the interview waiting in its checkpoint between calls; optional
@@ -138,6 +167,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- The simulator (T-317, the author's decision of 2026-11-17): an example explains a jargon term only next to it
+  (a marker at most 8 words after the term in the same sentence, or a bracket or a dash right after it); an
+  example elsewhere in the question no longer makes every term understood.
+- The coverage interviewer (M2) no longer ends the interview by coverage before every enabled area got a
+  question (T-318). The brief's paragraphs count toward coverage, so on a rich brief all thresholds were met after
+  a few answers and the interview stopped at the 3rd-4th question, against the T-305 rule «ask each area at least
+  once, even if the brief covered it». Measurement: `evals/reports/results-2026-11-17-cheap-m2stop-{before,after}.*`.
 - TZ (T-314): a constraint goes to the TZ sections by its type (time, budget, legal, tech) that the Analyst sets,
   not by words of its text: «stored in Russia» landed nowhere, «on the university servers» in two sections.
 - Analyst (T-313): atomic FRs — the prompt says one function, one FR, with an example of a list of functions
@@ -254,6 +290,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   ADR-016 (DOCX export via pandoc); ADR-015 (Streamlit demo) recorded as rejected.
 
 ### Changed
+
+- The coverage interviewer (M2) goes deeper (T-319): an area closes after two answers that told nothing new, not
+  after one; a reached threshold no longer ends the interview while an area asked before is still open. Open
+  areas whose threshold is met are asked again after the gaps, the one whose latest answer told the most first.
+  On dev-01…03 (27 interviews against 54 before) every interview used the 20-question limit; interview recall
+  rose from 47.2% to 58.3% at IT levels 0-1 and from 60.9% to 69.2% at level 3, at $0.08 per interview instead of
+  $0.055. Measurement: `evals/reports/results-2026-11-18-cheap-t319-after.*` against
+  `results-2026-11-17-cheap-t317-{before,before2}.*`.
 
 - Dev references (T-312): the facts of the brief (`in_brief`) say only what the brief says — dev-01 H-011, dev-03
   H-051 and H-052 lose details the brief does not give, dev-02 H-034 keeps the brief's 120 orders and the

@@ -200,14 +200,15 @@ def mode_gate(state: RunState) -> str:
 
 async def coverage(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     """Count the coverage from the graph and decide whether the interview goes on (03_agents):
-    coverage reached (with the tracker), every area left closed (T-305), the turn limit,
-    «/готово», or the agents stopped."""
+    coverage reached once every area has been asked (with the tracker; the brief alone does not
+    end it, T-318), every area left closed (T-305), the turn limit, «/готово», or the agents
+    stopped."""
     ctx = start(runtime, "coverage")
     counted = coverage_of(state["graph"], state["coverage"].need)
     tracker = ctx.interviewer == "coverage"
-    reached = counted.complete and tracker
     left = queue(counted, state["graph"], state["asked_areas"])
-    saturated = tracker and not reached and not left
+    reached = tracker and counted.complete and not left  # every area asked once (T-305, T-318)
+    saturated = tracker and not counted.complete and not left
     limit = state["turns"] >= ctx.max_turns
     done = state["interview_done"] or state["stop"] is not None or reached or saturated or limit
     ctx.events.emit(

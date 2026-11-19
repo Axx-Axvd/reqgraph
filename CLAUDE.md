@@ -17,7 +17,7 @@
 - uv run pytest -q                  # тесты без сети (кассеты в packages/core/tests/cassettes)
 - uv run pytest packages/core/tests/llm/test_live_cassettes.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты LLM (нужна сеть)
 - uv run ruff check . && uv run ruff format --check .
-- uv run mypy packages/core evals/reqgraph_evals
+- uv run mypy packages/core evals/reqgraph_evals apps/api
 - uv run pre-commit install         # один раз: хуки ruff, mypy и базовые проверки перед коммитом
 - uv run reqgraph --version
 - uv run reqgraph schemas           # JSON Schema из Pydantic в schemas/ (GraphPatch, ArtifactGraph, ProjectConfig, ProcessDSL, CIReport)
@@ -37,12 +37,16 @@
 - pnpm install && pnpm -C apps/web dev | lint | build
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
+- uv run reqgraph-api serve         # API (T-501): DATABASE_URL, SUPABASE_JWKS_URL, CORS_ORIGINS из окружения; /docs — описание адресов
+- uv run reqgraph-api openapi --out schemas/openapi.json && pnpm -C apps/web gen:api   # описание API и типы для сайта после правки адресов
+- REQGRAPH_TEST_DATABASE_URL=<postgres> uv run pytest apps/api/tests -m pg   # тесты API с базой: Supabase с миграциями или голый Postgres (заглушка auth и миграции — сами)
 - uv run reqgraph-evals probe --models <провайдер/модель,...> --repeat 3   # мини-экзамен моделей (evals/README.md)
 - uv run python -m reqgraph_evals.simprobe --out evals/reports/simprobe-<дата>.json   # шаг выбора симулятора на вопросах T-305 (нужна сеть)
 - uv run python -m reqgraph_evals.judgeprobe --reasoning on|low|off --out evals/reports/judgeprobe-<дата>.json   # судья заново на разметке автора, каппа (нужна сеть)
 - uv run reqgraph-evals human card|start|answer|finish|page   # пилот «человек вместо симулятора» (T-306): один ход за вызов, страница evals/human/page.html (evals/README.md)
 - uv run reqgraph-evals groups [сценарии] [--check]   # разметка «типовое / уникальное» (T-308): t / u / ? / q, ответ сразу в hidden.yaml
-- uv run reqgraph-evals matrix --methods M2,M1,B1,B2,B3 [--scenarios dev-01,...] [--characters] [--repeat] [--max-turns] [--max-usd 1]   # матрица 09_eval: интервью с симулятором и метрики, results-*.csv со сводкой и графиками; --max-usd — лимит $ на весь запуск; A1-A3 — абляции M2 (нужна сеть, гоняется в облачной сессии; test-сценарии — только в S6)
+- uv run reqgraph-evals pure sample|show|report|check   # свой подсчёт типовых требований на документах PURE (T-308; нужны pdftotext и soffice, документы — вне репозитория)
+- uv run reqgraph-evals matrix --methods M2,M1,B1,B2,B3 [--scenarios dev-01,...] [--characters] [--repeat] [--max-turns] [--it-level 0,1,3] [--max-usd 1] [--resume <progress.jsonl>]   # матрица 09_eval: интервью с симулятором и метрики, results-*.csv со сводкой и графиками; --max-usd — лимит $ на весь запуск; A1-A3 — абляции M2 (нужна сеть, гоняется в облачной сессии; test-сценарии — только в S6)
 - uv run reqgraph-evals analyst --repeat 5 [--save-runs] [--no-brief]   # Analyst на 3 dev-брифах: валидность патча, нарушения ISO-001/003, требования по видам, найденные факты брифа (судья) и разброс ФТ по правилу T-311 (нужна сеть)
 - uv run reqgraph-evals modeler --repeat 3  # Analyst → Modeler на 3 dev-брифах: SCH-002 за ≤ 3 ответа, доля без SND-001 (нужна сеть)
 - uv run reqgraph-evals uml --repeat 3      # Modeler: сценарии использования и C4 на 3 dev-брифах, SCH-004/005 через Kroki, сироты, роли без UC (нужна сеть)

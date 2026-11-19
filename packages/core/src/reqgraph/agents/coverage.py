@@ -5,10 +5,13 @@ from a client turn and is not an assumption of the Analyst. The kind of a node g
 it can: a BR is a goal, a CON a constraint, an actor a stakeholder, and the nfr area counts distinct
 ISO 25010 characteristics (03_agents: «at least 4»). UR and FR count in the area the Analyst tagged.
 
-An area is saturated when the client has nothing more to tell about it (T-305): an answer that
-yields no new requirement closes its area.
+An area is saturated when the client has nothing more to tell about it (T-305): two answers about
+it that yield no new requirement close it (T-319; one empty answer may be a misunderstood question).
 Every area is asked at least once before any is asked again, even one the brief already covered:
 the brief gives the topic, the client knows more about it.
+Reached coverage ends the interview only after that (T-318): a rich brief alone does not.
+Nor does it end the interview while an area asked before is still open (T-319): the client may know
+more than the need, and the question limit is the same for every method.
 """
 
 from collections import Counter
@@ -22,7 +25,7 @@ from reqgraph.graph.nodes import ActorNode, InterviewTurn, Node, NonFunctionalRe
 
 REQUIREMENT_KINDS = ("BR", "UR", "FR", "NFR", "CON")
 KIND_AREA = {"BR": "goals", "CON": "constraints", "ACT": "stakeholders", "NFR": "nfr"}
-CLOSE_AFTER = 1  # answers about an area that told nothing new: the area is closed
+CLOSE_AFTER = 2  # answers about an area that told nothing new: the area is closed (T-319)
 
 
 def told_by_client(graph: ArtifactGraph) -> set[str]:
@@ -86,13 +89,28 @@ def answer_yields(graph: ArtifactGraph) -> list[int]:
     return [new.get(answer, 0) for answer in answers]
 
 
-def empty_answers(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> list[str | None]:
-    """The area of every answered question whose answer told nothing new, None otherwise. The
-    latest questions pair with the latest answers: areas of an earlier session may be missing."""
+def _paired(
+    graph: ArtifactGraph, asked_areas: Sequence[str | None]
+) -> list[tuple[str | None, int]]:
+    """(area, new facts) for every answered question. The latest questions pair with the latest
+    answers: areas of an earlier session may be missing."""
     yields = answer_yields(graph)
     n = min(len(yields), len(asked_areas))
-    pairs = zip(asked_areas[len(asked_areas) - n :], yields[len(yields) - n :], strict=True)
-    return [area if count == 0 else None for area, count in pairs]
+    return list(zip(asked_areas[len(asked_areas) - n :], yields[len(yields) - n :], strict=True))
+
+
+def empty_answers(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> list[str | None]:
+    """The area of every answered question whose answer told nothing new, None otherwise."""
+    return [area if count == 0 else None for area, count in _paired(graph, asked_areas)]
+
+
+def area_yields(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> dict[str, list[int]]:
+    """How many new facts each answer about an area told, in order (T-319)."""
+    found: dict[str, list[int]] = {}
+    for area, count in _paired(graph, asked_areas):
+        if area is not None:
+            found.setdefault(area, []).append(count)
+    return found
 
 
 def closed_areas(graph: ArtifactGraph, asked_areas: Sequence[str | None]) -> set[str]:
@@ -111,13 +129,26 @@ def queue(
     coverage: Coverage, graph: ArtifactGraph, asked_areas: Sequence[str | None]
 ) -> list[tuple[str, int, int]]:
     """What to ask about, in order: gaps never asked (the emptiest first), then areas the brief
-    covered but nobody asked about, then gaps asked before. Closed areas drop out."""
+    covered but nobody asked about, then gaps asked before, then areas asked before that reached
+    their need but are still open (T-319): the one whose latest answer told the most first, then
+    the one asked fewer times. Closed areas drop out."""
     closed = closed_areas(graph, asked_areas)
     asked = {a for a in asked_areas if a is not None}
     short = [g for g in gaps(coverage) if g[0] not in closed]
-    covered = [
+    reached = [
         (a, coverage.got.get(a, 0), n)
         for a, n in coverage.need.items()
-        if n > 0 and coverage.got.get(a, 0) >= n and a not in asked and a not in closed
+        if n > 0 and coverage.got.get(a, 0) >= n and a not in closed
     ]
-    return [g for g in short if g[0] not in asked] + covered + [g for g in short if g[0] in asked]
+    yields = area_yields(graph, asked_areas)
+
+    def richest(g: tuple[str, int, int]) -> tuple[int, int]:
+        told = yields.get(g[0], [])
+        return (-(told[-1] if told else 0), len(told))
+
+    return (
+        [g for g in short if g[0] not in asked]
+        + [g for g in reached if g[0] not in asked]
+        + [g for g in short if g[0] in asked]
+        + sorted((g for g in reached if g[0] in asked), key=richest)
+    )

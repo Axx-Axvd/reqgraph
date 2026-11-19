@@ -5,7 +5,7 @@ are here because the simulator (sim/stakeholder.py) reads them and reqgraph neve
 """
 
 import re
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -37,6 +37,10 @@ class Persona(_Strict):
     role: str = Field(min_length=1, description="кто он в компании")
     facts: list[str] = Field(min_length=1, description="что он знает о деле, кроме требований")
     style: str = Field(min_length=1, description="манера речи")
+    # T-316: how much of IT the client understands, 0 (not at all) to 3 (a specialist), in general
+    # and by area; a persona written before T-316 understands everything, as the simulator did
+    it_level: int = Field(default=3, ge=0, le=3, description="понимание ИТ: 0-3")
+    it_by_area: dict[Area, Annotated[int, Field(ge=0, le=3)]] = Field(default_factory=dict)
 
 
 class HiddenRequirement(_Strict):

@@ -73,18 +73,25 @@ async def test_the_analyst_reads_the_brief_then_only_each_new_answer(
     assert out["interview_done"] and out["turns"] == 2
 
 
-async def test_reached_coverage_ends_the_interview_and_the_models_follow(
+async def test_reached_coverage_ends_the_interview_once_its_areas_are_closed(
     brief_context: Callable[..., RunContext],
 ) -> None:
     actor = {"ref": "patient", "name": "Пациент", "sources": ["TURN-0002"]}  # the first answer
-    ctx = brief_context(models=stub_models(analyst=DRAFT | {"actors": [actor]}), max_iter=0)
+    ask = {"text": QUESTION, "area": "stakeholders"}  # the only area is asked: coverage may end it
+    models = stub_models(analyst=DRAFT | {"actors": [actor]}, interviewer=ask)
+    ctx = brief_context(models=models, max_iter=0)
     need = NO_NEED | {"stakeholders": 1}
     run = interview(ctx, need=need)
     out = await run.start()  # no brief: nothing known yet, the first question
     assert out["__interrupt__"][0].value["turn"] == 1
     out = await run.answer("Пациенты записываются по телефону.")
-    assert "__interrupt__" not in out
-    assert out["coverage"].got["stakeholders"] == 1 and out["coverage"].complete
+    # T-319: the need is reached, but the answer told something: the area is still open
+    assert out["__interrupt__"][0].value["turn"] == 2 and out["coverage"].complete
+    out = await run.answer("Больше никого.")
+    assert out["__interrupt__"][0].value["turn"] == 3  # one empty answer leaves it open
+    out = await run.answer("Нет, только пациенты.")
+    assert "__interrupt__" not in out and out["turns"] == 3  # the second empty answer closes it
+    assert out["coverage"].complete
     assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["coverage"]
     steps = visited(ctx)
     after = steps[len(steps) - steps[::-1].index("coverage") :]
@@ -175,8 +182,10 @@ async def test_the_interview_ends_when_every_open_area_told_nothing(
     ctx = brief_context(models=models, max_turns=10, max_iter=0)
     run = interview(ctx, need=NO_NEED | {"goals": 1})
     await run.start()
-    out = await run.answer("Пока не думали.")  # nothing new: the only open area is closed
-    assert "__interrupt__" not in out and out["turns"] == 1
+    out = await run.answer("Пока не думали.")  # nothing new: one empty answer leaves it open
+    assert out["__interrupt__"][0].value["turn"] == 2
+    out = await run.answer("Не знаю.")  # the second empty answer closes the only open area
+    assert "__interrupt__" not in out and out["turns"] == 2
     assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["saturated"]
 
 
@@ -209,6 +218,35 @@ async def test_saturation_waits_for_every_area_to_be_asked_once(
         "Пока не думали."
     )  # goals is closed; constraints are covered, never asked
     assert out["__interrupt__"][0].value["turn"] == 2
+
+
+async def test_coverage_from_the_brief_ends_the_interview_only_after_every_area_is_asked(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-318: a rich brief fills every area at once; the interview still asks about each one
+    (the rule of T-305), and ends by coverage only when both are closed (T-319)."""
+    actor = {"ref": "patient", "name": "Пациент", "sources": ["TURN-0001"]}
+    con = {**DRAFT["requirements"][-1], "assumption": False, "sources": ["TURN-0001"]}
+    analyst = recording([{"actors": [actor], "requirements": [con]}, {"requirements": []}], [])
+    asks = [
+        {"text": "Кто ещё работает с записью?", "area": "stakeholders"},
+        {"text": "Есть ли сроки или бюджет?", "area": "constraints"},
+        {"text": "Кто ещё бывает в клинике?", "area": "stakeholders"},
+        {"text": "Есть ли требования закона?", "area": "constraints"},
+    ]
+    models = stub_models() | {"analyst": analyst, "interviewer": recording(asks, [])}
+    ctx = brief_context(models=models, max_turns=10, max_iter=0)
+    run = interview(ctx, brief=BRIEF, need=NO_NEED | {"stakeholders": 1, "constraints": 1})
+    out = await run.start()  # the brief covers both areas, neither has been asked
+    assert out["__interrupt__"][0].value["turn"] == 1
+    out = await run.answer("Только администратор.")
+    assert out["__interrupt__"][0].value["turn"] == 2  # constraints: covered, never asked
+    out = await run.answer("Запуститься к весне.")
+    assert out["__interrupt__"][0].value["turn"] == 3  # both asked once, both still open
+    out = await run.answer("Больше никого.")
+    out = await run.answer("Не знаю.")
+    assert "__interrupt__" not in out and out["turns"] == 4
+    assert [e["reason"] for e in events_of(ctx, "interview_end")] == ["coverage"]
 
 
 async def test_the_questionnaire_asks_its_fixed_questions_without_an_llm(

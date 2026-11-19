@@ -154,3 +154,100 @@ def test_the_matrix_refuses_test_scenarios_and_a_limit_over_5_dollars() -> None:
     assert refused.exit_code == 2 and "только в финальной матрице (S6)" in refused.output
     costly = CliRunner().invoke(app, ["matrix", "--scenarios", "dev-01", "--max-usd", "6"])
     assert costly.exit_code == 2 and "--allow-over-5" in costly.output
+
+
+async def test_a_stopped_matrix_goes_on_from_its_progress_file(tmp_path: Path) -> None:
+    """T-406: a case is written to the progress file as soon as it is scored; a new run with the
+    same file skips the cases it has and runs the rest."""
+    calls: list[str] = []
+    inner = harness.run_task(
+        max_turns=2, runs=tmp_path / "runs", models=agents(), sim_model=simulator(["H-013"])
+    )
+
+    async def counted(inputs: harness.RunInputs) -> harness.RunOutput:
+        calls.append(inputs.name)
+        return await inner(inputs)
+
+    progress = tmp_path / "results.progress.jsonl"
+    first = [harness.RunInputs("dev-01", "cooperative", "M2", 1)]
+    both = [*first, harness.RunInputs("dev-01", "cooperative", "M2", 2)]
+    scoring = {"judge_model": judge_first(), "embedder": TestEmbeddingModel()}
+    _, first_pairs = await harness.evaluate(first, counted, progress=progress, **scoring)
+    assert len(progress.read_text(encoding="utf-8").splitlines()) == 1
+    results, pairs = await harness.evaluate(both, counted, progress=progress, **scoring)
+    assert calls == ["dev-01-cooperative-M2-r1", "dev-01-cooperative-M2-r2"]  # r1 not run again
+    assert [r.repeat for r in results] == [1, 2] and all(not r.error for r in results)
+    assert [p for p in pairs if p["run"].endswith("-r1")] == first_pairs  # kept with the case
+
+
+def test_the_progress_file_keeps_a_result_with_its_judged_pairs(tmp_path: Path) -> None:
+    path = tmp_path / "p.jsonl"
+    result = harness.Result("dev-01-vague-M1-r1", "dev-01", "vague", "M1", 1, recall=0.4, turns=7)
+    pair = {"run": result.run, "hidden_id": "H-013", "judge": True, "level": "full"}
+    harness._write_progress(path, result, [pair])
+    assert harness._read_progress(path) == {result.run: (result, [pair])}
+
+
+async def test_a_case_that_failed_runs_again_on_resume(tmp_path: Path) -> None:
+    """A free model out of quota fails a case; the resumed run tries it again, not skips it."""
+    progress = tmp_path / "p.jsonl"
+    failed = harness.Result(
+        "dev-01-cooperative-M2-r1", "dev-01", "cooperative", "M2", 1, error="429"
+    )
+    harness._write_progress(progress, failed, [])
+    calls: list[str] = []
+    inner = harness.run_task(
+        max_turns=2, runs=tmp_path / "runs", models=agents(), sim_model=simulator(["H-013"])
+    )
+
+    async def counted(inputs: harness.RunInputs) -> harness.RunOutput:
+        calls.append(inputs.name)
+        return await inner(inputs)
+
+    results, _ = await harness.evaluate(
+        [harness.RunInputs("dev-01", "cooperative", "M2", 1)],
+        counted,
+        progress=progress,
+        judge_model=judge_first(),
+        embedder=TestEmbeddingModel(),
+    )
+    assert calls == ["dev-01-cooperative-M2-r1"] and results[0].error == ""
+    assert harness._read_progress(progress)[failed.run][0].error == ""  # the later line wins
+
+
+async def test_the_matrix_runs_each_it_level_as_its_own_case(tmp_path: Path) -> None:
+    """T-316: the IT level is an axis of the matrix; level 3 keeps the old case names."""
+    from pydantic_ai.models.test import TestModel
+
+    jargon = "Нужен ли пациенту личный кабинет?"  # step 1: a client at step 0 does not understand
+    models = agents() | {
+        "interviewer": TestModel(custom_output_args={"text": jargon, "area": "scenarios"})
+    }
+    cases = [harness.RunInputs("dev-01", "cooperative", "M2", 1, it_level=lvl) for lvl in (0, 3)]
+    task = harness.run_task(
+        max_turns=2,
+        runs=tmp_path / "runs",
+        dialogs=tmp_path / "dialogs",
+        models=models,
+        sim_model=simulator(["H-013"]),
+    )
+    results, _ = await harness.evaluate(
+        cases, task, judge_model=judge_first(), embedder=TestEmbeddingModel()
+    )
+    by = {r.it_level: r for r in results}
+    assert [r.run for r in results] == ["dev-01-cooperative-it0-M2-r1", "dev-01-cooperative-M2-r1"]
+    assert by["0"].not_understood == 2 and by["3"].not_understood == 0
+    assert (tmp_path / "runs" / "M2" / "dev-01-cooperative-it0-r1").is_dir()
+    dialog = tmp_path / "dialogs" / "M2" / "dev-01-cooperative-it0-r1.md"
+    assert "не понял" in dialog.read_text(encoding="utf-8")
+    path = tmp_path / "r.csv"
+    harness.write_results(results, path)
+    assert "it_level" in path.read_text(encoding="utf-8").splitlines()[0]
+
+
+def test_the_matrix_refuses_an_unknown_it_level() -> None:
+    from reqgraph_evals.cli import app
+    from typer.testing import CliRunner
+
+    refused = CliRunner().invoke(app, ["matrix", "--scenarios", "dev-01", "--it-level", "5"])
+    assert refused.exit_code == 2 and "0, 1, 2, 3 или persona" in refused.output

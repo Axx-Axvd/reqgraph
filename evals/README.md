@@ -24,6 +24,19 @@ uv run reqgraph-evals scenarios          # проверка формата и п
 uv run reqgraph-evals scenarios --seal   # переписать печать test-сценариев — только после проверки автором
 ```
 
+## Типовые требования в настоящих документах — набор PURE (T-308)
+
+Свой подсчёт доли типовых требований по правилу [scenarios/README.md](scenarios/README.md) на документах набора PURE (Ferrari, Spagnolo, Gnesi, RE 2017). Документы в репозиторий не попадают: их скачивают в свою папку. Правило отбора документов и выборки — в docs/backlog.md (T-308), итог — в docs/journal.md (18.11).
+
+```bash
+uv run reqgraph-evals pure sample <папка PURE> --docs "0000 - cctns,2001 - npac,..." --out labels.csv   # по 15 случайных требований из документа, seed 42; в CSV нет текста требований
+uv run reqgraph-evals pure show labels.csv <папка PURE>      # тексты выборки — только в терминал, для разметки
+uv run reqgraph-evals pure report evals/reports/labels/pure-groups-2026-11-18.csv   # доля типовых с интервалом Уилсона, по документам и видам
+uv run reqgraph-evals pure check evals/reports/labels/pure-groups-2026-11-18.csv <папка PURE>   # вторая разметка 20%, метки Claude скрыты; каппа Коэна
+```
+
+Нужны внешние программы `pdftotext` (poppler) и `soffice` (LibreOffice); без них команда сообщает, что текст не извлечь.
+
 ## Пилот «человек вместо симулятора» (T-306)
 
 Человек отвечает интервьюеру по карточке dev-сценария, вместо симулятора. Интервью идёт по одному ходу за вызов, между вызовами ждёт в чекпоинте (пауза и продолжение, как у `reqgraph interview`):
