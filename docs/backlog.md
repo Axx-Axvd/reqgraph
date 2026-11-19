@@ -340,7 +340,7 @@
 
 - **Критерий приёмки:** OpenAPI -> типы TS; тесты на httpx
 - **Зависит от:** T-206, T-004
-- **Статус:** сделано 19.11 (ветка feat/T-501): `apps/api` на FastAPI — `/health`, `/projects` (список, создание, проект, граф по ревизии, выгрузки), `/projects/{id}/runs`, `/runs/{id}` (статус, события после id, ответ интервью, отмена); вход — токен Supabase Auth по JWKS (ES256, RS256; HS256 — только локальный CLI с секретом); чтение — под ролью `authenticated` с заявками JWT, поэтому действуют политики RLS, запись прогонов, очереди и ревизий — после проверки владельца, ролью `service_role`; прогон и ответ ложатся в очередь `jobs` (ADR-009), исполняет воркер T-502; миграция `20261119000001_api.sql` — `projects.config`, `graph_revisions.files` и `layout`, `jobs`; `PgStore` хранит проект как FileStore (garage61 — без потерь); `schemas/openapi.json` → `apps/web/src/lib/api-types.ts` (openapi-typescript), свежесть проверяют тест и CI; тесты на httpx — без базы (вход, 401, 503, OpenAPI) и с базой (маркер `pg`, в CI — задача `db` на локальном Supabase); бакет Storage для выгрузок не сделан — предложение перенести в T-505
+- **Статус:** сделано 19.11 (ветка feat/T-501): `apps/api` на FastAPI — `/health`, `/projects` (список, создание, проект, граф по ревизии, выгрузки), `/projects/{id}/runs`, `/runs/{id}` (статус, события после id, ответ интервью, отмена); вход — токен Supabase Auth по JWKS (ES256, RS256; HS256 — только локальный CLI с секретом); чтение — под ролью `authenticated` с заявками JWT, поэтому действуют политики RLS, запись прогонов, очереди и ревизий — после проверки владельца, ролью `service_role`; прогон и ответ ложатся в очередь `jobs` (ADR-009), исполняет воркер T-502; миграция `20261119000001_api.sql` — `projects.config`, `graph_revisions.files` и `layout`, `jobs`; `PgStore` хранит проект как FileStore (garage61 — без потерь); `schemas/openapi.json` → `apps/web/src/lib/api-types.ts` (openapi-typescript), свежесть проверяют тест и CI; тесты на httpx — без базы (вход, 401, 503, OpenAPI) и с базой (маркер `pg`, в CI — задача `db` на локальном Supabase); бакет Storage для выгрузок перенесён в T-505 (решение автора 19.11)
 
 ### T-502 — worker: jobs (SKIP LOCKED), PostgresSaver в схеме lg, run_events, cancel
 
@@ -359,7 +359,7 @@
 
 ### T-505 — Web: граф (React Flow), BPMN (bpmn-js), отчёт CI, выгрузка
 
-- **Критерий приёмки:** клик по ошибке подсвечивает узел
+- **Критерий приёмки:** клик по ошибке подсвечивает узел; бакет Storage `exports` с политиками по владельцу проекта и ссылки на файлы выгрузок в `/projects/{id}/exports` (перенесено из T-501, решение автора 19.11)
 - **Зависит от:** T-504
 
 ### T-506 — Деплой: Dockerfile, Render, Vercel, Supabase prod, migrate.yml, keepalive.yml
