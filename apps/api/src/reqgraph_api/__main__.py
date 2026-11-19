@@ -1,4 +1,4 @@
-"""reqgraph-api serve | openapi."""
+"""reqgraph-api serve | worker | openapi."""
 
 import json
 import os
@@ -30,6 +30,33 @@ def serve(
     from reqgraph_api.app import create_app
 
     uvicorn.run(create_app(), host=host, port=port or int(os.environ.get("PORT", "8000")))
+
+
+@app.command()
+def worker() -> None:
+    """Только исполнитель задач, без API: локально и на офлайн-стенде (на Render — вместе с API)."""
+    import asyncio
+    import logging
+
+    from reqgraph_api.app import start_worker
+    from reqgraph_api.db import Database, make_pool
+    from reqgraph_api.settings import Settings
+
+    settings = Settings()
+    if not settings.database_url:
+        raise typer.BadParameter("нужна переменная DATABASE_URL")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+
+    async def main() -> None:
+        assert settings.database_url is not None
+        pool = make_pool(settings.database_url, max_size=2)
+        await pool.open()
+        try:
+            await start_worker(Database(pool), settings, asyncio.Event())
+        finally:
+            await pool.close()
+
+    asyncio.run(main())
 
 
 @app.command()

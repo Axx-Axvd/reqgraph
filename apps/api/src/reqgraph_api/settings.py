@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     supabase_jwt_secret: str | None = None  # HS256 of a local Supabase CLI; never in production
     cors_origins: str = ""  # comma-separated: the Vercel domain, http://localhost:3000
     db_pool_max: int = 4  # Render Free: a few connections are enough
+    worker_enabled: bool = True  # ADR-009: the worker runs in the API process (T-502)
+    worker_poll_seconds: float = 2.0  # an empty queue is checked again after this
+    job_stale_seconds: int = 120  # a running job without a heartbeat this long was abandoned
 
     def origins(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

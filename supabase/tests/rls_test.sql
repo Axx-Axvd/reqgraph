@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(22);
 
 -- Two users; the auth trigger creates their profiles.
 insert into auth.users (id, email, aud, role)
@@ -61,6 +61,7 @@ select is((select count(*)::int from public.interview_turns), 1, 'реплики
 select is((select count(*)::int from public.exports), 1, 'выгрузки чужого проекта не видны');
 select is((select count(*)::int from public.usage_daily), 1, 'чужой расход не виден');
 select is((select count(*)::int from public.jobs), 0, 'очередь задач пользователю не видна, даже своя (T-501)');
+select ok(not has_schema_privilege('authenticated', 'lg', 'usage'), 'чекпоинты прогонов (схема lg) пользователю недоступны (T-502)');
 select is((select config from public.projects limit 1), '{}'::jsonb, 'настройки своего проекта видны (T-501)');
 
 select lives_ok($$insert into public.projects (owner_id, name)

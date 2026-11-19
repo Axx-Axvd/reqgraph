@@ -1,7 +1,8 @@
 """The FastAPI application: create_app() for uvicorn, the tests and the OpenAPI export."""
 
+import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +17,18 @@ DESCRIPTION = (
     "API reqgraph: проекты, прогоны агентов, ответы интервью, граф требований и выгрузки. "
     "Вход — токен Supabase Auth в заголовке Authorization: Bearer."
 )
+
+
+async def start_worker(db: Database, settings: Settings, stop: asyncio.Event) -> None:
+    """The worker loop next to the API (one process on Render Free, ADR-009)."""
+    from reqgraph_api.worker.loop import run_worker
+    from reqgraph_api.worker.runner import Runner
+
+    assert settings.database_url is not None
+    runner = Runner(db, settings.database_url)
+    await run_worker(
+        db, runner, stop, poll=settings.worker_poll_seconds, stale=settings.job_stale_seconds
+    )
 
 
 def create_app(
@@ -33,9 +46,18 @@ def create_app(
             pool = make_pool(settings.database_url, max_size=settings.db_pool_max)
             await pool.open()
             app.state.db = Database(pool)
+        stop = asyncio.Event()
+        worker = None
+        if settings.worker_enabled and settings.database_url and app.state.db is not None:
+            worker = asyncio.create_task(start_worker(app.state.db, settings, stop))  # ADR-009
         try:
             yield
         finally:
+            stop.set()
+            if worker is not None:
+                worker.cancel()  # a running job stays locked and is taken again after a restart
+                with suppress(asyncio.CancelledError):
+                    await worker
             if pool is not None:
                 await pool.close()
 
