@@ -35,10 +35,10 @@
 - uv run pytest packages/core/tests/agents/test_interview_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету живого интервью
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
-- PW_CHROMIUM_PATH=/opt/pw-browsers/chromium pnpm -C apps/web e2e:mock   # e2e сайта с подменой API и Supabase (без сервисов); полный e2e — `pnpm -C apps/web e2e` на `supabase start`, гоняется в CI (T-504)
+- PW_CHROMIUM_PATH=/opt/pw-browsers/chromium pnpm -C apps/web e2e:mock   # e2e сайта с подменой API и Supabase (без сервисов); полный e2e — `pnpm -C apps/web e2e` на `supabase start`, гоняется в CI (T-504, T-505)
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
-- uv run reqgraph-api serve         # API (T-501) и исполнитель задач (T-502, WORKER_ENABLED): DATABASE_URL, SUPABASE_JWKS_URL, CORS_ORIGINS из окружения; лимиты демо (T-503): DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP, PROJECT_PROFILE; /docs — описание адресов
+- uv run reqgraph-api serve         # API (T-501) и исполнитель задач (T-502, WORKER_ENABLED): DATABASE_URL, SUPABASE_JWKS_URL, CORS_ORIGINS из окружения; лимиты демо (T-503): DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP, PROJECT_PROFILE; выгрузка в Storage (T-505): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, EXPORT_OFFLINE; /docs — описание адресов
 - uv run reqgraph-api worker        # только исполнитель задач: прогоны из очереди jobs, чекпоинты в схеме lg, продолжение после перезапуска
 - uv run reqgraph-api openapi --out schemas/openapi.json && pnpm -C apps/web gen:api   # описание API и типы для сайта после правки адресов
 - REQGRAPH_TEST_DATABASE_URL=<postgres> uv run pytest apps/api/tests -m pg   # тесты API с базой: Supabase с миграциями или голый Postgres (заглушка auth и миграции — сами)

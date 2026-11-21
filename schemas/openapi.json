@@ -27,6 +27,103 @@
         "title": "AnswerIn",
         "type": "object"
       },
+      "CIReport": {
+        "additionalProperties": false,
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/CheckResult"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/Finding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "project": {
+            "title": "Project",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          }
+        },
+        "required": [
+          "project",
+          "checks",
+          "findings",
+          "summary"
+        ],
+        "title": "CIReport",
+        "type": "object"
+      },
+      "CheckResult": {
+        "additionalProperties": false,
+        "properties": {
+          "errors": {
+            "default": 0,
+            "title": "Errors",
+            "type": "integer"
+          },
+          "group": {
+            "enum": [
+              "sch",
+              "snd",
+              "iso",
+              "trc",
+              "tpl"
+            ],
+            "title": "Group",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "infos": {
+            "default": 0,
+            "title": "Infos",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "warning",
+              "failed",
+              "skipped"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "warnings": {
+            "default": 0,
+            "title": "Warnings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "group",
+          "status"
+        ],
+        "title": "CheckResult",
+        "type": "object"
+      },
       "EventOut": {
         "properties": {
           "id": {
@@ -65,12 +162,23 @@
             "type": "string"
           },
           "format": {
+            "description": "md, docx, reqif, svg",
             "title": "Format",
             "type": "string"
           },
           "id": {
             "format": "uuid",
             "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "файл внутри выгрузки ревизии, например srs.docx, img/PRC-01.svg",
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "description": "путь в бакете Storage exports: <проект>/<ревизия>/<файл>",
+            "title": "Path",
             "type": "string"
           },
           "rev": {
@@ -82,9 +190,72 @@
           "id",
           "rev",
           "format",
+          "path",
+          "name",
           "created_at"
         ],
         "title": "ExportOut",
+        "type": "object"
+      },
+      "Finding": {
+        "additionalProperties": false,
+        "description": "One problem: which check, how serious, which nodes, what to do and who fixes it.",
+        "properties": {
+          "check_id": {
+            "pattern": "^(SCH|SND|ISO|TRC|TPL)-\\d{3}$",
+            "title": "Check Id",
+            "type": "string"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "message": {
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "node_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Node Ids",
+            "type": "array"
+          },
+          "owner": {
+            "enum": [
+              "analyst",
+              "modeler",
+              "standards"
+            ],
+            "title": "Owner",
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "check_id",
+          "severity",
+          "message",
+          "owner"
+        ],
+        "title": "Finding",
         "type": "object"
       },
       "GraphOut": {
@@ -450,6 +621,50 @@
         "title": "RunOut",
         "type": "object"
       },
+      "Summary": {
+        "additionalProperties": false,
+        "properties": {
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "infos": {
+            "title": "Infos",
+            "type": "integer"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "warned": {
+            "title": "Warned",
+            "type": "integer"
+          },
+          "warnings": {
+            "title": "Warnings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "errors",
+          "warnings",
+          "infos",
+          "passed",
+          "warned",
+          "failed",
+          "skipped"
+        ],
+        "title": "Summary",
+        "type": "object"
+      },
       "UsageOut": {
         "description": "The demo limits of the signed-in user today (T-503); a day is Moscow time.",
         "properties": {
@@ -736,6 +951,76 @@
         "tags": [
           "projects"
         ]
+      },
+      "post": {
+        "description": "SRS, TZ by GOST 34 and 19 (md, docx), scheme pictures and ReqIF of a revision into the\nStorage bucket exports. A revision is exported once: a repeated call returns its files.",
+        "operationId": "make_exports_projects__project_id__exports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ревизия; без неё — последняя",
+            "in": "query",
+            "name": "rev",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ревизия; без неё — последняя",
+              "title": "Rev"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExportOut"
+                  },
+                  "title": "Response Make Exports Projects  Project Id  Exports Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Make Exports",
+        "tags": [
+          "projects"
+        ]
       }
     },
     "/projects/{project_id}/graph": {
@@ -800,6 +1085,147 @@
           }
         ],
         "summary": "Get Graph",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/projects/{project_id}/processes/{process_id}/bpmn": {
+      "get": {
+        "description": "BPMN of a process node, compiled from its DSL by dsl/bpmn_compile.py (LLM writes no XML).",
+        "operationId": "get_bpmn_projects__project_id__processes__process_id__bpmn_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "process_id",
+            "required": true,
+            "schema": {
+              "title": "Process Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ревизия; без неё — последняя",
+            "in": "query",
+            "name": "rev",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ревизия; без неё — последняя",
+              "title": "Rev"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/xml": {}
+            },
+            "description": "BPMN 2.0 XML"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Bpmn",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/projects/{project_id}/report": {
+      "get": {
+        "description": "The CI report of a revision: kept by the worker after a run; for an older revision it is\ncomputed here without network (Kroki checks are skipped) and kept.",
+        "operationId": "get_report_projects__project_id__report_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ревизия; без неё — последняя",
+            "in": "query",
+            "name": "rev",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ревизия; без неё — последняя",
+              "title": "Rev"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CIReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Report",
         "tags": [
           "projects"
         ]

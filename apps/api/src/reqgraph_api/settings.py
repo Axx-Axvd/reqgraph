@@ -1,5 +1,6 @@
 """Settings of the API from environment variables (07_deploy); secrets are never logged."""
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +21,9 @@ class Settings(BaseSettings):
         0.50  # all users' paid spend today; above it new runs use free models
     )
     demo_timezone: str = "Europe/Moscow"  # when a new day starts (author's decision 19.11)
+    supabase_url: str | None = None  # T-505: Storage for the exported files (server only)
+    supabase_service_role_key: SecretStr | None = None  # never in the site, never logged
+    export_offline: bool = False  # exports without Kroki: no scheme pictures (CI, offline stand)
     project_profile: str = "free"  # models of new projects (roles.yaml); the public demo: cheap
 
     def origins(self) -> list[str]:

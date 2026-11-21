@@ -69,7 +69,12 @@ export interface paths {
         /** List Exports */
         get: operations["list_exports_projects__project_id__exports_get"];
         put?: never;
-        post?: never;
+        /**
+         * Make Exports
+         * @description SRS, TZ by GOST 34 and 19 (md, docx), scheme pictures and ReqIF of a revision into the
+         *     Storage bucket exports. A revision is exported once: a repeated call returns its files.
+         */
+        post: operations["make_exports_projects__project_id__exports_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -85,6 +90,47 @@ export interface paths {
         };
         /** Get Graph */
         get: operations["get_graph_projects__project_id__graph_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/processes/{process_id}/bpmn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Bpmn
+         * @description BPMN of a process node, compiled from its DSL by dsl/bpmn_compile.py (LLM writes no XML).
+         */
+        get: operations["get_bpmn_projects__project_id__processes__process_id__bpmn_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Report
+         * @description The CI report of a revision: kept by the worker after a run; for an older revision it is
+         *     computed here without network (Kroki checks are skipped) and kept.
+         */
+        get: operations["get_report_projects__project_id__report_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -226,6 +272,54 @@ export interface components {
             /** Text */
             text?: string | null;
         };
+        /** CIReport */
+        CIReport: {
+            /** Checks */
+            checks: components["schemas"]["CheckResult"][];
+            /** Findings */
+            findings: components["schemas"]["Finding"][];
+            /** Project */
+            project: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            summary: components["schemas"]["Summary"];
+        };
+        /** CheckResult */
+        CheckResult: {
+            /**
+             * Errors
+             * @default 0
+             */
+            errors: number;
+            /**
+             * Group
+             * @enum {string}
+             */
+            group: "sch" | "snd" | "iso" | "trc" | "tpl";
+            /** Id */
+            id: string;
+            /**
+             * Infos
+             * @default 0
+             */
+            infos: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "passed" | "warning" | "failed" | "skipped";
+            /** Title */
+            title: string;
+            /**
+             * Warnings
+             * @default 0
+             */
+            warnings: number;
+        };
         /** EventOut */
         EventOut: {
             /** Id */
@@ -249,15 +343,55 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Format */
+            /**
+             * Format
+             * @description md, docx, reqif, svg
+             */
             format: string;
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /**
+             * Name
+             * @description файл внутри выгрузки ревизии, например srs.docx, img/PRC-01.svg
+             */
+            name: string;
+            /**
+             * Path
+             * @description путь в бакете Storage exports: <проект>/<ревизия>/<файл>
+             */
+            path: string;
             /** Rev */
             rev: number;
+        };
+        /**
+         * Finding
+         * @description One problem: which check, how serious, which nodes, what to do and who fixes it.
+         */
+        Finding: {
+            /** Check Id */
+            check_id: string;
+            /** Hint */
+            hint?: string | null;
+            /** Message */
+            message: string;
+            /**
+             * Node Ids
+             * @default []
+             */
+            node_ids: string[];
+            /**
+             * Owner
+             * @enum {string}
+             */
+            owner: "analyst" | "modeler" | "standards";
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "error" | "warning" | "info";
         };
         /** GraphOut */
         GraphOut: {
@@ -425,6 +559,23 @@ export interface components {
              * @enum {string}
              */
             status: "queued" | "running" | "waiting_input" | "succeeded" | "failed" | "cancelled";
+        };
+        /** Summary */
+        Summary: {
+            /** Errors */
+            errors: number;
+            /** Failed */
+            failed: number;
+            /** Infos */
+            infos: number;
+            /** Passed */
+            passed: number;
+            /** Skipped */
+            skipped: number;
+            /** Warned */
+            warned: number;
+            /** Warnings */
+            warnings: number;
         };
         /**
          * UsageOut
@@ -600,6 +751,40 @@ export interface operations {
             };
         };
     };
+    make_exports_projects__project_id__exports_post: {
+        parameters: {
+            query?: {
+                /** @description ревизия; без неё — последняя */
+                rev?: number | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_graph_projects__project_id__graph_get: {
         parameters: {
             query?: {
@@ -621,6 +806,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GraphOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_bpmn_projects__project_id__processes__process_id__bpmn_get: {
+        parameters: {
+            query?: {
+                /** @description ревизия; без неё — последняя */
+                rev?: number | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+                process_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description BPMN 2.0 XML */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_report_projects__project_id__report_get: {
+        parameters: {
+            query?: {
+                /** @description ревизия; без неё — последняя */
+                rev?: number | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CIReport"];
                 };
             };
             /** @description Validation Error */

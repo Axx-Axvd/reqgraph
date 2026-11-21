@@ -298,10 +298,11 @@ class Runner:
             rev = await store.save(conn, run["project_id"], done, "agent")
             ci = {**report.summary.model_dump(mode="json"), "headline": report.headline()}
             await conn.execute(
-                "update public.graph_revisions set ci_summary = %s "
+                "update public.graph_revisions set ci_summary = %s, ci_report = %s "
                 "where project_id = %s and rev = %s",
                 [
                     Jsonb(ci | {"stop": out["stop"], "run_id": str(run["id"])}),
+                    Jsonb(report.model_dump(mode="json")),  # T-505: findings for the site
                     run["project_id"],
                     rev,
                 ],

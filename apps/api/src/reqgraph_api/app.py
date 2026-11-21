@@ -14,6 +14,7 @@ from reqgraph_api.db import Database, make_pool
 from reqgraph_api.keys import RunKeys
 from reqgraph_api.routes import health, projects, runs
 from reqgraph_api.settings import Settings
+from reqgraph_api.storage import Storage, SupabaseStorage
 
 DESCRIPTION = (
     "API reqgraph: проекты, прогоны агентов, ответы интервью, граф требований и выгрузки. "
@@ -50,6 +51,7 @@ def create_app(
     *,
     database: Database | None = None,
     verifier: TokenVerifier | None = None,
+    storage: Storage | None = None,
 ) -> FastAPI:
     settings = settings or Settings()
 
@@ -83,6 +85,10 @@ def create_app(
     app.state.db = database
     app.state.settings = settings
     app.state.keys = RunKeys()
+    if storage is None and settings.supabase_url and settings.supabase_service_role_key:
+        storage = SupabaseStorage(settings.supabase_url, settings.supabase_service_role_key)
+    app.state.storage = storage
+    app.state.export_locks = {}
     app.state.verifier = verifier or TokenVerifier.from_settings(settings)
     if settings.origins():
         app.add_middleware(
