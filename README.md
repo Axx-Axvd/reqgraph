@@ -6,7 +6,7 @@
 
 reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
 
-The project is developed as a thesis. As of 29 October 2026, sprints S0–S3 are complete: the core, the agents, the interview with a simulated client and the metrics. The command line already covers the path from a brief to a checked report. Document export is planned for S4, the web interface for S5, and version 1.0 for 21 February 2027.
+The project is developed as a thesis. As of 21 November 2026, sprints S0–S4 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is mostly built: the API, the background worker, demo limits, sign-in and the interview in the browser; the graph, BPMN and export pages are in review, and the public deployment is next. Version 1.0 is due on 21 February 2027.
 
 ## Contents
 
@@ -62,7 +62,7 @@ flowchart LR
 4. The Modeler agent describes the processes and the data model and links every step and table to a requirement.
 5. The checks run.
 6. On errors, the Reviewer agent passes each error to the agent responsible for it, which then fixes it. There are at most five repair rounds; remaining errors are listed in the report with an explanation.
-7. The Standards agent fills in the document sections, and the SRS, the GOST specification and a ReqIF file for requirements management tools are built from the same graph.
+7. The Standards agent fills in the document sections, and three documents are built from the same graph: the SRS (Wiegers' structure, IEEE 830, under ISO/IEC/IEEE 29148), the system specification under GOST 34.602-2020 and the software specification under GOST 19.201-78, as Markdown and Word, plus a ReqIF file for requirements management tools.
 
 Nodes approved by a person are never changed by the agents. The final decision stays with the analyst.
 
@@ -116,19 +116,27 @@ The full method is described in [docs/tech-design/09_eval.md](docs/tech-design/0
 | S1 | 02.11–15.11 | graph, process format and BPMN compiler, checks | complete |
 | S2 | 16.11–29.11 | agents and the repair loop, version 0.1 | complete |
 | S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | complete |
-| S4 | 14.12–27.12 | SRS, GOST specification, ReqIF, baseline methods, first run, version 0.5 | planned |
-| S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download | planned |
+| S4 | 14.12–27.12 | SRS, GOST specifications, ReqIF, baseline methods, first run, version 0.5 | complete |
+| S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download, deployment | in progress |
 | S6 | 25.01–07.02 | full comparison, ablations, expert verification on one example, statistics | planned |
 | S7 | 08.02–21.02 | version 1.0, technical report, video, thesis chapters | planned |
 
-The project is ahead of schedule: by the plan, S3 runs from 30 November to 13 December. Implemented so far:
+The project is ahead of schedule: by the plan, S5 starts on 11 January. Implemented so far:
 
-- the graph and its storage in project files, the process format with a compiler to BPMN 2.0, data models in DBML, diagram rendering through Kroki, 21 checks and the `reqgraph check` command;
-- the run graph on LangGraph, the Analyst, Modeler, Standards and Reviewer agents, a repair loop that detects repeated errors, the `reqgraph init` and `reqgraph run` commands ([demo](docs/demo/m2.md));
-- `reqgraph interview` with pause and resume, 15 scenarios with hidden requirements, a simulated client with three characters (cooperative, vague, contradictory) that reveals a requirement only when asked about its topic;
-- metrics computed by a script: recall through embeddings and a judge model of another family than the agents, plus ambiguity, validity, soundness and traceability from the checks. The judge agrees with the author's manual labelling with Cohen's kappa 0.858 against the required 0.8 ([report](evals/reports/labels/agreement-results-2026-10-28-free-check-dev03.md)).
+- the core: the graph and its storage in project files, the process format with a compiler to BPMN 2.0, data models in DBML, use case diagrams in PlantUML and C4 in Structurizr, diagram rendering through Kroki, 23 checks and the `reqgraph check` command;
+- the agents: the run graph on LangGraph, the Analyst, Modeler, Standards and Reviewer agents, a repair loop that detects repeated errors, the `reqgraph init` and `reqgraph run` commands ([demo](docs/demo/m2.md));
+- the interview: `reqgraph interview` with pause and resume, 15 scenarios with hidden requirements, a simulated client with three characters (cooperative, vague, contradictory) and four levels of IT literacy, which reveals a requirement only when asked about its topic;
+- metrics computed by a script: recall through embeddings and a judge model of another family than the agents, plus ambiguity, validity, soundness and traceability from the checks. The judge agrees with the author's manual labelling with Cohen's kappa 0.858 against the required 0.8 ([report](evals/reports/labels/agreement-results-2026-10-28-free-check-dev03.md));
+- export: `reqgraph export` writes the SRS, both GOST specifications (Markdown and Word through pandoc, each BPMN diagram on its own landscape page) and ReqIF, which opens in StrictDoc;
+- the experiment harness: the method matrix (M2 with coverage and checks, M1 without coverage, B1 a single prompt, B2 without checks, B3 a fixed questionnaire) with a dollar limit per launch and a report with charts;
+- the web part: an API on FastAPI with Supabase sign-in, a worker that runs agents from a queue in Postgres and resumes a run after a restart, demo limits of three runs per day or the user's own OpenRouter key, and a Next.js site with sign-in, projects and the interview chat with live updates. The requirements graph, BPMN diagrams, the check report with a click to the faulty node, and document download are in review ([PR #131](https://github.com/Axx-Axvd/reqgraph/pull/131)).
 
-First measurements on the tuning scenarios, 12 questions with a cooperative client: the system records most of what the client says, but within 12 questions the client mentions only 25–60% of the hidden requirements, so recall is 23–50% ([results](evals/reports/)). The interviewer is being changed to stop repeating covered topics (T-305).
+Measurements so far, all on the three tuning scenarios:
+
+- The first full matrix (45 runs, $2.23): the interviewer with coverage (M2) found 38% of hidden requirements, the fixed questionnaire (B3) 47%. With one repeat per case this is not a test of H1, but it showed why: M2 ended the interview early once every area had one answer ([results](evals/reports/results-2026-11-05-cheap-dev-v1-cheap.md)).
+- Two fixes followed, each accepted by a decision rule written before the measurement: the interview no longer ends before every area has been asked about, and an area closes only after two answers with nothing new. The second fix, with 20 questions, raised recall from 47.2% to 58.3% for clients with little IT knowledge and from 60.9% to 69.2% for IT-literate clients ([results](evals/reports/results-2026-11-18-cheap-t319-after.md)).
+- Two attempts to adapt the interviewer's language to the client's IT level made recall worse and were rejected; both are recorded in the [work log](docs/journal.md).
+- How much of a real specification is typical: in 180 requirements sampled from 12 public documents of the PURE dataset, 148 (82%, 95% interval 76–87%) are typical, and all non-functional requirements are ([report](evals/reports/pure-groups-2026-11-18.md)). This is the share the system can be expected to cover from domain knowledge; the rest has to come from the client.
 
 Tasks with acceptance criteria are listed in [docs/backlog.md](docs/backlog.md); decisions and their rationale are in [docs/adr/](docs/adr/README.md).
 
@@ -150,18 +158,22 @@ uv run reqgraph init projects/smile --name "Smile dental clinic" --brief brief.m
 uv run reqgraph run projects/smile         # Analyst → Modeler → Standards → checks → repair
 uv run reqgraph check projects/smile       # checks only, no AI
 uv run reqgraph interview projects/smile   # interview: /готово to finish, /пауза to pause
+uv run reqgraph export projects/smile      # SRS, GOST 34 and GOST 19 specifications (md, docx), ReqIF
 ```
 
-Exit code 0 means no errors; 1 means errors remain and are listed in `reports/ci-report.md`; 2 means the run did not start. Prompts and check messages are currently in Russian. The full list of commands is in [CLAUDE.md](CLAUDE.md).
+Exit code 0 means no errors; 1 means errors remain and are listed in `reports/ci-report.md`; 2 means the run did not start. Prompts, check messages and the web interface are currently in Russian. The full list of commands is in [CLAUDE.md](CLAUDE.md).
+
+The web part runs locally on the Supabase stack (requires Docker): `pnpm supabase start`, then `uv run reqgraph-api serve` (API and worker) and `pnpm -C apps/web dev`. Settings are listed in [docs/tech-design/07_deploy.md](docs/tech-design/07_deploy.md) (in Russian). A public demo will appear with the deployment (T-506).
 
 <details>
 <summary>Development commands</summary>
 
 ```bash
 uv run ruff check . && uv run ruff format --check .
-uv run mypy packages/core evals/reqgraph_evals
+uv run mypy packages/core evals/reqgraph_evals apps/api
 uv run pre-commit install          # pre-commit hooks, once
 pnpm install && pnpm -C apps/web lint && pnpm -C apps/web build
+PW_CHROMIUM_PATH=<chromium> pnpm -C apps/web e2e:mock   # browser tests with a mocked API
 pnpm db:start && pnpm db:reset     # local Postgres for Supabase, requires Docker
 pnpm db:test                       # access rule tests (RLS)
 uv run reqgraph schemas            # JSON Schemas from the Pydantic models
@@ -175,7 +187,8 @@ uv run reqgraph schemas            # JSON Schemas from the Pydantic models
 |---|---|
 | `packages/core` | the library and the `reqgraph` command: graph, process format, checks, agents, model access, export, simulator |
 | `evals/` | scenarios with hidden requirements, the experiment harness, run reports |
-| `apps/web`, `apps/api` | web interface on Next.js and API on FastAPI (from S5) |
+| `apps/api` | API on FastAPI and the worker that runs agents from the queue |
+| `apps/web` | web interface on Next.js, Playwright browser tests |
 | `supabase/` | database migrations and access rules |
 | [examples/garage61](examples/garage61/README.md) | a reference project built by hand: the "Garage 61" car service |
 | [docs/tech-design/](docs/tech-design/README.md) | the technical design, by section (in Russian) |
@@ -187,7 +200,7 @@ reqgraph does not generate application code and does not estimate effort. It doe
 
 ## Stack
 
-Python 3.12, LangGraph, pydantic-ai, pydantic-evals, FastAPI, PM4Py, Kroki, pandoc, Next.js, Supabase, bpmn-js. Open-weight models are used through OpenRouter, Groq and Google AI Studio, and through Ollama for offline work.
+Python 3.12, LangGraph, pydantic-ai, pydantic-evals, FastAPI, PM4Py, Kroki, pandoc, Next.js, Supabase (Postgres, Auth, Storage, Realtime), React Flow, bpmn-js, Playwright. Open-weight models are used through OpenRouter, Groq and Google AI Studio, and through Ollama for offline work.
 
 ## License
 
