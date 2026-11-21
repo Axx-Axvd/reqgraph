@@ -65,7 +65,8 @@ async def test_without_a_token_every_route_but_health_is_401(bare: AsyncClient) 
         assert (
             await client.get("/projects", headers={"Authorization": "Bearer x"})
         ).status_code == 401
-        assert (await client.get("/health")).json() == {"status": "degraded", "database": False}
+        health = (await client.get("/health")).json()
+        assert (health["status"], health["database"]) == ("degraded", False)
 
 
 async def test_without_a_database_a_signed_in_request_is_503(
