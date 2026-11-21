@@ -35,6 +35,8 @@
 - uv run pytest packages/core/tests/agents/test_interview_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету живого интервью
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
+- docker build -f apps/api/Dockerfile -t reqgraph-api .   # образ API для Render и офлайн-стенда (T-506; нужен Docker, в CI — задача docker)
+- SMOKE_WEB_URL=<сайт> SMOKE_API_URL=<api> pnpm -C apps/web e2e:smoke   # smoke опубликованного демо (T-506; в GitHub — Actions → smoke); настройка prod — docs/setup/deploy.md
 - PW_CHROMIUM_PATH=/opt/pw-browsers/chromium pnpm -C apps/web e2e:mock   # e2e сайта с подменой API и Supabase (без сервисов); полный e2e — `pnpm -C apps/web e2e` на `supabase start`, гоняется в CI (T-504, T-505)
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)

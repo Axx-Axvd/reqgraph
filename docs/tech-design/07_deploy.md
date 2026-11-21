@@ -16,7 +16,7 @@ flowchart LR
   subgraph Render[Render · free web service]
     A[api · FastAPI] -->|jobs: SKIP LOCKED| WK[worker · LangGraph, CI, экспорт]
   end
-  subgraph Supabase[Supabase · Free, 2 проекта: staging и prod]
+  subgraph Supabase[Supabase · Free, проект prod, Франкфурт]
     PG[(Postgres 17 + pgvector)]
     AU[Auth]
     ST[Storage]
@@ -41,12 +41,12 @@ flowchart LR
 
 | Возможность | Для чего | Лимит Free | Риск и решение |
 |---|---|---|---|
-| `Postgres + pgvector` | проекты, ревизии jsonb, прогоны, события, чекпоинты | 500 МБ | ежедневная чистка: чекпоинты > 14 дней, ревизии > 50 на проект |
+| `Postgres + pgvector` | проекты, ревизии jsonb, прогоны, события, чекпоинты | 500 МБ | ежедневная чистка (T-506): чекпоинты прогонов, завершённых > 14 дней назад, события > 30 дней; ревизии не чистятся, пока база мала (решение 21.11) |
 | `Auth` | GitHub OAuth, magic link, JWT для API | 50 000 MAU | — |
-| `Storage` | DOCX, SVG, ZIP выгрузки | 1 ГБ | TTL 30 дней (очистка — T-506), повторная генерация по запросу |
+| `Storage` | DOCX, SVG, ReqIF выгрузки | 1 ГБ | очистка выгрузок старше 30 дней — исполнитель раз в сутки (T-506), повторная генерация по запросу |
 | `Realtime` | поток run_events в браузер | ~200 одновременных подключений | фолбэк: опрос GET /runs/{id}/events |
 | `Трафик` | API и Storage | 5 ГБ egress | SVG рендерить на клиенте (bpmn-js) |
-| `Пауза` | проект засыпает после 7 дней без активности | — | dev — локально (Supabase CLI); prod — cron-пинг /health раз в 3 дня |
+| `Пауза` | проект засыпает после 7 дней без активности | — | dev — локально (Supabase CLI); prod — `keepalive.yml`, GET /health раз в 3 дня |
 
 <sub>Подключение из Render: прямое подключение Supabase идёт по IPv6, а Render, Vercel и GitHub Actions работают по IPv4. Поэтому `DATABASE_URL` — строка Supavisor в session-режиме (порт 5432 на хосте pooler). Для psycopg и PostgresSaver: `autocommit=True, prepare_threshold=None`, пул на 3-5 соединений.</sub>
 
@@ -67,7 +67,7 @@ flowchart LR
 | `Свой ноутбук` | $0 | docker compose | только офлайн | защита диплома |
 
 > [!WARNING]
-> Render Free: 512 МБ на всё — FastAPI, LangGraph, pm4py. Проверить потребление памяти в S5 первым делом (T-506). Если не влезает: вынести SND-002 (pm4py) в фоновый шаг с ленивым импортом или перейти на Railway / Fly (~$5). Пока пользователь смотрит прогон, фронтенд опрашивает API и не даёт сервису уснуть; прогоны без наблюдателя запускать только локально или в GitHub Actions.
+> Render Free: 512 МБ на всё — FastAPI, LangGraph, pm4py. Память процесса API видна в `/health` (`memory_mb`, `peak_memory_mb`) и в журнале исполнителя после каждой задачи (T-506). Первый замер 21.11 в окружении образа: пик 250 МБ после всех проверок garage61 (с pm4py) и выгрузки документов; pandoc идёт отдельным процессом и сюда не входит. Замер на Render — после публикации. Если не влезает: вынести SND-002 (pm4py) в фоновый шаг с ленивым импортом или перейти на Railway / Fly (~$5). Пока пользователь смотрит прогон, фронтенд опрашивает API и не даёт сервису уснуть; прогоны без наблюдателя запускать только локально или в GitHub Actions.
 
 ## Доступ из РФ
 
@@ -86,9 +86,10 @@ flowchart LR
 | Окружение | Где | База | Модели |
 |---|---|---|---|
 | `local` | ноутбук, docker compose | Supabase CLI (Postgres в Docker) | profile=free или local |
-| `ci` | GitHub Actions | без базы (FileStore) или сервис postgres | кассеты, без сети |
-| `staging` | Render preview + Vercel preview | Supabase проект #1 | free |
-| `prod` | Render + Vercel | Supabase проект #2 | cheap, лимиты демо |
+| `ci` | GitHub Actions | `supabase start` (задачи `db`, `e2e`) | кассеты и заглушки, без сети |
+| `prod` | Render + Vercel, Франкфурт | Supabase `reqgraph-prod`, eu-central-1 | cheap, лимиты демо |
+
+<sub>Staging нет (решение автора 21.11): превью-сервисы Render платные, а миграции и сайт проверяются на каждом PR в CI на `supabase start`. Пошаговая настройка prod — [docs/setup/deploy.md](../setup/deploy.md).</sub>
 
 | Переменная | Где | Назначение |
 |---|---|---|
@@ -108,7 +109,7 @@ flowchart LR
 | `OLLAMA_BASE_URL` | api, cli (local) | офлайн-профиль `local` (Ollama) |
 | `PYDANTIC_AI_NO_BANNER` | api, cli, evals | отключает баннер pydantic-ai в консоли |
 | `KROKI_URL` | api | https://kroki.io или свой контейнер |
-| `DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP` | api | лимиты публичного демо: 3 прогона в день, $0.50 в день на всех (T-503) |
+| `DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP` | api | лимиты публичного демо: 3 прогона в день, $0.20 в день на всех (T-503; потолок снижен с $0.50 решением автора 21.11) |
 | `DEMO_TIMEZONE` | api | когда начинается новый день лимитов; `Europe/Moscow` (решение автора 19.11) |
 | `PROJECT_PROFILE` | api | модели новых проектов: `free` в разработке, `cheap` в публичном демо |
 | `NEXT_PUBLIC_API_URL` | web | адрес API на Render |
@@ -119,8 +120,10 @@ flowchart LR
 | Workflow | Когда | Что делает |
 |---|---|---|
 | `ci.yml` | push, PR | ruff, mypy, pytest без сети (кассеты), сборка web, проверка миграций и тесты API на локальном Supabase; e2e сайта: `supabase start`, API с исполнителем на заглушках, Playwright — вход, проект, 3 ответа интервью (T-504); прогон по брифу, граф, проверки и скачивание выгрузки (T-505) |
-| `migrate.yml` | push в main с изменениями supabase/ | supabase db push в staging, затем в prod по ручному подтверждению |
-| `keepalive.yml` | cron раз в 3 дня | GET /health (select 1) — проект Supabase не засыпает |
+| `ci.yml`, задача `docker` | push, PR | сборка образа API, pandoc и pm4py внутри, старт без базы (T-506) |
+| `migrate.yml` | push в main с изменениями `supabase/migrations/`, вручную | `supabase db push` в prod после подтверждения автора (окружение `production`) |
+| `smoke.yml` | после `migrate`, вручную | Playwright `smoke.spec.ts` против опубликованного сайта: вход, /health со страницы (CORS), 401 без входа, кнопка GitHub; память API — в сводку |
+| `keepalive.yml` | cron раз в 3 дня | GET /health (select 1) — Render и Supabase не засыпают |
 | `Render, Vercel` | push в main | автодеплой из GitHub; превью на PR |
 
 **Эксперименты** (матрица `reqgraph-evals matrix`, мини-экзамен `reqgraph-evals probe`) идут в облачной сессии Claude Code, а не в GitHub Actions: ключи моделей хранятся в настройках облачной среды, в GitHub их нет (решение автора 03.11, T-406). У запуска матрицы — лимит $ на весь запуск (`--max-usd`, по умолчанию $1, больше $5 — только с `--allow-over-5`); отчёты, диалоги и пары судьи коммитятся в `evals/reports/` через PR.
@@ -130,12 +133,12 @@ flowchart LR
 | Мера | Значение |
 |---|---|
 | `Прогонов на пользователя` | 3 в день (usage_daily), день — по Москве; 4-й — ответ 429 с текстом и `Retry-After`; 40 ходов интервью, 800k токенов на прогон; пользователь с ролью `admin` — без лимитов; свой расход — `GET /usage` (T-503) |
-| `Общий потолок` | $0.50 в день на всех; после него новые прогоны идут на профиле free (не отклоняются) или на своём ключе |
+| `Общий потолок` | $0.20 в день на всех (до ~$6 в месяц, решение автора 21.11); после него новые прогоны идут на профиле free (не отклоняются) или на своём ключе |
 | `Свой ключ (BYOK)` | ключ OpenRouter хранится только в памяти браузера и передаётся в заголовке `X-OpenRouter-Key` при запуске и с каждым ответом; сервер держит его в памяти процесса для исполнителя (2 часа), в базу, события и логи не пишет; прогон — на профиле `byok` (только OpenRouter), вне лимитов «3 в день» и общего потолка; после перезапуска сервера без ключа прогон не переходит на наши модели (T-503) |
 | `Доступ к данным` | RLS по owner_id; service_role только на сервере; CORS только домен Vercel |
 | `Prompt injection` | ответы как данные, у агентов нет сетевых и файловых инструментов, вывод — только по схеме |
 | `Персональные данные` | дисклеймер: не вводить ПДн; бесплатные модели могут обучаться на запросах; удаление проекта — каскадно |
-| `Логи` | run_events хранятся 30 дней; ключи и токены в логи не пишутся |
+| `Логи` | run_events хранятся 30 дней (очистка — исполнитель раз в сутки, T-506); ключи и токены в логи не пишутся |
 
 ## Бюджет
 
@@ -143,7 +146,7 @@ flowchart LR
 |---|---|---|
 | `Frontend` | Vercel Hobby | Vercel Hobby |
 | `Backend` | Render Free | Render Free или Railway / Fly ~$5 |
-| `Данные` | Supabase Free x2 (staging, prod) | Supabase Free x2 |
-| `Модели` | :free + Groq + AI Studio | + $10 разово в OpenRouter, ~$5-10/мес на DeepSeek / Qwen в январе-феврале |
+| `Данные` | Supabase Free, проект prod (staging нет, решение 21.11) | Supabase Free |
+| `Модели` | :free + Groq + AI Studio | + $10 разово в OpenRouter, ~$5-10/мес на DeepSeek / Qwen в январе-феврале; демо на `cheap` — не больше $0.20 в день (~$6/мес) |
 | `Диаграммы` | kroki.io | kroki.io или контейнер |
 | `Итого` | $0 | $10-20 в месяц только в период экспериментов |
