@@ -6,7 +6,7 @@
 
 reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
 
-The project is developed as a thesis. As of 21 November 2026, sprints S0–S4 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is mostly built: the API, the background worker, demo limits, sign-in and the interview in the browser; the graph, BPMN and export pages are in review, and the public deployment is next. Version 1.0 is due on 21 February 2027.
+The project is developed as a thesis. As of 21 November 2026, sprints S0–S4 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is mostly built: the API, the background worker, demo limits, sign-in, the interview in the browser, the requirements graph, BPMN diagrams, the check report and document download; the public deployment is next. Version 1.0 is due on 21 February 2027.
 
 ## Contents
 
@@ -129,7 +129,7 @@ The project is ahead of schedule: by the plan, S5 starts on 11 January. Implemen
 - metrics computed by a script: recall through embeddings and a judge model of another family than the agents, plus ambiguity, validity, soundness and traceability from the checks. The judge agrees with the author's manual labelling with Cohen's kappa 0.858 against the required 0.8 ([report](evals/reports/labels/agreement-results-2026-10-28-free-check-dev03.md));
 - export: `reqgraph export` writes the SRS, both GOST specifications (Markdown and Word through pandoc, each BPMN diagram on its own landscape page) and ReqIF, which opens in StrictDoc;
 - the experiment harness: the method matrix (M2 with coverage and checks, M1 without coverage, B1 a single prompt, B2 without checks, B3 a fixed questionnaire) with a dollar limit per launch and a report with charts;
-- the web part: an API on FastAPI with Supabase sign-in, a worker that runs agents from a queue in Postgres and resumes a run after a restart, demo limits of three runs per day or the user's own OpenRouter key, and a Next.js site with sign-in, projects and the interview chat with live updates. The requirements graph, BPMN diagrams, the check report with a click to the faulty node, and document download are in review ([PR #131](https://github.com/Axx-Axvd/reqgraph/pull/131)).
+- the web part: an API on FastAPI with Supabase sign-in, a worker that runs agents from a queue in Postgres and resumes a run after a restart, demo limits of three runs per day or the user's own OpenRouter key, and a Next.js site with sign-in, projects and the interview chat with live updates. Project pages show the requirements graph, BPMN diagrams, the check report (a click on an error highlights the node) and document download from a private storage bucket.
 
 Measurements so far, all on the three tuning scenarios:
 
