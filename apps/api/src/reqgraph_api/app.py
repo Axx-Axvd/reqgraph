@@ -23,9 +23,14 @@ DESCRIPTION = (
 
 
 async def start_worker(
-    db: Database, settings: Settings, stop: asyncio.Event, keys: RunKeys | None = None
+    db: Database,
+    settings: Settings,
+    stop: asyncio.Event,
+    keys: RunKeys | None = None,
+    storage: Storage | None = None,
 ) -> None:
     """The worker loop next to the API (one process on Render Free, ADR-009)."""
+    from reqgraph_api.maintenance import cleanup
     from reqgraph_api.worker.loop import run_worker
     from reqgraph_api.worker.runner import Runner
 
@@ -42,7 +47,12 @@ async def start_worker(
         tz=settings.demo_timezone,
     )
     await run_worker(
-        db, runner, stop, poll=settings.worker_poll_seconds, stale=settings.job_stale_seconds
+        db,
+        runner,
+        stop,
+        poll=settings.worker_poll_seconds,
+        stale=settings.job_stale_seconds,
+        upkeep=lambda: cleanup(db, storage),
     )
 
 
@@ -66,7 +76,7 @@ def create_app(
         worker = None
         if settings.worker_enabled and settings.database_url and app.state.db is not None:
             worker = asyncio.create_task(  # ADR-009: in the API process, sharing its keys
-                start_worker(app.state.db, settings, stop, app.state.keys)
+                start_worker(app.state.db, settings, stop, app.state.keys, app.state.storage)
             )
         try:
             yield

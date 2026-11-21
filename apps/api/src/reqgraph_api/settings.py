@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     job_stale_seconds: int = 120  # a running job without a heartbeat this long was abandoned
     demo_runs_per_day: int = 3  # T-503: runs per user per day (admins and own keys: no limit)
     demo_daily_usd_cap: float = (
-        0.50  # all users' paid spend today; above it new runs use free models
+        0.20  # all users' paid spend today; above it new runs use free models (author 21.11)
     )
     demo_timezone: str = "Europe/Moscow"  # when a new day starts (author's decision 19.11)
     supabase_url: str | None = None  # T-505: Storage for the exported files (server only)

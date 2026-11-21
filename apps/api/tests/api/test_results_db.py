@@ -32,6 +32,10 @@ class FakeStorage:
     async def upload(self, path: str, data: bytes, content_type: str) -> None:
         self.files[path] = (data, content_type)
 
+    async def remove(self, paths: list[str]) -> None:
+        for path in paths:
+            self.files.pop(path, None)
+
 
 @pytest.fixture
 def storage() -> FakeStorage:
