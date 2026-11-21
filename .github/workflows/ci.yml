@@ -142,8 +142,13 @@ jobs:
           cat api.log
           exit 1
       - run: pnpm -C apps/web exec playwright install --with-deps chromium
-      - name: e2e — interview with 3 answers; graph, checks and exports (T-505)
+      - name: e2e — interview with 3 answers; graph, checks and exports (T-505); smoke (T-506)
         run: pnpm -C apps/web e2e
+      - name: memory of the API process after the e2e (Render Free has 512 MB, T-506)
+        run: |
+          health=$(curl -fsS http://127.0.0.1:8000/health)
+          echo "$health"
+          echo "API after e2e: $health" >> "$GITHUB_STEP_SUMMARY"
       - name: reports on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -154,16 +159,46 @@ jobs:
             api.log
           retention-days: 7
 
+  # The image Render runs (T-506): it builds, starts without a database and has pandoc and pm4py.
+  docker:
+    name: docker (api image)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: build
+        run: docker build -f apps/api/Dockerfile -t reqgraph-api .
+      - name: the tools inside
+        run: |
+          docker run --rm reqgraph-api reqgraph --version
+          docker run --rm reqgraph-api python -c "import pm4py, pypandoc; print('pandoc', pypandoc.get_pandoc_version())"
+      - name: starts and answers /health without a database
+        run: |
+          docker run -d --name api -p 8000:8000 -e WORKER_ENABLED=false reqgraph-api
+          for i in $(seq 1 30); do
+            body=$(curl -fsS http://127.0.0.1:8000/health) && break
+            sleep 2
+          done
+          echo "$body"
+          echo "$body" | grep -q '"status":"degraded"'
+          {
+            echo "image: $(docker image inspect reqgraph-api --format '{{.Size}}' | numfmt --to=iec)"
+            echo "idle API: $body"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: container log on failure
+        if: failure()
+        run: docker logs api || true
+
   # One stable check name for branch protection, whatever the matrix looks like.
   ci:
     if: always()
-    needs: [python, web, db, e2e]
+    needs: [python, web, db, e2e, docker]
     runs-on: ubuntu-latest
     steps:
       - name: all jobs must succeed
         run: |
-          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}, db: ${{ needs.db.result }}, e2e: ${{ needs.e2e.result }}"
+          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}, db: ${{ needs.db.result }}, e2e: ${{ needs.e2e.result }}, docker: ${{ needs.docker.result }}"
           test "${{ needs.python.result }}" = "success"
           test "${{ needs.web.result }}" = "success"
           test "${{ needs.db.result }}" = "success"
           test "${{ needs.e2e.result }}" = "success"
+          test "${{ needs.docker.result }}" = "success"

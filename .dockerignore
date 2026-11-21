@@ -1,0 +1,11 @@
+# Only what apps/api/Dockerfile copies goes into the build context.
+*
+!pyproject.toml
+!uv.lock
+!.python-version
+!packages/core/pyproject.toml
+!packages/core/src
+!apps/api/pyproject.toml
+!apps/api/src
+!evals/pyproject.toml
+**/__pycache__

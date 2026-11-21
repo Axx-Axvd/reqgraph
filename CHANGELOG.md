@@ -6,6 +6,21 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Publishing the demo (T-506): the API image (`apps/api/Dockerfile`, a uv workspace build with only the API and
+  the core, non-root) and a Render Blueprint (`render.yaml`: free plan, Frankfurt, `/health` check, secrets in
+  the dashboard); `migrate.yml` applies the migrations to the prod Supabase project after the author's
+  approval, `smoke.yml` runs Playwright against the published site (sign-in page, `/health` from the site's
+  page through CORS, 401 without sign-in, GitHub sign-in), `keepalive.yml` wakes the API and the database every
+  3 days; CI job `docker` builds and starts the image. The worker cleans up once a day: exports older than 30
+  days (Storage files and rows), run events older than 30 days, checkpoints of runs finished over 14 days ago.
+  `/health` and the worker log report the process memory. Step-by-step setup: `docs/setup/deploy.md`.
+
+### Changed
+
+- The demo's daily paid cap `DEMO_DAILY_USD_CAP` is $0.20 by default (was $0.50; author's decision 21.11).
+
 ### Security
 
 - Next.js 16.4.2 → 16.4.6 and `eslint-config-next` with it: closes 7 moderate advisories of Next.js ≤ 16.4.4

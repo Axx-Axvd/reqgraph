@@ -102,6 +102,8 @@ class ExportOut(BaseModel):
 class Health(BaseModel):
     status: Literal["ok", "degraded"]
     database: bool
+    memory_mb: float | None = Field(None, description="память процесса API сейчас, МБ (T-506)")
+    peak_memory_mb: float | None = Field(None, description="пик памяти процесса API, МБ (T-506)")
 
 
 class UsageOut(BaseModel):

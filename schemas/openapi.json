@@ -331,6 +331,30 @@
             "title": "Database",
             "type": "boolean"
           },
+          "memory_mb": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "память процесса API сейчас, МБ (T-506)",
+            "title": "Memory Mb"
+          },
+          "peak_memory_mb": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "пик памяти процесса API, МБ (T-506)",
+            "title": "Peak Memory Mb"
+          },
           "status": {
             "enum": [
               "ok",

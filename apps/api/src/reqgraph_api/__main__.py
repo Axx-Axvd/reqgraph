@@ -52,7 +52,12 @@ def worker() -> None:
         pool = make_pool(settings.database_url, max_size=2)
         await pool.open()
         try:
-            await start_worker(Database(pool), settings, asyncio.Event())
+            storage = None
+            if settings.supabase_url and settings.supabase_service_role_key:
+                from reqgraph_api.storage import SupabaseStorage
+
+                storage = SupabaseStorage(settings.supabase_url, settings.supabase_service_role_key)
+            await start_worker(Database(pool), settings, asyncio.Event(), storage=storage)
         finally:
             await pool.close()
 

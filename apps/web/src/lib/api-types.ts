@@ -434,6 +434,16 @@ export interface components {
             /** Database */
             database: boolean;
             /**
+             * Memory Mb
+             * @description память процесса API сейчас, МБ (T-506)
+             */
+            memory_mb?: number | null;
+            /**
+             * Peak Memory Mb
+             * @description пик памяти процесса API, МБ (T-506)
+             */
+            peak_memory_mb?: number | null;
+            /**
              * Status
              * @enum {string}
              */

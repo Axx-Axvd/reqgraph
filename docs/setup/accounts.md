@@ -25,7 +25,7 @@ Cerebras исключён из проекта (решение автора, см
 
 | Сервис | Где | Что завести | Бесплатно на 21.10.2026 (официальные страницы) |
 |---|---|---|---|
-| Supabase | https://supabase.com/dashboard | 2 проекта: `reqgraph-staging`, `reqgraph-prod` (регион eu-central) | 500 МБ базы на проект, 500 МБ RAM (shared CPU), 5 ГБ egress, 1 ГБ Storage, 50 000 MAU; **пауза после 1 недели неактивности; максимум 2 активных проекта** — ровно staging + prod, третий (например, для экспериментов) не поместится |
+| Supabase | https://supabase.com/dashboard | проект `reqgraph-prod` (регион eu-central-1, Франкфурт); staging нет — решение автора 21.11, шаги — [deploy.md](deploy.md) | 500 МБ базы на проект, 500 МБ RAM (shared CPU), 5 ГБ egress, 1 ГБ Storage, 50 000 MAU; **пауза после 1 недели неактивности; максимум 2 активных проекта** — ровно staging + prod, третий (например, для экспериментов) не поместится |
 | Render | https://dashboard.render.com | Web Service `reqgraph-api` (Docker, план Free) | 512 МБ RAM; засыпает через 15 мин без входящего трафика, просыпается ~1 мин; 750 инстанс-часов в месяц на workspace; файловая система эфемерная; фоновые воркеры и cron на Free недоступны — worker внутри того же web-процесса (ADR-009) |
 | Vercel | https://vercel.com/signup | проект `reqgraph-web` из `apps/web` | Hobby: только некоммерческое использование; 100 ГБ Fast Data Transfer, 1 млн вызовов функций, 4 CPU-часа Active CPU, функция до 300 с |
 
