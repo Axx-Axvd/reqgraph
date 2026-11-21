@@ -1,0 +1,46 @@
+# Render Blueprint (T-506): the API with its worker on the free plan in Frankfurt, next to the
+# Supabase project (eu-central-1). Secrets and addresses are entered in the Render dashboard
+# (sync: false) — never in this file. Steps: docs/setup/deploy.md.
+services:
+  - type: web
+    name: reqgraph-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # demo limits and models (authors' decisions 19.11 and 21.11)
+      - key: PROJECT_PROFILE
+        value: cheap
+      - key: DEMO_RUNS_PER_DAY
+        value: "3"
+      - key: DEMO_DAILY_USD_CAP
+        value: "0.20"
+      - key: DEMO_TIMEZONE
+        value: Europe/Moscow
+      - key: KROKI_URL
+        value: https://kroki.io
+      - key: WORKER_ENABLED
+        value: "true"
+      - key: DB_POOL_MAX
+        value: "4"
+      # set in the dashboard
+      - key: DATABASE_URL # Supavisor session pooler, port 5432
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWKS_URL # <SUPABASE_URL>/auth/v1/.well-known/jwks.json
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CORS_ORIGINS # the Vercel address of the site
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

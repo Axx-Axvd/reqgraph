@@ -1,0 +1,28 @@
+# T-506 · wakes the demo every 3 days: Render Free sleeps after 15 minutes without requests and a
+# Supabase Free project pauses after a week without activity; /health runs select 1 (07_deploy).
+name: keepalive
+
+on:
+  schedule:
+    - cron: "17 5 */3 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    env:
+      API: ${{ vars.PROD_API_URL }}
+    steps:
+      - name: GET /health until the service is up and the database answers
+        run: |
+          if [ -z "$API" ]; then echo "нет переменной PROD_API_URL: демо ещё не опубликовано"; exit 0; fi
+          for i in $(seq 1 8); do
+            body=$(curl -sS --max-time 90 "$API/health" || true)
+            echo "попытка $i: $body"
+            echo "$body" | grep -q '"status":"ok"' && exit 0
+            sleep 20
+          done
+          echo "API не ответил «ok» за 8 попыток"
+          exit 1

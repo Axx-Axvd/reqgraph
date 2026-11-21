@@ -1,0 +1,46 @@
+# T-506 · the smoke test of the published demo (apps/web/e2e/smoke.spec.ts): the sign-in page, the
+# API's /health from the site's page (CORS), 401 without sign-in, GitHub sign-in. By hand and after
+# the migrations of prod; the API's memory goes to the run summary.
+name: smoke
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [migrate]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  prod:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      SMOKE_WEB_URL: ${{ vars.PROD_WEB_URL }}
+      SMOKE_API_URL: ${{ vars.PROD_API_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: addresses are set
+        run: |
+          test -n "$SMOKE_WEB_URL" || { echo "нет переменной PROD_WEB_URL"; exit 1; }
+          test -n "$SMOKE_API_URL" || { echo "нет переменной PROD_API_URL"; exit 1; }
+      - name: wake the API (Render Free sleeps)
+        run: |
+          for i in $(seq 1 8); do
+            curl -fsS --max-time 90 "$SMOKE_API_URL/health" && exit 0
+            sleep 15
+          done
+          exit 1
+      - run: pnpm -C apps/web exec playwright install --with-deps chromium
+      - run: pnpm -C apps/web e2e:smoke
+      - name: memory of the API
+        if: always()
+        run: |
+          echo "API after smoke — $(curl -sS --max-time 60 "$SMOKE_API_URL/health")" >> "$GITHUB_STEP_SUMMARY"

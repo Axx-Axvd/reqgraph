@@ -9,7 +9,8 @@
     "lint": "eslint",
     "gen:api": "openapi-typescript ../../schemas/openapi.json -o src/lib/api-types.ts",
     "e2e": "playwright test",
-    "e2e:mock": "playwright test -c playwright.mock.config.ts"
+    "e2e:mock": "playwright test -c playwright.mock.config.ts",
+    "e2e:smoke": "playwright test -c playwright.smoke.config.ts"
   },
   "dependencies": {
     "@dagrejs/dagre": "3.1.3",

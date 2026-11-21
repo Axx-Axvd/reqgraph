@@ -1,0 +1,44 @@
+# T-506 · the migrations of supabase/migrations into the prod Supabase project. Runs after a merge
+# that changes them (or by hand) and waits for the author's approval: environment "production"
+# has the author as a required reviewer (docs/setup/deploy.md). No staging (author 21.11): the
+# migrations are checked before on every PR (CI jobs db and e2e on supabase start).
+name: migrate
+
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate-prod
+  cancel-in-progress: false
+
+jobs:
+  prod:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: settings are in place
+        run: |
+          test -n "$PROJECT_REF" || { echo "нет переменной SUPABASE_PROJECT_REF (docs/setup/deploy.md)"; exit 1; }
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo "нет секрета SUPABASE_ACCESS_TOKEN"; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo "нет секрета SUPABASE_DB_PASSWORD"; exit 1; }
+      - run: pnpm supabase link --project-ref "$PROJECT_REF"
+      - name: what will be applied
+        run: pnpm supabase db push --dry-run
+      - run: pnpm supabase db push
