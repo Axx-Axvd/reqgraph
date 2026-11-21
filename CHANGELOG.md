@@ -6,6 +6,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Security
+
+- Next.js 16.4.2 → 16.4.6 and `eslint-config-next` with it: closes 7 moderate advisories of Next.js ≤ 16.4.4
+  (cache poisoning and cross-user disclosure in `use cache`, HttpOnly cookie exposure, SVG rejection bypass in
+  image optimization, response injection in self-hosted mode); `pnpm audit --prod` reports none.
+
 ### Added
 
 - The project's results on the web app (T-505): a «Граф» tab — the requirements graph in React Flow with a dagre
