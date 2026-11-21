@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { ProjectTabs } from "@/components/ProjectTabs";
 import { Shell } from "@/components/Shell";
 import { api, errorText, STATUS, type Project, type Run } from "@/lib/api";
 import { useOwnKey } from "@/lib/own-key";
@@ -65,6 +66,7 @@ function ProjectView() {
   return (
     <>
       <p><Link href="/projects">← Проекты</Link></p>
+      <ProjectTabs projectId={id} />
       <h1>{project.name}</h1>
       <section className="card">
         <h2>Бриф</h2>

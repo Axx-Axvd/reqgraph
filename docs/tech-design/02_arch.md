@@ -77,7 +77,7 @@ flowchart TB
 | `Экспорт` | Jinja2, pypandoc-binary (pandoc), reqif | Markdown → DOCX по reference.docx (ADR-016), ReqIF 1.2 (`exporters/reqif.py`, T-403: профиль StrictDoc, текст — XHTML) |
 | `API` | FastAPI, uvicorn, pydantic-settings, PyJWT | REST, проверка JWT Supabase |
 | `CLI` | typer, rich | reqgraph init / interview / run / check / export / probe |
-| `Frontend` | Next.js (App Router, TS), Tailwind, shadcn/ui, TanStack Query, supabase-js, bpmn-js, @xyflow/react | интервью, граф, BPMN, отчёт CI |
+| `Frontend` | Next.js (App Router, TS), свой CSS, supabase-js, openapi-fetch, bpmn-js, @xyflow/react, @dagrejs/dagre | интервью, граф, BPMN, отчёт CI, выгрузка (T-504, T-505; Tailwind, shadcn/ui и TanStack Query не понадобились) |
 | `Данные` | Supabase: Postgres + pgvector, Auth, Storage, Realtime; Supabase CLI | облако и такой же локальный стек |
 | `Тесты` | pytest, pytest-recording (VCR), pytest-socket, hypothesis | LLM-ответы записаны в кассеты, сеть в юнит-тестах закрыта |
 | `Эксперименты` | pydantic-evals, scipy, statsmodels | probe, харнес, метрики, LLM-судья, статистика |
@@ -124,8 +124,8 @@ reqgraph/
 │   ├── reqgraph_api/worker/   # очередь jobs, запуск LangGraph, чекпоинты в lg (T-502)
 │   └── Dockerfile
 ├── apps/web/                  # Next.js
-│   ├── src/app/login  auth/callback  projects  projects/[id]  projects/[id]/interview   # T-504; graph, ci, export — T-505
-│   ├── src/components/        # Shell Disclaimer InterviewChat (T-504); BpmnViewer TraceGraph CIReport — T-505
+│   ├── src/app/login  auth/callback  projects  projects/[id]  projects/[id]/{interview,graph,report,exports,processes/[pid]}   # T-504, T-505
+│   ├── src/components/        # Shell Disclaimer InterviewChat (T-504); ProjectTabs GraphView BpmnView (T-505)
 │   ├── src/lib/               # supabase.ts api.ts (openapi-fetch) api-types.ts (из schemas/openapi.json) own-key.tsx
 │   └── e2e/                   # Playwright: с подменой API (e2e:mock) и на локальном стеке (e2e, CI)
 ├── supabase/

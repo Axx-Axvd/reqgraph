@@ -175,10 +175,46 @@ async def graph(conn: Conn, project_id: UUID, rev: int | None) -> DictRow | None
     return await _one(conn, query, [project_id] if rev is None else [project_id, rev])
 
 
-async def exports(conn: Conn, project_id: UUID) -> list[DictRow]:
+EXPORT = (
+    "id, rev, format, storage_path as path, "
+    "regexp_replace(storage_path, '^[^/]+/[^/]+/', '') as name, created_at"
+)
+
+
+async def exports(conn: Conn, project_id: UUID, rev: int | None = None) -> list[DictRow]:
+    """Files of the project's exports, the latest revision first; of one revision if given."""
     cur = await conn.execute(
-        "select id, rev, format, created_at from public.exports "
-        "where project_id = %s order by created_at desc",
-        [project_id],
+        f"select {EXPORT} from public.exports where project_id = %s "
+        + ("and rev = %s " if rev is not None else "")
+        + "order by rev desc, storage_path",
+        [project_id] if rev is None else [project_id, rev],
     )
     return await cur.fetchall()
+
+
+async def add_exports(
+    conn: Conn, project_id: UUID, rev: int, files: list[tuple[str, str]]
+) -> list[DictRow]:
+    """Rows for the uploaded files (format, storage path); call after elevate()."""
+    for fmt, path in files:
+        await conn.execute(
+            "insert into public.exports (project_id, rev, format, storage_path) "
+            "values (%s, %s, %s, %s) on conflict (project_id, rev, storage_path) do nothing",
+            [project_id, rev, fmt, path],
+        )
+    return await exports(conn, project_id, rev)
+
+
+async def ci_report(conn: Conn, project_id: UUID, rev: int | None) -> DictRow | None:
+    query = "select rev, ci_report from public.graph_revisions where project_id = %s " + (
+        "and rev = %s" if rev is not None else "order by rev desc limit 1"
+    )
+    return await _one(conn, query, [project_id] if rev is None else [project_id, rev])
+
+
+async def save_ci_report(conn: Conn, project_id: UUID, rev: int, report: dict[str, Any]) -> None:
+    """Keep a report computed on request; call after elevate()."""
+    await conn.execute(
+        "update public.graph_revisions set ci_report = %s where project_id = %s and rev = %s",
+        [Jsonb(report), project_id, rev],
+    )

@@ -43,7 +43,7 @@ flowchart LR
 |---|---|---|---|
 | `Postgres + pgvector` | проекты, ревизии jsonb, прогоны, события, чекпоинты | 500 МБ | ежедневная чистка: чекпоинты > 14 дней, ревизии > 50 на проект |
 | `Auth` | GitHub OAuth, magic link, JWT для API | 50 000 MAU | — |
-| `Storage` | DOCX, SVG, ZIP выгрузки | 1 ГБ | TTL 30 дней, повторная генерация по запросу |
+| `Storage` | DOCX, SVG, ZIP выгрузки | 1 ГБ | TTL 30 дней (очистка — T-506), повторная генерация по запросу |
 | `Realtime` | поток run_events в браузер | ~200 одновременных подключений | фолбэк: опрос GET /runs/{id}/events |
 | `Трафик` | API и Storage | 5 ГБ egress | SVG рендерить на клиенте (bpmn-js) |
 | `Пауза` | проект засыпает после 7 дней без активности | — | dev — локально (Supabase CLI); prod — cron-пинг /health раз в 3 дня |
@@ -93,7 +93,9 @@ flowchart LR
 | Переменная | Где | Назначение |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY` | web | клиент supabase-js (вход, Realtime, чтение реплик под RLS); только anon-ключ (T-504) |
-| `SUPABASE_SERVICE_ROLE_KEY` | api | запись прогонов и ревизий; никогда не попадает в браузер |
+| `SUPABASE_URL` | api | адрес проекта Supabase для Storage: API кладёт файлы выгрузок в бакет `exports` (T-505) |
+| `SUPABASE_SERVICE_ROLE_KEY` | api | запись файлов выгрузок в Storage; никогда не попадает в браузер. Без этих двух выгрузка отвечает 503 |
+| `EXPORT_OFFLINE` | api | `1` — выгрузка без Kroki: документы без картинок схем (CI, офлайн-стенд); по умолчанию выключено (T-505) |
 | `DATABASE_URL` | api | Supavisor session pooler :5432 |
 | `SUPABASE_JWKS_URL` | api | проверка JWT пользователя |
 | `SUPABASE_JWT_AUD` | api | ожидаемая аудитория токена, по умолчанию `authenticated` |
@@ -116,7 +118,7 @@ flowchart LR
 
 | Workflow | Когда | Что делает |
 |---|---|---|
-| `ci.yml` | push, PR | ruff, mypy, pytest без сети (кассеты), сборка web, проверка миграций и тесты API на локальном Supabase; e2e сайта: `supabase start`, API с исполнителем на заглушках, Playwright — вход, проект, 3 ответа интервью (T-504) |
+| `ci.yml` | push, PR | ruff, mypy, pytest без сети (кассеты), сборка web, проверка миграций и тесты API на локальном Supabase; e2e сайта: `supabase start`, API с исполнителем на заглушках, Playwright — вход, проект, 3 ответа интервью (T-504); прогон по брифу, граф, проверки и скачивание выгрузки (T-505) |
 | `migrate.yml` | push в main с изменениями supabase/ | supabase db push в staging, затем в prod по ручному подтверждению |
 | `keepalive.yml` | cron раз в 3 дня | GET /health (select 1) — проект Supabase не засыпает |
 | `Render, Vercel` | push в main | автодеплой из GitHub; превью на PR |
