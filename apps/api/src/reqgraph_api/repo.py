@@ -92,9 +92,12 @@ async def create_run(
     *,
     profile: str,
     byok: bool,
+    client_level: int | None = None,
 ) -> tuple[DictRow, DictRow]:
     """A queued run and its start job, in the backend role (after limits.admit)."""
-    settings = {"max_turns": max_turns or config.interview.max_turns}
+    settings: dict[str, Any] = {"max_turns": max_turns or config.interview.max_turns}
+    if client_level is not None:
+        settings["client_level"] = client_level
     payload: dict[str, Any] = {"brief": brief} if brief else {}
     await elevate(conn)
     run = await _one(
@@ -137,7 +140,9 @@ async def _job(conn: Conn, run_id: UUID, kind: str, payload: dict[str, Any]) -> 
     return job
 
 
-async def answer(conn: Conn, run: DictRow, text: str | None, done: bool) -> DictRow:
+async def answer(
+    conn: Conn, run: DictRow, text: str | None, done: bool, simpler: bool = False
+) -> DictRow:
     """The answer to the waiting question as a resume job (the worker resumes the graph with it;
     the text is data for the Analyst, never an instruction)."""
     if run["status"] != "waiting_input":
@@ -150,7 +155,8 @@ async def answer(conn: Conn, run: DictRow, text: str | None, done: bool) -> Dict
     )
     if pending is not None:
         raise Conflict("ответ на этот вопрос уже принят")
-    job = await _job(conn, run["id"], "resume", {"done": True} if done else {"answer": text})
+    payload = {"done": True} if done else {"simpler": True} if simpler else {"answer": text}
+    job = await _job(conn, run["id"], "resume", payload)
     # the answer is taken: the run works again (T-504: the chat hides the form at once; the worker
     # sets waiting_input at the next question)
     await conn.execute(

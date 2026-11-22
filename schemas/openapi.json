@@ -3,11 +3,16 @@
     "schemas": {
       "AnswerIn": {
         "additionalProperties": false,
-        "description": "The client's answer to the last question, or done — end the interview («/готово»).",
+        "description": "The client's answer to the last question, done — end the interview («/готово»), or\nsimpler — ask the same question in plainer words («Слишком сложно — проще», T-320).",
         "properties": {
           "done": {
             "default": false,
             "title": "Done",
+            "type": "boolean"
+          },
+          "simpler": {
+            "default": false,
+            "title": "Simpler",
             "type": "boolean"
           },
           "text": {
@@ -516,6 +521,20 @@
             ],
             "description": "бриф вместо сохранённого",
             "title": "Brief"
+          },
+          "client_level": {
+            "anyOf": [
+              {
+                "maximum": 3.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "как заказчик разбирается в ИТ (T-320): 0 — не разбирается, 1 — пользуется программами в работе, 2 — участвовал в ИТ-проектах, 3 — специалист; по умолчанию 1",
+            "title": "Client Level"
           },
           "kind": {
             "description": "интервью или прогон по брифу",
@@ -1387,7 +1406,7 @@
     },
     "/runs/{run_id}/answer": {
       "post": {
-        "description": "The answer to the waiting interview question, or done: true to end the interview; a run on\nthe user's own key needs the key again (the server keeps it only in memory).",
+        "description": "The answer to the waiting interview question, done: true to end the interview, or\nsimpler: true to hear the same question in plainer words (no question spent); a run on\nthe user's own key needs the key again (the server keeps it only in memory).",
         "operationId": "answer_runs__run_id__answer_post",
         "parameters": [
           {

@@ -32,6 +32,13 @@ class RunIn(_In):
         default=None, max_length=20_000, description="бриф вместо сохранённого"
     )
     max_turns: int | None = Field(default=None, ge=1, le=40, description="лимит вопросов интервью")
+    client_level: int | None = Field(
+        default=None,
+        ge=0,
+        le=3,
+        description="как заказчик разбирается в ИТ (T-320): 0 — не разбирается, 1 — пользуется "
+        "программами в работе, 2 — участвовал в ИТ-проектах, 3 — специалист; по умолчанию 1",
+    )
 
 
 class RunOut(BaseModel):
@@ -49,15 +56,17 @@ class RunOut(BaseModel):
 
 
 class AnswerIn(_In):
-    """The client's answer to the last question, or done — end the interview («/готово»)."""
+    """The client's answer to the last question, done — end the interview («/готово»), or
+    simpler — ask the same question in plainer words («Слишком сложно — проще», T-320)."""
 
     text: str | None = Field(default=None, min_length=1, max_length=4_000)
     done: bool = False
+    simpler: bool = False
 
     @model_validator(mode="after")
     def _one_of(self) -> "AnswerIn":
-        if (self.text is None) == (not self.done):
-            raise ValueError("нужен либо text, либо done: true")
+        if [self.text is not None, self.done, self.simpler].count(True) != 1:
+            raise ValueError("нужно одно из: text, done: true, simpler: true")
         return self
 
 

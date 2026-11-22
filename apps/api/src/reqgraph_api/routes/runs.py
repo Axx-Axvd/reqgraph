@@ -73,6 +73,7 @@ async def create_run(
             body.max_turns,
             profile=admission.profile,
             byok=admission.byok,
+            client_level=body.client_level if body.kind == "interview" else None,
         )
         if own_key is not None:
             run_keys(request).put(run["id"], own_key)
@@ -133,7 +134,7 @@ async def _job(
             job = (
                 await repo.cancel(conn, run)
                 if body is None
-                else await repo.answer(conn, run, body.text, body.done)
+                else await repo.answer(conn, run, body.text, body.done, body.simpler)
             )
         except repo.Conflict as exc:
             raise HTTPException(409, str(exc)) from None
@@ -149,7 +150,8 @@ async def answer(
     request: Request,
     own_key: OwnKey = None,
 ) -> JobOut:
-    """The answer to the waiting interview question, or done: true to end the interview; a run on
+    """The answer to the waiting interview question, done: true to end the interview, or
+    simpler: true to hear the same question in plainer words (no question spent); a run on
     the user's own key needs the key again (the server keeps it only in memory)."""
     return await _job(run_id, user, db, body, run_keys(request), own_key)
 

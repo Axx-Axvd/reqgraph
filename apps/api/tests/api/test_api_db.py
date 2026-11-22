@@ -58,7 +58,7 @@ async def test_a_run_is_queued_with_its_start_job(
 ) -> None:
     alice, bob = new_user(), new_user()
     pid = await new_project(client, auth(token, alice))
-    body = {"kind": "interview", "max_turns": 12}
+    body = {"kind": "interview", "max_turns": 12, "client_level": 0}
     assert (
         await client.post(f"/projects/{pid}/runs", json=body, headers=auth(token, bob))
     ).status_code == 404
@@ -72,7 +72,11 @@ async def test_a_run_is_queued_with_its_start_job(
         row = conn.execute(
             "select config, model_profile from runs where id = %s", [run["id"]]
         ).fetchone()
-    assert row == ({"max_turns": 12}, "free")
+    assert row == ({"max_turns": 12, "client_level": 0}, "free")
+    wrong = {"kind": "interview", "client_level": 4}
+    assert (
+        await client.post(f"/projects/{pid}/runs", json=wrong, headers=auth(token, alice))
+    ).status_code == 422
     assert (await client.get(f"/runs/{run['id']}", headers=auth(token, bob))).status_code == 404
     assert (await client.get(f"/runs/{run['id']}", headers=auth(token, alice))).json()["id"] == run[
         "id"
@@ -94,9 +98,8 @@ async def test_an_answer_is_taken_only_while_the_run_waits_and_only_once(
     )
     assert early.status_code == 409 and "queued" in early.json()["detail"]
     sql(database_url, "update runs set status = 'waiting_input' where id = %s", [run["id"]])
-    assert (
-        await client.post(url, json={"text": "x", "done": True}, headers=headers)
-    ).status_code == 422
+    for both in ({"text": "x", "done": True}, {"done": True, "simpler": True}, {}):
+        assert (await client.post(url, json=both, headers=headers)).status_code == 422
     taken = await client.post(
         url, json={"text": "Пациенты записываются по телефону."}, headers=headers
     )

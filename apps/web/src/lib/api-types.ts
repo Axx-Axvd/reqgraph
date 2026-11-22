@@ -188,7 +188,8 @@ export interface paths {
         put?: never;
         /**
          * Answer
-         * @description The answer to the waiting interview question, or done: true to end the interview; a run on
+         * @description The answer to the waiting interview question, done: true to end the interview, or
+         *     simpler: true to hear the same question in plainer words (no question spent); a run on
          *     the user's own key needs the key again (the server keeps it only in memory).
          */
         post: operations["answer_runs__run_id__answer_post"];
@@ -261,7 +262,8 @@ export interface components {
     schemas: {
         /**
          * AnswerIn
-         * @description The client's answer to the last question, or done — end the interview («/готово»).
+         * @description The client's answer to the last question, done — end the interview («/готово»), or
+         *     simpler — ask the same question in plainer words («Слишком сложно — проще», T-320).
          */
         AnswerIn: {
             /**
@@ -269,6 +271,11 @@ export interface components {
              * @default false
              */
             done: boolean;
+            /**
+             * Simpler
+             * @default false
+             */
+            simpler: boolean;
             /** Text */
             text?: string | null;
         };
@@ -518,6 +525,11 @@ export interface components {
              * @description бриф вместо сохранённого
              */
             brief?: string | null;
+            /**
+             * Client Level
+             * @description как заказчик разбирается в ИТ (T-320): 0 — не разбирается, 1 — пользуется программами в работе, 2 — участвовал в ИТ-проектах, 3 — специалист; по умолчанию 1
+             */
+            client_level?: number | null;
             /**
              * Kind
              * @description интервью или прогон по брифу

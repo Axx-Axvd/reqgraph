@@ -21,7 +21,7 @@ from psycopg import AsyncConnection
 from psycopg.rows import DictRow, dict_row
 from psycopg.types.json import Jsonb
 from reqgraph.agents.graph import build_graph
-from reqgraph.agents.nodes import DONE
+from reqgraph.agents.nodes import DONE, SIMPLER
 from reqgraph.agents.run import summarize
 from reqgraph.agents.runtime import RunContext, checkpoint_serde
 from reqgraph.agents.state import BudgetState, Mode, RunState
@@ -35,6 +35,10 @@ from reqgraph_api.worker import queue
 from reqgraph_api.worker.events import PgEvents
 
 FINISHED = ("succeeded", "failed", "cancelled")
+
+
+# what the chat shows for «Слишком сложно — проще» (T-320): the plainer question follows it
+SIMPLER_TURN = "Слишком сложно — можно проще?"
 
 
 class RunError(RuntimeError):
@@ -158,6 +162,8 @@ class Runner:
         settings: dict[str, Any] = {}
         if "max_turns" in run["config"]:
             settings["max_turns"] = int(run["config"]["max_turns"])
+        if run["config"].get("client_level") is not None:
+            settings["client_level"] = int(run["config"]["client_level"])
         if run["model_profile"]:
             settings["profile"] = run["model_profile"]
         keys: dict[str, str] = {}
@@ -231,6 +237,9 @@ class Runner:
             payload = job["payload"]
             if payload.get("done"):
                 answer: object = dict(DONE)
+            elif payload.get("simpler"):
+                answer = dict(SIMPLER)
+                await self._turn(run["id"], "client", SIMPLER_TURN, None)
             else:
                 answer = str(payload["answer"])
                 await self._turn(run["id"], "client", str(answer), None)

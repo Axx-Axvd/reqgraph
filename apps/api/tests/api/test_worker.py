@@ -16,7 +16,7 @@ from pydantic_ai.models.test import TestModel
 from reqgraph_api.db import Database
 from reqgraph_api.worker import queue
 from reqgraph_api.worker.loop import run_once
-from reqgraph_api.worker.runner import Runner
+from reqgraph_api.worker.runner import SIMPLER_TURN, Runner
 
 from .conftest import Token
 
@@ -163,6 +163,37 @@ async def test_an_interview_through_the_api_ends_in_a_new_graph_revision(
     kinds = [e["type"] for e in events]
     assert {"run_start", "question", "answer", "run_end"} <= set(kinds) and kinds[-1] == "run_end"
     assert [e["id"] for e in events] == sorted(e["id"] for e in events)
+
+
+async def test_simpler_asks_the_question_again_at_a_lower_level(
+    client: AsyncClient,
+    token: Token,
+    new_user: Callable[[], UUID],
+    make_runner: Callable[..., Runner],
+    database: Database,
+    database_url: str,
+) -> None:
+    """T-320: the level chosen before the interview reaches the run; «проще» lowers it and the
+    question comes again, no question spent."""
+    headers = auth(token, new_user())
+    run_id = await start(client, headers, "interview", max_turns=3, client_level=2)
+    runner = make_runner()
+    assert await run_once(database, runner, STALE)
+    simpler = await client.post(f"/runs/{run_id}/answer", json={"simpler": True}, headers=headers)
+    assert simpler.status_code == 202
+    assert await run_once(database, runner, STALE)
+    run = (await client.get(f"/runs/{run_id}", headers=headers)).json()
+    assert run["status"] == "waiting_input"
+    turns = rows(
+        database_url,
+        "select role, content from interview_turns where run_id = %s order by id",
+        [run_id],
+    )
+    assert turns == [("agent", QUESTION), ("client", SIMPLER_TURN), ("agent", QUESTION)]
+    events = (await client.get(f"/runs/{run_id}/events", headers=headers)).json()
+    levels = [e["payload"]["level"] for e in events if e["type"] in ("question_check", "simpler")]
+    assert levels == [2, 1, 1]  # the first question, «проще», the question again
+    assert [e["payload"]["turn"] for e in events if e["type"] == "question"] == [1, 1]
 
 
 async def test_a_brief_run_goes_through_without_pauses(
