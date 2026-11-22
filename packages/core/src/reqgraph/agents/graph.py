@@ -15,6 +15,7 @@ from reqgraph.agents.analyst import analyst
 from reqgraph.agents.modeler import modeler
 from reqgraph.agents.nodes import (
     after_analyst,
+    answer_gate,
     await_answer,
     ci_check,
     ci_gate,
@@ -59,7 +60,7 @@ def build_graph(
     # the interview: question -> answer -> Analyst -> coverage -> the next question or the models
     g.add_conditional_edges("coverage", coverage_gate, {"ask": "interviewer", "done": "modeler"})
     g.add_edge("interviewer", "await_answer")
-    g.add_edge("await_answer", "analyst")
+    g.add_conditional_edges("await_answer", answer_gate, ["interviewer", "analyst"])
     g.add_conditional_edges("analyst", after_analyst, ["coverage", "modeler"])
     g.add_edge("modeler", "standards")
     g.add_edge("standards", "ci_check")

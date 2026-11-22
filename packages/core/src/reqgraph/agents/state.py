@@ -98,6 +98,11 @@ class RunState(TypedDict):
     iteration: int  # repair rounds done, 0..max_iter
     budget: BudgetState
     stop: Stop | None  # why the agents stopped early; the run still ends with a report
+    # T-320: how the client understands IT, 0..3; None — the run context's. «Проще» lowers it
+    # mid-run, so it lives here; the question to ask again in plainer words waits in rephrase.
+    # Checkpoints older than T-320 have neither key: read them with .get()
+    client_level: int | None
+    rephrase: str | None
 
 
 def initial_state(
@@ -127,4 +132,6 @@ def initial_state(
         iteration=0,
         budget=budget or BudgetState.default(),
         stop=None,
+        client_level=None,
+        rephrase=None,
     )

@@ -22,10 +22,10 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic_ai.models import Model
 
+from reqgraph.checks.jargon import explained_terms, unknown_terms
 from reqgraph.graph.store.config import Area
 from reqgraph.llm.prompts import Prompt, read_prompt
 from reqgraph.llm.router import CallStats, structured
-from reqgraph.sim.jargon import explained_terms, unknown_terms
 from reqgraph.sim.scenario import HiddenRequirement, Scenario
 
 Character = Literal["cooperative", "vague", "contradictory"]

@@ -74,6 +74,8 @@ class RunContext:
     interviewer: Literal["coverage", "free", "questionnaire"] = "coverage"
     # False: agents do not check their own answers (B2, T-405) — only the schema parse stays
     self_checks: bool = True
+    # how the client understands IT, 0..3 (T-320): chosen before the interview; None — 1
+    client_level: int | None = None
 
     @classmethod
     def for_project(cls, project: Project, **options: Any) -> "RunContext":

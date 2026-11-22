@@ -119,3 +119,22 @@ def test_cli_refuses_the_reference_project_and_a_bad_mode() -> None:
     assert result.exit_code == 2 and "эталонный проект" in result.output
     result = runner.invoke(app, ["interview", str(GARAGE61), "--interviewer", "x"])
     assert result.exit_code == 2
+
+
+@pytest.mark.usefixtures("stubbed")
+def test_cli_simpler_asks_the_same_question_again_without_a_turn(tmp_path: Path) -> None:
+    """T-320: «/проще» brings the question back (the stub repeats it) as the same turn."""
+    root = project(tmp_path)
+    result = CliRunner().invoke(
+        app, ["interview", str(root), "--offline", "--level", "2"], input="/проще\n/пауза\n"
+    )
+    assert result.exit_code == 0, result.output
+    assert result.output.count("Вопрос 1:") == 2 and "Вопрос 2:" not in result.output
+    events = (root / "reports" / "interview-events.jsonl").read_text(encoding="utf-8")
+    simpler = [json.loads(e) for e in events.splitlines() if '"simpler"' in e]
+    assert [e["level"] for e in simpler] == [1]
+
+
+def test_cli_refuses_a_level_out_of_range(tmp_path: Path) -> None:
+    result = CliRunner().invoke(app, ["interview", str(project(tmp_path)), "--level", "4"])
+    assert result.exit_code == 2

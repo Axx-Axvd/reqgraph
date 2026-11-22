@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from reqgraph.agents.common import start
 from reqgraph.agents.coverage import coverage_of, facts_by_area, queue
 from reqgraph.agents.prompts import load_prompt
+from reqgraph.agents.question_check import check_question, unclear_terms
 from reqgraph.agents.reviewer import fingerprints
 from reqgraph.agents.runtime import RunContext
 from reqgraph.agents.state import RunState
@@ -27,6 +28,8 @@ from reqgraph.graph.store.project import Project
 from reqgraph.llm.router import BudgetExceeded
 
 DONE = {"done": True}  # the answer that ends the interview early («/готово» in the CLI)
+SIMPLER = {"simpler": True}  # «Слишком сложно — проще»: the same question again, plainer (T-320)
+DEFAULT_LEVEL = 1  # a client who uses programs at work, when nobody said otherwise
 RECENT_TURNS = 8  # turns the interviewer sees verbatim
 SAME_AREA = 2  # questions in a row about one area; then the next gap goes first
 FACTS_SHOWN = 8  # told facts of an area the interviewer sees, the latest
@@ -93,8 +96,19 @@ def _turns(graph: ArtifactGraph) -> list[InterviewTurn]:
     return [n for n in graph.nodes_of("TURN") if isinstance(n, InterviewTurn)]
 
 
-def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
-    """The prompt and the template name: with the coverage tracker (M2) or without it (M1)."""
+def client_level(state: RunState, ctx: RunContext) -> int:
+    """The level the questions are asked at: lowered by «проще», else the chosen one (T-320)."""
+    level = state.get("client_level")
+    if level is None:
+        level = ctx.client_level if ctx.client_level is not None else DEFAULT_LEVEL
+    return level
+
+
+def render_question(
+    state: RunState, ctx: RunContext, issues: list[str] | None = None
+) -> tuple[str, str]:
+    """The prompt and the template name: with the coverage tracker (M2) or without it (M1).
+    issues — what the question check found in the previous try (T-320)."""
     turns = _turns(state["graph"])
     asked = [t.text for t in turns if t.role == "agent"]
     assumptions = [
@@ -117,6 +131,9 @@ def render_question(state: RunState, ctx: RunContext) -> tuple[str, str]:
         assumptions=assumptions[:10],
         turn=state["turns"] + 1,
         max_turns=ctx.max_turns,
+        level=client_level(state, ctx),
+        rephrase=state.get("rephrase"),
+        issues=issues or [],
     )
     return prompt, name
 
@@ -163,14 +180,44 @@ async def interviewer(state: RunState, runtime: Runtime[RunContext]) -> dict[str
     if question.done and ctx.interviewer == "free":
         ctx.events.emit("interview_end", reason="interviewer", turns=state["turns"])
         return {"budget": budget, "question": None, "interview_done": True}
+    level = client_level(state, ctx)
+    issues = check_question(question.text, level)
+    retried = bool(issues)
+    if issues:  # once: a second miss still goes out, the interview never hangs
+        prompt, _ = render_question(state, ctx, issues)
+        try:
+            second, budget = await ctx.ask(
+                "interviewer", prompt, Question, budget, template=template
+            )
+        except BudgetExceeded:
+            second = question  # the first one goes out; the next node stops the run
+        if not (second.done and ctx.interviewer == "free"):
+            question = second
+        issues = check_question(question.text, level)
+    ctx.events.emit(
+        "question_check",
+        turn=state["turns"] + 1,
+        level=level,
+        retried=retried,
+        fixed=retried and not issues,
+        terms=unclear_terms(question.text, level),
+        several=question.text.count("?") > 1,
+    )
     ctx.events.emit("question", turn=state["turns"] + 1, area=question.area)
-    asked = [*state["asked_areas"], question.area]
-    return {"question": question.text, "budget": budget, "asked_areas": asked}
+    # asked again plainer: the same question, its area is not counted twice
+    asked = state["asked_areas"][:-1] if state.get("rephrase") else state["asked_areas"]
+    return {
+        "question": question.text,
+        "budget": budget,
+        "asked_areas": [*asked, question.area],
+        "rephrase": None,
+    }
 
 
 async def await_answer(state: RunState, runtime: Runtime[RunContext]) -> dict[str, Any]:
     """Pause until a person or the simulator answers; both turns go into the graph as data.
-    The answer DONE ends the interview without a turn."""
+    The answer DONE ends the interview without a turn; SIMPLER lowers the level by one and sends
+    the same question back to the interviewer, no turn spent (T-320)."""
     ctx = start(runtime, "await_answer")
     if state["stop"] is not None or state["question"] is None:
         return {}
@@ -178,6 +225,10 @@ async def await_answer(state: RunState, runtime: Runtime[RunContext]) -> dict[st
     if answer == DONE:
         ctx.events.emit("interview_end", reason="client", turns=state["turns"])
         return {"question": None, "interview_done": True}
+    if answer == SIMPLER:
+        level = max(0, client_level(state, ctx) - 1)
+        ctx.events.emit("simpler", turn=state["turns"] + 1, level=level)
+        return {"client_level": level, "rephrase": state["question"], "question": None}
     turns = [("q", "agent", state["question"]), ("a", "client", str(answer))]
     patch = GraphPatch(
         ops=[
@@ -188,6 +239,11 @@ async def await_answer(state: RunState, runtime: Runtime[RunContext]) -> dict[st
     result = state["graph"].apply(patch, actor="agent")
     ctx.events.emit("answer", turns=[result.id_map["q"], result.id_map["a"]])
     return {"graph": result.graph, "question": None, "turns": state["turns"] + 1}
+
+
+def answer_gate(state: RunState) -> str:
+    """«Проще» goes back to the interviewer; an answer (or a stopped run) goes to the Analyst."""
+    return "interviewer" if state.get("rephrase") and state["stop"] is None else "analyst"
 
 
 def mode_gate(state: RunState) -> str:

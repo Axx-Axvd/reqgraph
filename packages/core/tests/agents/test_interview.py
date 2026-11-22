@@ -11,7 +11,7 @@ from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.test import TestModel
 from reqgraph.agents.graph import build_graph
-from reqgraph.agents.nodes import DONE
+from reqgraph.agents.nodes import DONE, SIMPLER
 from reqgraph.agents.runtime import RunContext, checkpoint_serde
 from reqgraph.agents.state import AREAS, RunState, initial_state
 
@@ -269,3 +269,76 @@ async def test_the_questionnaire_asks_its_fixed_questions_without_an_llm(
     assert asked == questions
     assert "interviewer" not in [e["role"] for e in events_of(ctx, "llm_call")]
     assert events_of(ctx, "interview_end")[0]["reason"] == "questionnaire"
+
+
+JARGON = {"text": "Нужна ли интеграция с внешними системами?", "area": "integrations"}
+PLAIN = {
+    "text": "С какими программами вы сейчас работаете: 1С, Excel, тетрадь?",
+    "area": "integrations",
+}
+
+
+async def test_a_question_with_jargon_is_asked_again_once_with_the_problems(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-320: a question the client at their level would not understand goes back to the model
+    once, with what to fix; the client sees the second one."""
+    prompts: list[str] = []
+    models = stub_models() | {"interviewer": recording([JARGON, PLAIN], prompts)}
+    ctx = brief_context(models=models, client_level=0, max_iter=0)
+    out = await interview(ctx).start()
+    assert out["__interrupt__"][0].value["question"] == PLAIN["text"]
+    assert len(prompts) == 2 and "<question_issues>" in prompts[1] and "интеграция" in prompts[1]
+    assert "<question_issues>" not in prompts[0]
+    check = events_of(ctx, "question_check")[0]
+    assert check["level"] == 0 and check["retried"] and check["fixed"]
+
+
+async def test_two_unclear_questions_in_a_row_still_go_out(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    models = stub_models() | {"interviewer": recording([JARGON, JARGON], [])}
+    ctx = brief_context(models=models, client_level=0, max_iter=0)
+    out = await interview(ctx).start()
+    assert out["__interrupt__"][0].value["question"] == JARGON["text"]  # the interview never hangs
+    check = events_of(ctx, "question_check")[0]
+    assert (
+        check["retried"]
+        and not check["fixed"]
+        and check["terms"]
+        == [
+            "интеграция",
+            "внешние системы",
+        ]
+    )
+
+
+async def test_a_specialist_gets_the_question_as_is(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    prompts: list[str] = []
+    models = stub_models() | {"interviewer": recording([JARGON], prompts)}
+    ctx = brief_context(models=models, client_level=3, max_iter=0)
+    out = await interview(ctx).start()
+    assert out["__interrupt__"][0].value["question"] == JARGON["text"] and len(prompts) == 1
+
+
+async def test_simpler_asks_the_same_again_in_plainer_words_without_a_turn(
+    brief_context: Callable[..., RunContext],
+) -> None:
+    """T-320: «Слишком сложно — проще» lowers the level by one and the interviewer asks the same
+    question again; no turn is spent, the Analyst is not called."""
+    prompts: list[str] = []
+    asks = [{"text": QUESTION, "area": "scenarios"}, PLAIN]
+    models = stub_models() | {"interviewer": recording(asks, prompts)}
+    ctx = brief_context(models=models, client_level=2, max_iter=0)
+    run = interview(ctx)
+    await run.start()
+    out = await run.answer(SIMPLER)
+    assert out["__interrupt__"][0].value == {"question": PLAIN["text"], "turn": 1}
+    assert out["client_level"] == 1 and out["turns"] == 0
+    assert "<rephrase>" in prompts[1] and QUESTION in prompts[1]
+    assert "analyst" not in [e["role"] for e in events_of(ctx, "llm_call")]
+    out = await run.answer(SIMPLER)
+    out = await run.answer(SIMPLER)
+    assert out["client_level"] == 0  # never below 0

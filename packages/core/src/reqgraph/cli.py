@@ -303,7 +303,8 @@ def _print_summary(summary: "RunSummary", path: Path | None, as_json: bool) -> N
 
 
 HELP_ANSWERS = (
-    "Отвечайте одной строкой и нажимайте Enter. /готово — закончить интервью и перейти к моделям, "
+    "Отвечайте одной строкой и нажимайте Enter. /проще — переспросить проще, "
+    "/готово — закончить интервью и перейти к моделям, "
     "/пауза (или Ctrl+C) — прервать; продолжить потом той же командой."
 )
 
@@ -322,6 +323,16 @@ def interview(
     interviewer: Annotated[
         str, typer.Option("--interviewer", help="coverage, or free (no coverage tracker, M1).")
     ] = "coverage",
+    level: Annotated[
+        int | None,
+        typer.Option(
+            "--level",
+            min=0,
+            max=3,
+            help="How you know IT: 0 not at all, 1 use programs at work, 2 took part in IT "
+            "projects, 3 specialist (default 1).",
+        ),
+    ] = None,
     profile: Annotated[
         str | None, typer.Option("--profile", help="Model profile of llm/roles.yaml.")
     ] = None,
@@ -342,7 +353,7 @@ def interview(
     import asyncio
 
     from reqgraph.agents.interview import Reply, has_open_interview, interview_project
-    from reqgraph.agents.nodes import DONE
+    from reqgraph.agents.nodes import DONE, SIMPLER
     from reqgraph.agents.run import RunFailed
 
     if interviewer not in ("coverage", "free"):
@@ -359,6 +370,8 @@ def interview(
                 return None
             if line == "/готово":
                 return DONE
+            if line == "/проще":
+                return SIMPLER
             if line:
                 return line
 
@@ -378,6 +391,7 @@ def interview(
                 max_turns=max_turns,
                 max_iter=max_iter,
                 interviewer="coverage" if interviewer == "coverage" else "free",
+                client_level=level,
                 offline=offline,
                 on_line=None if as_json else typer.echo,
             )

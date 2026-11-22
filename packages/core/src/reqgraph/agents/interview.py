@@ -20,7 +20,7 @@ from langgraph.types import Command
 from pydantic_ai.models import Model
 
 from reqgraph.agents.graph import build_graph
-from reqgraph.agents.nodes import DONE
+from reqgraph.agents.nodes import DONE, SIMPLER
 from reqgraph.agents.run import (
     ConsoleEvents,
     RunSummary,
@@ -39,7 +39,8 @@ EVENTS = "interview-events.jsonl"
 if TYPE_CHECKING:
     from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
-Reply = str | Mapping[str, Any] | None  # an answer, DONE to end the interview, None to pause
+# an answer, DONE to end the interview, SIMPLER to hear the question plainer, None to pause
+Reply = str | Mapping[str, Any] | None
 Answer = Callable[[str, int], Awaitable[Reply]]
 
 
@@ -100,6 +101,7 @@ async def interview_project(
     reviewer: Literal["llm", "template"] = "llm",
     interviewer: Literal["coverage", "free", "questionnaire"] = "coverage",
     self_checks: bool = True,
+    client_level: int | None = None,
     offline: bool = False,
     models: Mapping[str, Model] | None = None,
     on_line: Callable[[str], None] | None = None,
@@ -120,6 +122,8 @@ async def interview_project(
         options["max_iter"] = max_iter
     if max_turns is not None:
         options["max_turns"] = max_turns
+    if client_level is not None:  # a resumed interview keeps the level in its checkpoint
+        options["client_level"] = client_level
     tee = ConsoleEvents(JsonlEvents(events_file), on_line, interviewing=True)
     ctx = RunContext.for_project(project, events=tee, **options)
     config: Any = {"configurable": {"thread_id": thread["thread_id"]}}
@@ -141,7 +145,7 @@ async def interview_project(
             reply = await answer(pending["question"], pending["turn"])
             if reply is None:
                 return Outcome(paused=True, turns=pending["turn"] - 1)
-            resume = dict(DONE) if reply == DONE else str(reply)
+            resume = dict(reply) if reply in (DONE, SIMPLER) else str(reply)
             result = await graph.ainvoke(Command(resume=resume), config, context=ctx)
     out = RunState(**result)  # type: ignore[typeddict-item]
     thread["status"] = "done"
