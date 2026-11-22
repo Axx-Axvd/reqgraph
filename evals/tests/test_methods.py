@@ -237,12 +237,41 @@ async def test_the_matrix_runs_each_it_level_as_its_own_case(tmp_path: Path) -> 
     by = {r.it_level: r for r in results}
     assert [r.run for r in results] == ["dev-01-cooperative-it0-M2-r1", "dev-01-cooperative-M2-r1"]
     assert by["0"].not_understood == 2 and by["3"].not_understood == 0
+    # T-320: the interviewer is told the level too; the stub repeats the jargon after the check
+    assert (by["0"].declared_level, by["0"].retried) == ("0", 2)
+    assert (by["3"].declared_level, by["3"].retried) == ("3", 0)
     assert (tmp_path / "runs" / "M2" / "dev-01-cooperative-it0-r1").is_dir()
     dialog = tmp_path / "dialogs" / "M2" / "dev-01-cooperative-it0-r1.md"
     assert "не понял" in dialog.read_text(encoding="utf-8")
     path = tmp_path / "r.csv"
     harness.write_results(results, path)
     assert "it_level" in path.read_text(encoding="utf-8").splitlines()[0]
+
+
+async def test_a_wrongly_declared_level_is_what_the_interviewer_is_told(tmp_path: Path) -> None:
+    """T-320: --declared-level — the client chose «specialist», but is a level 0 client."""
+    from pydantic_ai.models.test import TestModel
+
+    jargon = "Нужен ли пациенту личный кабинет?"
+    models = agents() | {
+        "interviewer": TestModel(custom_output_args={"text": jargon, "area": "scenarios"})
+    }
+    task = harness.run_task(
+        max_turns=2,
+        runs=tmp_path / "runs",
+        models=models,
+        sim_model=simulator(["H-013"]),
+        declared_level=3,
+    )
+    results, _ = await harness.evaluate(
+        [harness.RunInputs("dev-01", "cooperative", "M2", 1, it_level=0)],
+        task,
+        judge_model=judge_first(),
+        embedder=TestEmbeddingModel(),
+    )
+    row = results[0]
+    assert (row.it_level, row.declared_level, row.retried) == ("0", "3", 0)
+    assert row.not_understood == 2
 
 
 def test_the_matrix_refuses_an_unknown_it_level() -> None:

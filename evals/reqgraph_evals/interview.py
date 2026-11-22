@@ -45,6 +45,10 @@ class Row:
     interviewer: str = "coverage"
     method: str = ""  # T-405: M2, M1, B1, B2, B3, A1-A3; empty for runs before it
     it_level: str = "3"  # T-316: the client's IT level, 0-3 or «persona»; 3 for runs before it
+    # T-320: the level the interviewer was told; empty for runs before it
+    declared_level: str = ""
+    retried: int = 0  # T-320: questions asked again after the question check
+    several: int = 0  # T-320: questions sent with more than one «?»
     models: str = ""  # role=provider/model of every role that answered, the simulator included
     temperature: float = 0.0  # agents
     sim_temperature: float = 0.0
@@ -112,6 +116,7 @@ async def run_interview(
     max_iter: int | None = None,
     method: str = "",
     it_level: int | None = 3,
+    declared_level: int | None = None,
     self_checks: bool = True,
     reviewer: Literal["llm", "template"] = "llm",
     disabled: Sequence[str] = (),
@@ -132,6 +137,10 @@ async def run_interview(
     )
     row.seed = (cfg.defaults.seed or 0) + repeat  # the simulator's random choices per repeat
     row.it_level = "persona" if it_level is None else str(it_level)
+    # T-320: the interviewer asks at the level the client chose; by default the true one (a persona
+    # has none: the default of the run, 1); --declared-level — a client who chose wrong
+    client_level = declared_level if declared_level is not None else it_level
+    row.declared_level = "1" if client_level is None else str(client_level)
     sim = Stakeholder(
         scenario, character, seed=row.seed, profile=profile, model=sim_model, it_level=it_level
     )
@@ -167,6 +176,7 @@ async def run_interview(
                 max_iter=max_iter,
                 self_checks=self_checks,
                 reviewer=reviewer,
+                client_level=client_level,
                 offline=True,
                 models=models,
             )
@@ -228,6 +238,9 @@ def _fill(
         row.off_topic += sum(  # a repeat is not a hint: it was told before
             1 for t in turn.told if area is not None and t["area"] != area and t["mode"] != "repeat"
         )
+    checks = [e for e in events if e["type"] == "question_check"]
+    row.retried = sum(bool(e["retried"]) for e in checks)
+    row.several = sum(bool(e["several"]) for e in checks)
     ends = [e["reason"] for e in events if e["type"] == "interview_end"]
     row.end = ends[-1] if ends else ""
     row.turns = len(turns)

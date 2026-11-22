@@ -367,6 +367,15 @@ def matrix_cmd(
             "3 — как до T-316"
         ),
     ] = "3",
+    declared_level: Annotated[
+        int | None,
+        typer.Option(
+            min=0,
+            max=3,
+            help="уровень, который заказчик выбрал перед интервью (T-320), если он не совпадает "
+            "с настоящим (--it-level): проверка ошибочного выбора; по умолчанию — настоящий",
+        ),
+    ] = None,
     profile: Annotated[str, typer.Option(help="профиль моделей roles.yaml")] = "free",
     max_turns: Annotated[int, typer.Option(min=1, help="вопросов не больше")] = 30,
     out: Annotated[Path, typer.Option(help="папка отчётов")] = REPORTS,
@@ -425,7 +434,11 @@ def matrix_cmd(
     progress = (resume.parent if resume is not None else out) / f"{stem}.progress.jsonl"
     runs = REPORTS.parent / "runs" / "matrix" / stem  # B1 reads the M1 runs of the same launch
     task = harness.run_task(
-        profile=profile, max_turns=max_turns, runs=runs, dialogs=out / "dialogs" / stem
+        profile=profile,
+        max_turns=max_turns,
+        runs=runs,
+        dialogs=out / "dialogs" / stem,
+        declared_level=declared_level,
     )
     results, pairs = asyncio.run(
         harness.evaluate(cases, task, profile=profile, max_usd=max_usd, progress=progress)

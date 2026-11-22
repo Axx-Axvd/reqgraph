@@ -133,6 +133,9 @@ class Result:
     orphan_rate: float = 0.0
     errors: int = 0
     it_level: str = "3"  # T-316: the client's IT level, 0-3 or «persona»
+    declared_level: str = ""  # T-320: the level the interviewer was told; empty before it
+    retried: int = 0  # T-320: questions asked again after the question check
+    several: int = 0  # T-320: questions sent with more than one «?»
     not_understood: int = 0  # answers «I do not understand» (T-316)
     llm_calls: int = 0  # the run and the judge
     input_tokens: int = 0
@@ -222,8 +225,10 @@ def run_task(
     models: Mapping[str, Model] | None = None,
     sim_model: Model | None = None,
     root: Path = SCENARIOS,
+    declared_level: int | None = None,
 ) -> Task:
-    """The task of a case: the interview with the simulator, the project kept for the metrics."""
+    """The task of a case: the interview with the simulator, the project kept for the metrics.
+    declared_level — the level every interviewer is told instead of the true one (T-320)."""
 
     async def task(inputs: RunInputs) -> RunOutput:
         options = METHODS[inputs.method]
@@ -260,6 +265,7 @@ def run_task(
             dialogs=None if dialogs is None else dialogs / inputs.method,  # a case per method
             keep=runs / inputs.method,
             it_level=inputs.it_level,
+            declared_level=declared_level,
         )
         return RunOutput(row, runs / inputs.method / case)
 
@@ -411,6 +417,9 @@ def _result(
         turns=row.turns,
         end=row.end,
         it_level=row.it_level,
+        declared_level=row.declared_level,
+        retried=row.retried,
+        several=row.several,
         not_understood=row.not_understood,
         llm_calls=row.llm_calls + len(judge),
         input_tokens=row.input_tokens + sum(s.input_tokens for s in judge),
