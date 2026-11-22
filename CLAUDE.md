@@ -31,7 +31,7 @@
 - uv run reqgraph init <папка> --name <название> --brief <бриф.md> [--id] [--profile]   # новый проект: reqgraph.yaml и brief.md
 - uv run reqgraph run <папка> [--brief] [--budget-usd] [--max-iter] [--reviewer llm|template] [--offline] [--no-write] [--json]   # бриф → агенты → проверки → ремонт (нужна сеть); код 0 / 1 ошибки остались / 2 не запустился
 - uv run pytest packages/core/tests/agents/test_run_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету сквозного прогона dev-01
-- uv run reqgraph interview <папка> [--brief] [--restart] [--max-turns] [--interviewer coverage|free] [--offline]   # интервью в терминале: /готово, /пауза; продолжение после перезапуска
+- uv run reqgraph interview <папка> [--brief] [--restart] [--max-turns] [--interviewer coverage|free] [--level 0-3] [--offline]   # интервью в терминале: /проще, /готово, /пауза; продолжение после перезапуска; --level — как заказчик разбирается в ИТ (T-320)
 - uv run pytest packages/core/tests/agents/test_interview_live.py --record-mode=rewrite --force-enable-socket   # перезаписать кассету живого интервью
 - uv run pytest packages/core/tests/dsl/test_kroki.py packages/core/tests/dsl/test_cli_render.py --record-mode=rewrite --force-enable-socket   # перезаписать кассеты Kroki (нужна сеть)
 - pnpm install && pnpm -C apps/web dev | lint | build
@@ -50,7 +50,7 @@
 - uv run reqgraph-evals human card|start|answer|finish|page   # пилот «человек вместо симулятора» (T-306): один ход за вызов, страница evals/human/page.html (evals/README.md)
 - uv run reqgraph-evals groups [сценарии] [--check]   # разметка «типовое / уникальное» (T-308): t / u / ? / q, ответ сразу в hidden.yaml
 - uv run reqgraph-evals pure sample|show|report|check   # свой подсчёт типовых требований на документах PURE (T-308; нужны pdftotext и soffice, документы — вне репозитория)
-- uv run reqgraph-evals matrix --methods M2,M1,B1,B2,B3 [--scenarios dev-01,...] [--characters] [--repeat] [--max-turns] [--it-level 0,1,3] [--max-usd 1] [--resume <progress.jsonl>]   # матрица 09_eval: интервью с симулятором и метрики, results-*.csv со сводкой и графиками; --max-usd — лимит $ на весь запуск; A1-A3 — абляции M2 (нужна сеть, гоняется в облачной сессии; test-сценарии — только в S6)
+- uv run reqgraph-evals matrix --methods M2,M1,B1,B2,B3 [--scenarios dev-01,...] [--characters] [--repeat] [--max-turns] [--it-level 0,1,3] [--declared-level N] [--max-usd 1] [--resume <progress.jsonl>]   # матрица 09_eval: интервью с симулятором и метрики, results-*.csv со сводкой и графиками; --max-usd — лимит $ на весь запуск; A1-A3 — абляции M2 (нужна сеть, гоняется в облачной сессии; test-сценарии — только в S6)
 - uv run reqgraph-evals analyst --repeat 5 [--save-runs] [--no-brief]   # Analyst на 3 dev-брифах: валидность патча, нарушения ISO-001/003, требования по видам, найденные факты брифа (судья) и разброс ФТ по правилу T-311 (нужна сеть)
 - uv run reqgraph-evals modeler --repeat 3  # Analyst → Modeler на 3 dev-брифах: SCH-002 за ≤ 3 ответа, доля без SND-001 (нужна сеть)
 - uv run reqgraph-evals uml --repeat 3      # Modeler: сценарии использования и C4 на 3 dev-брифах, SCH-004/005 через Kroki, сироты, роли без UC (нужна сеть)

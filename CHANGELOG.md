@@ -6,6 +6,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Plain-language interview (T-320): the client chooses before the interview how to be asked (IT level 0-3,
+  `reqgraph interview --level`, API `client_level`, four options on the project page); the interviewer's
+  question is checked by code before it is shown (jargon of the T-316 dictionary above the level without an
+  explanation next to it, several questions in one) and asked again once with the problems; «Слишком сложно —
+  проще» (`/проще`, API `simpler: true`, a chat button) lowers the level and asks the same question plainer
+  without spending a turn. `reqgraph-evals matrix --declared-level` — a client who chose the wrong level.
+
+### Changed
+
+- The interviewer prompt no longer asks about a whole area in analyst words (rule 2, T-320); the jargon
+  dictionary moved from `sim/` to `checks/` (`reqgraph.sim.jargon` re-exports it).
+
 ### Fixed
 
 - Table rights of the API roles are granted explicitly (`20261122000002_api_grants.sql`): new Supabase projects
