@@ -50,10 +50,10 @@ async def test_live_interview_asks_by_coverage_and_counts_the_answers(tmp_path: 
         for line in (root / "reports" / "interview-events.jsonl").read_text("utf-8").splitlines()
     ]
     calls = [e for e in events if e["type"] == "llm_call"]
-    assert [c["role"] for c in calls if c["role"] in ("interviewer", "analyst")][:2] == [
-        "analyst",  # the brief first
-        "interviewer",
-    ]
+    roles = [c["role"] for c in calls if c["role"] in ("interviewer", "analyst")]
+    # the brief first (the Analyst may ask itself again after its own checks), then a question
+    first = roles.index("interviewer")
+    assert first > 0 and set(roles[:first]) == {"analyst"}
     ladder = {s.provider for s in load_roles().ladder("analyst", "free")}  # 429 -> the next model
     assert {c["provider"] for c in calls if c["role"] == "analyst"} <= ladder
     graph = FileStore(root).load().graph
