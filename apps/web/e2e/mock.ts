@@ -45,10 +45,17 @@ export async function installMock(page: Page): Promise<void> {
     if (/^\/projects\/[^/]+$/.test(path)) return json(route, projects[0]);
     if (path.endsWith("/events")) return json(route, []);
     if (path.endsWith("/answer")) {
-      const body = req.postDataJSON() as { text: string | null; done: boolean };
+      const body = req.postDataJSON() as { text?: string; done?: boolean; simpler?: boolean };
       if (body.text) turns.push({ id: turns.length + 1, role: "client", content: body.text });
       status = "running";
-      setTimeout(() => (body.done ? (status = "succeeded") : ask()), 300);
+      if (body.simpler) {
+        // T-320: the worker's «проще» turn, then the same question in plainer words
+        turns.push({ id: turns.length + 1, role: "client", content: "Слишком сложно — можно проще?" });
+        setTimeout(() => {
+          turns.push({ id: turns.length + 1, role: "agent", content: `Вопрос ${asked}, проще: как вы это делаете сейчас?` });
+          status = "waiting_input";
+        }, 300);
+      } else setTimeout(() => (body.done ? (status = "succeeded") : ask()), 300);
       return json(route, { id: 2, run_id: runId, kind: "resume", status: "queued", created_at: now() }, 202);
     }
     if (path.startsWith("/runs/")) return json(route, run(String(projects[0]?.id ?? "")));

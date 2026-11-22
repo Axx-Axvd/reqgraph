@@ -154,6 +154,28 @@ label {
   gap: 4px;
 }
 
+.levels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.levels legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.levels label {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.levels input {
+  margin-top: 4px;
+}
+
 input,
 textarea {
   font: inherit;

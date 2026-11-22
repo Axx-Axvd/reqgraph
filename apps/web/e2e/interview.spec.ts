@@ -43,3 +43,31 @@ test("create a project and answer 3 interview questions", async ({ page }, testI
   await expect(page.getByTestId("run-status")).toContainText("завершён", { timeout: 90_000 });
   expect(await page.evaluate(() => Object.keys(window.localStorage).join(","))).not.toContain("openrouter");
 });
+
+test("the level is chosen before the interview and «проще» asks the question again", async ({ page }) => {
+  if (mock) await installMock(page);
+  const session: Session = mock
+    ? fakeSession()
+    : JSON.parse(readFileSync(join(__dirname, ".session.json"), "utf-8"));
+  await signIn(page, supabaseUrl, session);
+
+  await page.goto("/projects");
+  await page.getByLabel("Название").fill("Уровень e2e");
+  await page.getByLabel(/Бриф/).fill("Автосервис, 2 подъёмника. Клиенты звонят мастеру.");
+  await page.getByRole("button", { name: "Создать" }).click();
+  await expect(page.getByRole("heading", { name: "Уровень e2e" })).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Простыми словами/ })).toBeChecked(); // the default
+  await page.getByRole("radio", { name: /Немного разбираюсь/ }).check();
+  const started = page.waitForRequest((r) => r.method() === "POST" && /\/projects\/[^/]+\/runs$/.test(r.url()));
+  await page.getByRole("button", { name: "Начать интервью" }).click();
+  expect((await started).postDataJSON()).toMatchObject({ kind: "interview", client_level: 1 });
+
+  const agent = page.locator('[data-role="agent"]');
+  await expect(agent.first()).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Слишком сложно — проще" }).click();
+  await expect(page.locator('[data-role="client"]').first()).toContainText("Слишком сложно");
+  await expect(agent).toHaveCount(2, { timeout: 60_000 });
+  await expect(page.getByLabel("Ваш ответ")).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: /Готово/ }).click();
+  await expect(page.getByTestId("run-status")).toContainText("завершён", { timeout: 90_000 });
+});

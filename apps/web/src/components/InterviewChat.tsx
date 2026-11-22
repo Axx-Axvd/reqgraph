@@ -91,7 +91,8 @@ export function InterviewChat({ runId, projectId }: { runId: string; projectId: 
     bottom.current?.scrollIntoView({ block: "end" });
   }, [turns.length]);
 
-  async function send(body: { text: string | null; done: boolean }) {
+  async function send(reply: { text?: string; done?: boolean; simpler?: boolean }) {
+    const body = { text: reply.text ?? null, done: reply.done ?? false, simpler: reply.simpler ?? false };
     setSending(true);
     setError("");
     const { error } = await api(key).POST("/runs/{run_id}/answer", {
@@ -108,7 +109,7 @@ export function InterviewChat({ runId, projectId }: { runId: string; projectId: 
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (answer.trim()) send({ text: answer.trim(), done: false });
+    if (answer.trim()) send({ text: answer.trim() });
   }
 
   async function cancel() {
@@ -167,7 +168,10 @@ export function InterviewChat({ runId, projectId }: { runId: string; projectId: 
           />
           <div className="row">
             <button type="submit" className="button" disabled={sending || !answer.trim()}>Ответить</button>
-            <button type="button" className="button secondary" disabled={sending} onClick={() => send({ text: null, done: true })}>
+            <button type="button" className="button secondary" disabled={sending} onClick={() => send({ simpler: true })}>
+              Слишком сложно — проще
+            </button>
+            <button type="button" className="button secondary" disabled={sending} onClick={() => send({ done: true })}>
               Готово, вопросов хватит
             </button>
           </div>

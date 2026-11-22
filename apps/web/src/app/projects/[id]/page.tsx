@@ -9,6 +9,14 @@ import { api, errorText, STATUS, type Project, type Run } from "@/lib/api";
 import { useOwnKey } from "@/lib/own-key";
 import { supabase } from "@/lib/supabase";
 
+// T-320: how the client knows IT, asked before the interview; the questions are worded for it
+const LEVELS = [
+  { value: 0, title: "Простыми словами", hint: "я не разбираюсь в технике" },
+  { value: 1, title: "Немного разбираюсь", hint: "пользуюсь программами в работе" },
+  { value: 2, title: "Хорошо разбираюсь", hint: "участвовал в ИТ-проектах" },
+  { value: 3, title: "Я специалист", hint: "можно профессиональными терминами" },
+];
+
 export default function ProjectPage() {
   return (
     <Shell>
@@ -26,6 +34,7 @@ function ProjectView() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [level, setLevel] = useState(0);
 
   useEffect(() => {
     api()
@@ -52,7 +61,7 @@ function ProjectView() {
     setError("");
     const { data, error } = await api(key).POST("/projects/{project_id}/runs", {
       params: { path: { project_id: id } },
-      body: { kind },
+      body: kind === "interview" ? { kind, client_level: level } : { kind },
     });
     setBusy(false);
     if (error || !data) {
@@ -72,6 +81,24 @@ function ProjectView() {
         <h2>Бриф</h2>
         {brief ? <pre className="brief">{brief}</pre> : <p className="muted">Брифа нет: агенты начнут с вопросов.</p>}
       </section>
+      <fieldset className="card levels">
+        <legend>Как вам удобнее, чтобы мы задавали вопросы?</legend>
+        {LEVELS.map((l) => (
+          <label key={l.value}>
+            <input
+              type="radio"
+              name="level"
+              value={l.value}
+              checked={level === l.value}
+              onChange={() => setLevel(l.value)}
+            />
+            <span>
+              {l.title} <span className="muted">— {l.hint}</span>
+            </span>
+          </label>
+        ))}
+        <p className="muted">Если вопрос всё равно покажется сложным, в чате есть кнопка «Слишком сложно — проще».</p>
+      </fieldset>
       <div className="row">
         <button type="button" className="button" disabled={busy} onClick={() => start("interview")}>
           Начать интервью
