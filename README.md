@@ -6,7 +6,7 @@
 
 reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
 
-The project is developed as a thesis. As of 21 November 2026, sprints S0–S4 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is mostly built: the API, the background worker, demo limits, sign-in, the interview in the browser, the requirements graph, BPMN diagrams, the check report and document download; the public deployment is next. Version 1.0 is due on 21 February 2027.
+The project is developed as a thesis. As of 21 November 2026, sprints S0–S4 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is mostly built: the API, the background worker, demo limits, sign-in, the interview in the browser, the requirements graph, BPMN diagrams, the check report and document download; the public demo runs at **https://reqgraph-sigma.vercel.app** (sign in with GitHub or an email link). Version 1.0 is due on 21 February 2027.
 
 ## Contents
 
@@ -163,7 +163,7 @@ uv run reqgraph export projects/smile      # SRS, GOST 34 and GOST 19 specificat
 
 Exit code 0 means no errors; 1 means errors remain and are listed in `reports/ci-report.md`; 2 means the run did not start. Prompts, check messages and the web interface are currently in Russian. The full list of commands is in [CLAUDE.md](CLAUDE.md).
 
-The web part runs locally on the Supabase stack (requires Docker): `pnpm supabase start`, then `uv run reqgraph-api serve` (API and worker) and `pnpm -C apps/web dev`. Settings are listed in [docs/tech-design/07_deploy.md](docs/tech-design/07_deploy.md) (in Russian). A public demo will appear with the deployment (T-506).
+The web part runs locally on the Supabase stack (requires Docker): `pnpm supabase start`, then `uv run reqgraph-api serve` (API and worker) and `pnpm -C apps/web dev`. Settings are listed in [docs/tech-design/07_deploy.md](docs/tech-design/07_deploy.md) (in Russian). The public demo — https://reqgraph-sigma.vercel.app — runs on Vercel, Render and Supabase free plans; setup: [docs/setup/deploy.md](docs/setup/deploy.md) (in Russian).
 
 <details>
 <summary>Development commands</summary>

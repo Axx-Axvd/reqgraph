@@ -11,6 +11,19 @@ services:
     dockerContext: .
     healthCheckPath: /health
     autoDeploy: true
+    # rebuild only when the image's inputs change: the free plan has few build minutes a month
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/core/**
+        - uv.lock
+        - pyproject.toml
+        - .python-version
+        - .dockerignore
+        - evals/pyproject.toml
+      ignoredPaths:
+        - apps/api/tests/**
+        - packages/core/tests/**
     envVars:
       # demo limits and models (authors' decisions 19.11 and 21.11)
       - key: PROJECT_PROFILE

@@ -6,6 +6,17 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Table rights of the API roles are granted explicitly (`20261122000002_api_grants.sql`): new Supabase projects
+  no longer give `authenticated` and `service_role` SELECT/INSERT/UPDATE/DELETE on tables created by migrations
+  (T-506, found on prod).
+
+### Changed
+
+- The public demo is published (T-506): https://reqgraph-sigma.vercel.app; Render rebuilds the API image only
+  when its inputs change (`buildFilter` in `render.yaml`).
+
 ### Added
 
 - Publishing the demo (T-506): the API image (`apps/api/Dockerfile`, a uv workspace build with only the API and
