@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { ProjectTabs } from "@/components/ProjectTabs";
 import { Shell } from "@/components/Shell";
+import { Loading } from "@/components/ui/skeleton";
 import { api, errorText } from "@/lib/api";
 import { SEVERITY, nodeHref, type Finding, type Report } from "@/lib/results";
 
@@ -34,7 +35,7 @@ function ReportScreen() {
       <ProjectTabs projectId={id} />
       <h1>Проверки</h1>
       {error && <p className="error">{error}</p>}
-      {!report && !error && <p className="muted">Загружаем…</p>}
+      {!report && !error && <Loading />}
       {report && (
         <>
           <p data-testid="report-summary">

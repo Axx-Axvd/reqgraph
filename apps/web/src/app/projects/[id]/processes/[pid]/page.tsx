@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 
 import { ProjectTabs } from "@/components/ProjectTabs";
 import { Shell } from "@/components/Shell";
+import { Loading } from "@/components/ui/skeleton";
 import { api, errorText } from "@/lib/api";
 
 // bpmn-js works with the DOM only: no server rendering
@@ -17,7 +18,7 @@ const BpmnView = dynamic(() => import("@/components/BpmnView").then((m) => m.Bpm
 export default function ProcessPage() {
   return (
     <Shell>
-      <Suspense fallback={<p className="muted">Загружаем…</p>}>
+      <Suspense fallback={<Loading />}>
         <ProcessScreen />
       </Suspense>
     </Shell>
@@ -47,7 +48,7 @@ function ProcessScreen() {
         <Link href={`/projects/${id}/graph?node=${pid}`}>← Узел на графе</Link>
       </p>
       {error && <p className="error">{error}</p>}
-      {!xml && !error && <p className="muted">Загружаем…</p>}
+      {!xml && !error && <Loading />}
       {xml && <BpmnView xml={xml} focus={focus} />}
     </>
   );

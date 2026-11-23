@@ -6,6 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- The site look «Сигнал» (T-508, ADR-018): design tokens with a dark («сумерки») and a light theme and a
+  switch that remembers the choice; Tailwind CSS 4 and shadcn-style components (button, field, card, label,
+  dialog on Radix, skeletons) in `apps/web/src/components/ui`; a new header with the logo, the demo limit, the
+  own key in a dialog, the theme and sign-out; project tabs «Интервью · Схемы · Проверки · Документы»; visible
+  focus and 44 px touch targets on phones. Fonts Unbounded, Onest and PT Serif are bundled (`@fontsource`).
+
 ### Fixed
 
 - Table rights of the API roles are granted explicitly (`20261122000002_api_grants.sql`): new Supabase projects

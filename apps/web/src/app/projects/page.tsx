@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Shell } from "@/components/Shell";
+import { Loading } from "@/components/ui/skeleton";
 import { api, errorText, type Project } from "@/lib/api";
 
 export default function Projects() {
@@ -57,7 +58,7 @@ function ProjectList() {
       </form>
       {error && <p className="error" role="alert">{error}</p>}
       {projects === null ? (
-        <p className="muted">Загружаем…</p>
+        <Loading />
       ) : projects.length === 0 ? (
         <p className="muted">Проектов пока нет.</p>
       ) : (
