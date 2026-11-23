@@ -1,4 +1,5 @@
 "use client";
+import { MessageSquareText } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -6,9 +7,20 @@ import { useEffect, useState } from "react";
 import { ProjectTabs } from "@/components/ProjectTabs";
 import { Shell } from "@/components/Shell";
 import { Loading } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { api, errorText, STATUS, type Project, type Run } from "@/lib/api";
 import { useOwnKey } from "@/lib/own-key";
 import { supabase } from "@/lib/supabase";
+
+const TONE: Record<Run["status"], "coral" | "mint" | "amber" | "neutral"> = {
+  queued: "coral",
+  running: "coral",
+  waiting_input: "coral",
+  succeeded: "mint",
+  failed: "amber",
+  cancelled: "neutral",
+};
 
 export default function ProjectPage() {
   return (
@@ -66,36 +78,39 @@ function ProjectView() {
   if (project === null) return error ? <p className="error">{error}</p> : <Loading />;
   return (
     <>
-      <p><Link href="/projects">← Проекты</Link></p>
       <ProjectTabs projectId={id} />
-      <h1>{project.name}</h1>
+      <h1 className="[overflow-wrap:anywhere]">{project.name}</h1>
       <section className="card">
-        <h2>Бриф</h2>
-        {brief ? <pre className="brief">{brief}</pre> : <p className="muted">Брифа нет: агенты начнут с вопросов.</p>}
+        <h2>Чем вы занимаетесь</h2>
+        {brief ? <p className="brief">{brief}</p> : <p className="muted m-0">Брифа нет: аналитик начнёт с вопросов.</p>}
       </section>
       <div className="row">
-        <button type="button" className="button" disabled={busy} onClick={() => start("interview")}>
+        <Button size="lg" disabled={busy} onClick={() => start("interview")}>
+          <MessageSquareText aria-hidden="true" />
           Начать интервью
-        </button>
-        <button type="button" className="button secondary" disabled={busy || !brief} onClick={() => start("brief")}>
+        </Button>
+        <Button variant="secondary" size="lg" disabled={busy || !brief} onClick={() => start("brief")}>
           Прогон по брифу
-        </button>
+        </Button>
       </div>
+      <p className="hint">Интервью — аналитик задаёт вопросы по одному. Прогон по брифу — сразу собрать черновик ТЗ по тексту выше.</p>
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
       {runs.length > 0 && (
-        <section>
+        <section className="mt-8">
           <h2>Прогоны</h2>
           <ul className="list">
             {runs.map((r) => (
-              <li key={r.id}>
+              <li key={r.id} className="flex flex-wrap items-center gap-3">
                 <Link href={`/projects/${id}/interview?run=${r.id}`}>
                   {r.kind === "interview" ? "Интервью" : "По брифу"} · {new Date(r.created_at).toLocaleString("ru-RU")}
                 </Link>
-                <span className="muted"> · {STATUS[r.status]}</span>
+                <Badge tone={TONE[r.status]} className="ml-auto">
+                  {STATUS[r.status]}
+                </Badge>
               </li>
             ))}
           </ul>

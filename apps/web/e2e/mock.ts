@@ -2,11 +2,13 @@
 // numbered questions until «done» — the same shape the stub models give in the stack mode.
 import type { Page, Route } from "@playwright/test";
 
-type Turn = { id: number; role: "agent" | "client"; content: string };
+type Turn = { id: number; role: "agent" | "client"; content: string; coverage?: unknown };
+type Event = { id: number; type: string; payload: Record<string, unknown>; ts: string };
 
 export async function installMock(page: Page): Promise<void> {
   const projects: Record<string, unknown>[] = [];
   const turns: Turn[] = [];
+  const events: Event[] = [];
   let status = "queued";
   let asked = 0;
   const runId = "00000000-0000-4000-8000-0000000000r1".replace("r", "a");
@@ -15,7 +17,9 @@ export async function installMock(page: Page): Promise<void> {
     route.fulfill({ status: code, contentType: "application/json", body: JSON.stringify(body), headers: { "access-control-allow-origin": "*" } });
   const ask = () => {
     asked += 1;
-    turns.push({ id: turns.length + 1, role: "agent", content: `Вопрос ${asked}: как это устроено у вас сейчас?` });
+    const need = { goals: 2, scenarios: 3, rules: 2 };
+    const got = { goals: Math.min(asked - 1, 2), scenarios: Math.max(0, asked - 2), rules: 0 };
+    turns.push({ id: turns.length + 1, role: "agent", content: `Вопрос ${asked}: как это устроено у вас сейчас?`, coverage: { got, need } });
     status = "waiting_input";
   };
   const run = (projectId: string) => ({
@@ -43,10 +47,20 @@ export async function installMock(page: Page): Promise<void> {
       return json(route, { run: run(projectRuns[1]), job: { id: 1, run_id: runId, kind: "start", status: "queued", created_at: now() } }, 201);
     }
     if (/^\/projects\/[^/]+$/.test(path)) return json(route, projects[0]);
-    if (path.endsWith("/events")) return json(route, []);
+    if (path.endsWith("/events")) {
+      const after = Number(new URL(req.url()).searchParams.get("after") ?? 0);
+      return json(route, events.filter((e) => e.id > after));
+    }
     if (path.endsWith("/answer")) {
       const body = req.postDataJSON() as { text: string | null; done: boolean };
-      if (body.text) turns.push({ id: turns.length + 1, role: "client", content: body.text });
+      if (body.text) {
+        turns.push({ id: turns.length + 1, role: "client", content: body.text });
+        const n = turns.filter((t) => t.role === "client").length;
+        events.push({
+          id: events.length + 1, type: "drafts", ts: now(),
+          payload: { turn: `TURN-${String(2 * n).padStart(4, "0")}`, answer: body.text, items: [{ id: `FR-00${n}`, kind: "FR", title: `Требование ${n}`, statement: `Система делает шаг ${n} так, как вы описали.` }] },
+        });
+      }
       status = "running";
       setTimeout(() => (body.done ? (status = "succeeded") : ask()), 300);
       return json(route, { id: 2, run_id: runId, kind: "resume", status: "queued", created_at: now() }, 202);

@@ -56,9 +56,9 @@ test.describe("stack", () => {
     const session: Session = JSON.parse(readFileSync(join(__dirname, ".session.json"), "utf-8"));
     await signIn(page, supabaseUrl, session);
     await page.goto("/projects");
-    await page.getByLabel("Название").fill("Результаты e2e");
-    await page.getByLabel(/Бриф/).fill("Автосервис, 4 поста. Клиенты записываются по телефону.");
-    await page.getByRole("button", { name: "Создать" }).click();
+    await page.getByRole("button", { name: "Новый проект" }).first().click();
+    await page.getByLabel("Чем вы занимаетесь?").fill("Результаты e2e, автосервис, 4 поста. Клиенты записываются по телефону.");
+    await page.getByRole("button", { name: "Создать проект" }).click();
     await expect(page.getByRole("heading", { name: "Результаты e2e" })).toBeVisible();
     const projectUrl = page.url();
     await page.getByRole("button", { name: "Прогон по брифу" }).click();
