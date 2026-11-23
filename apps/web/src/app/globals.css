@@ -727,3 +727,53 @@
     min-height: 32px;
   }
 }
+
+/* The landing demo (T-509): one 10-second loop; the base styles are the final picture, so with
+   «reduce motion» (animation off) the scene is complete. */
+@layer components {
+  .demo-q { animation: demo-q 10s var(--ease-out-soft) infinite; }
+  .demo-a { animation: demo-a 10s var(--ease-out-soft) infinite; }
+  .demo-card { animation: demo-card 10s var(--ease-out-soft) infinite; }
+  .demo-node { transform-box: fill-box; transform-origin: center; animation: demo-node 10s var(--ease-spring) infinite; }
+  .demo-label { animation: demo-label 10s ease infinite; }
+  .demo-edge { stroke-dasharray: 1; animation: demo-edge 10s var(--ease-out-soft) infinite; }
+  .demo-hl {
+    background-image: linear-gradient(var(--coral-line), var(--coral-line));
+    background-repeat: no-repeat;
+    background-position: 0 88%;
+    background-size: 100% 38%;
+    animation: demo-hl 10s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+  .demo-tile {
+    border-color: var(--mint);
+    background: var(--mint-fill);
+    color: var(--mint-text);
+    animation: demo-tile 10s ease infinite;
+  }
+  .marquee {
+    animation: marquee 40s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .demo *,
+    .marquee {
+      animation: none !important;
+    }
+  }
+}
+@keyframes demo-q { 0%, 3% { opacity: 0; transform: translateY(10px); } 8%, 92% { opacity: 1; transform: none; } 97%, 100% { opacity: 0; } }
+@keyframes demo-a { 0%, 14% { opacity: 0; transform: translateY(10px); } 20%, 92% { opacity: 1; transform: none; } 97%, 100% { opacity: 0; } }
+@keyframes demo-hl { 0%, 28% { background-size: 0% 38%; } 36%, 100% { background-size: 100% 38%; } }
+@keyframes demo-card { 0%, 38% { opacity: 0; transform: translateY(8px); clip-path: inset(0 0 100% 0 round 16px); } 46%, 92% { opacity: 1; transform: none; clip-path: inset(0 0 0 0 round 16px); } 97%, 100% { opacity: 0; } }
+@keyframes demo-edge { 0%, 46% { stroke-dashoffset: 1; } 56%, 92% { stroke-dashoffset: 0; } 97%, 100% { stroke-dashoffset: 1; } }
+@keyframes demo-node { 0%, 54% { transform: scale(0); } 62%, 92% { transform: scale(1); } 97%, 100% { transform: scale(0); } }
+@keyframes demo-label { 0%, 58% { opacity: 0; } 64%, 92% { opacity: 1; } 97%, 100% { opacity: 0; } }
+@keyframes demo-tile { 0%, 62% { border-color: var(--line); background: var(--raised); color: var(--muted); } 68%, 92% { border-color: var(--mint); background: var(--mint-fill); color: var(--mint-text); } 97%, 100% { border-color: var(--line); background: var(--raised); color: var(--muted); } }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* The sign-in graph assembles once (T-509): edges draw, the requirement nodes pop. */
+@layer components {
+  .login-graph path[pathLength] { stroke-dasharray: 1; animation: login-draw 0.8s var(--ease-out-soft) both; }
+  .login-graph circle[stroke] { transform-box: fill-box; transform-origin: center; animation: login-pop 0.5s var(--ease-spring) both; }
+}
+@keyframes login-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes login-pop { from { transform: scale(0); } to { transform: scale(1); } }

@@ -13,6 +13,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   dialog on Radix, skeletons) in `apps/web/src/components/ui`; a new header with the logo, the demo limit, the
   own key in a dialog, the theme and sign-out; project tabs «Интервью · Схемы · Проверки · Документы»; visible
   focus and 44 px touch targets on phones. Fonts Unbounded, Onest and PT Serif are bundled (`@fontsource`).
+- The landing and sign-in pages in the «Сигнал» look (T-509): the start form carries «what do you do» across the
+  sign-in into the new project; a CSS demo of an answer becoming a draft requirement; «what the client said →
+  the ТЗ item» and an example ТЗ page, both from the reference project `examples/garage61`.
 
 ### Fixed
 
