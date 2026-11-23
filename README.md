@@ -6,7 +6,7 @@
 
 reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
 
-The project is developed as a thesis. As of 21 November 2026, sprints S0–S4 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is mostly built: the API, the background worker, demo limits, sign-in, the interview in the browser, the requirements graph, BPMN diagrams, the check report and document download; the public demo runs at **https://reqgraph-sigma.vercel.app** (sign in with GitHub or an email link). Version 1.0 is due on 21 February 2027.
+The project is developed as a thesis. As of 22 November 2026, sprints S0–S5 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is built and published: the API, the background worker, demo limits, sign-in, the interview in the browser, the requirements graph, BPMN diagrams, the check report and document download; the public demo runs at **https://reqgraph-sigma.vercel.app** (sign in with GitHub or an email link). Version 1.0 is due on 21 February 2027.
 
 ## Contents
 
@@ -117,11 +117,11 @@ The full method is described in [docs/tech-design/09_eval.md](docs/tech-design/0
 | S2 | 16.11–29.11 | agents and the repair loop, version 0.1 | complete |
 | S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | complete |
 | S4 | 14.12–27.12 | SRS, GOST specifications, ReqIF, baseline methods, first run, version 0.5 | complete |
-| S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download, deployment | in progress |
+| S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download, deployment | complete (the offline defence stand moved to S7) |
 | S6 | 25.01–07.02 | full comparison, ablations, expert verification on one example, statistics | planned |
 | S7 | 08.02–21.02 | version 1.0, technical report, video, thesis chapters | planned |
 
-The project is ahead of schedule: by the plan, S5 starts on 11 January. Implemented so far:
+The project is ahead of schedule: by the plan, S5 starts on 11 January and S6 on 25 January. Implemented so far:
 
 - the core: the graph and its storage in project files, the process format with a compiler to BPMN 2.0, data models in DBML, use case diagrams in PlantUML and C4 in Structurizr, diagram rendering through Kroki, 23 checks and the `reqgraph check` command;
 - the agents: the run graph on LangGraph, the Analyst, Modeler, Standards and Reviewer agents, a repair loop that detects repeated errors, the `reqgraph init` and `reqgraph run` commands ([demo](docs/demo/m2.md));
