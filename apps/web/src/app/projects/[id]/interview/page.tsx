@@ -6,11 +6,12 @@ import { Suspense } from "react";
 import { Disclaimer } from "@/components/Disclaimer";
 import { InterviewChat } from "@/components/InterviewChat";
 import { Shell } from "@/components/Shell";
+import { Loading } from "@/components/ui/skeleton";
 
 export default function InterviewPage() {
   return (
     <Shell>
-      <Suspense fallback={<p className="muted">Загружаем…</p>}>
+      <Suspense fallback={<Loading />}>
         <Interview />
       </Suspense>
     </Shell>

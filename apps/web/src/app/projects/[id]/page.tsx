@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { ProjectTabs } from "@/components/ProjectTabs";
 import { Shell } from "@/components/Shell";
+import { Loading } from "@/components/ui/skeleton";
 import { api, errorText, STATUS, type Project, type Run } from "@/lib/api";
 import { useOwnKey } from "@/lib/own-key";
 import { supabase } from "@/lib/supabase";
@@ -62,7 +63,7 @@ function ProjectView() {
     router.push(`/projects/${id}/interview?run=${data.run.id}`);
   }
 
-  if (project === null) return error ? <p className="error">{error}</p> : <p className="muted">Загружаем…</p>;
+  if (project === null) return error ? <p className="error">{error}</p> : <Loading />;
   return (
     <>
       <p><Link href="/projects">← Проекты</Link></p>

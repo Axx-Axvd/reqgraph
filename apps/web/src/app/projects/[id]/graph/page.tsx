@@ -5,13 +5,14 @@ import { Suspense, useEffect, useState } from "react";
 import { GraphView } from "@/components/GraphView";
 import { ProjectTabs } from "@/components/ProjectTabs";
 import { Shell } from "@/components/Shell";
+import { Loading } from "@/components/ui/skeleton";
 import { api, errorText } from "@/lib/api";
 import type { Graph } from "@/lib/results";
 
 export default function GraphPage() {
   return (
     <Shell>
-      <Suspense fallback={<p className="muted">Загружаем…</p>}>
+      <Suspense fallback={<Loading />}>
         <GraphScreen />
       </Suspense>
     </Shell>
@@ -37,7 +38,7 @@ function GraphScreen() {
       <ProjectTabs projectId={id} />
       <h1>Граф требований</h1>
       {error && <p className="error">{error}</p>}
-      {!graph && !error && <p className="muted">Загружаем…</p>}
+      {!graph && !error && <Loading />}
       {graph && Object.keys(graph.graph.nodes).length === 0 && (
         <p className="muted">Граф пока пуст: начните интервью или прогон по брифу.</p>
       )}
