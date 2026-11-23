@@ -96,6 +96,16 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-307": ("research", "evals"),
     "T-308": ("research", "evals"),
     "T-309": ("feature", "evals"),
+    "T-310": ("research", "evals"),
+    "T-311": ("research", "agents"),
+    "T-312": ("research", "evals"),
+    "T-313": ("research", "agents"),
+    "T-314": ("feature", "exporters"),
+    "T-315": ("feature", "checks"),
+    "T-316": ("feature", "evals"),
+    "T-317": ("research", "agents"),
+    "T-318": ("feature", "agents"),
+    "T-319": ("feature", "agents"),
     "T-401": ("feature", "exporters"),
     "T-402": ("feature", "exporters"),
     "T-403": ("feature", "exporters"),
@@ -103,6 +113,7 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-405": ("feature", "evals"),
     "T-406": ("infra", "evals"),
     "T-407": ("feature", "exporters"),
+    "T-408": ("feature", "exporters"),
     "T-501": ("feature", "api"),
     "T-502": ("feature", "api"),
     "T-503": ("feature", "api"),
@@ -161,9 +172,13 @@ TASK_DOCS: dict[str, list[str]] = {
     "T-107": ["examples/garage61/REVIEW.md"],
     "T-201": ["docs/adr/002-langgraph.md", "docs/adr/013-llm-layer-pydantic-ai.md"],
     "T-304": ["docs/research/2026-10-versions.md"],
+    "T-310": ["docs/tech-design/06_models.md", "docs/adr/017-one-model-family-rule.md"],
+    "T-315": ["docs/tech-design/05_ci.md", "docs/adr/006-deterministic-checks.md"],
+    "T-316": ["docs/adr/017-one-model-family-rule.md"],
     "T-401": ["docs/adr/016-export-pandoc.md"],
     "T-402": ["docs/adr/016-export-pandoc.md"],
     "T-405": ["docs/research/2026-10-versions.md"],
+    "T-408": ["docs/adr/012-no-standard-texts.md"],
     "T-502": ["docs/adr/009-pg-queue.md", "docs/adr/002-langgraph.md"],
     "T-505": ["docs/adr/010-diagrams.md"],
     "T-506": ["docs/adr/008-deploy.md", "docs/setup/accounts.md"],
@@ -251,6 +266,8 @@ def parse_backlog(text: str) -> tuple[list[Task], dict[str, str]]:
     flush()
 
     for t in tasks:
+        if t.tid not in CLASSIFY:
+            continue  # main() reports every unclassified task at once
         kind, area = CLASSIFY[t.tid]
         t.labels = [f"epic:{t.epic}", f"type:{kind}"]
         if area:
