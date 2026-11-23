@@ -1,11 +1,11 @@
 "use client";
 // Схемы (T-511): by default «Как это будет работать» — the processes in plain words; the requirements
 // graph is «Схема для разработчиков» (?view=dev), and a link to a node (?node=) opens it there.
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import { GraphView } from "@/components/GraphView";
 import { ProjectTabs } from "@/components/ProjectTabs";
 import { Shell } from "@/components/Shell";
 import { OtherSchemes } from "@/components/results/OtherSchemes";
@@ -14,6 +14,12 @@ import { Loading } from "@/components/ui/skeleton";
 import { api, errorText } from "@/lib/api";
 import type { Graph } from "@/lib/results";
 import { cn } from "@/lib/utils";
+
+// React Flow and dagre are only for «Схема для разработчиков»: loaded when it opens
+const GraphView = dynamic(() => import("@/components/GraphView").then((m) => m.GraphView), {
+  ssr: false,
+  loading: () => <Loading label="Загружаем схему…" />,
+});
 
 export default function GraphPage() {
   return (

@@ -37,7 +37,7 @@
 - pnpm install && pnpm -C apps/web dev | lint | build
 - docker build -f apps/api/Dockerfile -t reqgraph-api .   # образ API для Render и офлайн-стенда (T-506; нужен Docker, в CI — задача docker)
 - SMOKE_WEB_URL=<сайт> SMOKE_API_URL=<api> pnpm -C apps/web e2e:smoke   # smoke опубликованного демо (T-506; в GitHub — Actions → smoke); настройка prod — docs/setup/deploy.md
-- PW_CHROMIUM_PATH=/opt/pw-browsers/chromium pnpm -C apps/web e2e:mock   # e2e сайта с подменой API и Supabase (без сервисов); полный e2e — `pnpm -C apps/web e2e` на `supabase start`, гоняется в CI (T-504, T-505)
+- PW_CHROMIUM_PATH=/opt/pw-browsers/chromium pnpm -C apps/web e2e:mock   # e2e сайта с подменой API и Supabase (без сервисов): экраны, ширины 1440…320, «сломать», ошибки, axe в обеих темах (T-512); полный e2e — `pnpm -C apps/web e2e` на `supabase start`; оба гоняются в CI (T-504, T-505)
 - pnpm supabase start | pnpm db:start  # весь локальный стек Supabase | только Postgres (нужен Docker)
 - pnpm db:reset && pnpm db:test     # миграции + seed, тесты RLS (pgTAP)
 - uv run reqgraph-api serve         # API (T-501) и исполнитель задач (T-502, WORKER_ENABLED): DATABASE_URL, SUPABASE_JWKS_URL, CORS_ORIGINS из окружения; лимиты демо (T-503): DEMO_RUNS_PER_DAY, DEMO_DAILY_USD_CAP, PROJECT_PROFILE; выгрузка в Storage (T-505): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, EXPORT_OFFLINE; /docs — описание адресов

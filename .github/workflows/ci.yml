@@ -59,6 +59,18 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: pnpm -C apps/web gen:api && git diff --exit-code -- apps/web/src/lib/api-types.ts
       - run: pnpm -C apps/web build
+      - name: e2e on the mocked API — widths 1440…320, «break it», errors, axe in both themes (T-512)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pnpm -C apps/web exec playwright install --with-deps chromium
+          pnpm -C apps/web e2e:mock
+      - name: e2e reports on failure
+        if: failure() && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-mock-reports
+          path: apps/web/playwright-report
+          retention-days: 7
 
   db:
     name: db (supabase)

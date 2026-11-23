@@ -9,6 +9,7 @@ import { ArrowRight, Check, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
+import { Problem } from "@/components/Problem";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AREAS, api, errorText, STATUS, type Run, type RunEvent } from "@/lib/api";
@@ -60,6 +61,7 @@ export function InterviewChat({ runId, projectId }: { runId: string; projectId: 
   const [events, setEvents] = useState<RunEvent[]>([]);
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
+  const [lost, setLost] = useState<{ text: string | null; done: boolean } | null>(null);
   const [sending, setSending] = useState(false);
   const lastEvent = useRef(0);
 
@@ -99,12 +101,19 @@ export function InterviewChat({ runId, projectId }: { runId: string; projectId: 
     if (sending) return;
     setSending(true);
     setError("");
-    const { error } = await api(key).POST("/runs/{run_id}/answer", { params: { path: { run_id: runId } }, body });
-    setSending(false);
-    if (error) setError(errorText(error));
-    else {
-      setAnswer("");
-      refresh();
+    setLost(null);
+    try {
+      const { error, response } = await api(key).POST("/runs/{run_id}/answer", { params: { path: { run_id: runId } }, body });
+      if (response.status >= 500) setLost(body);
+      else if (error) setError(errorText(error));
+      else {
+        setAnswer("");
+        refresh();
+      }
+    } catch {
+      setLost(body); // no connection: the answer stays in the box
+    } finally {
+      setSending(false);
     }
   }
 
@@ -228,11 +237,22 @@ export function InterviewChat({ runId, projectId }: { runId: string; projectId: 
         )}
 
         {(interviewOver || finished) && run && <Build run={run} reached={reached} projectId={projectId} />}
-        {error && (
-          <p className="error mx-5 mb-4" role="alert">
-            {error}
-          </p>
+        {lost && (
+          <Problem
+            kind="offline"
+            title="Аналитик не получил ответ"
+            className="mx-5 mb-4"
+            actions={
+              <Button variant="secondary" size="sm" disabled={sending} onClick={() => send(lost)}>
+                Повторить
+              </Button>
+            }
+          >
+            {lost.text ? "Ваш ответ сохранён в поле — ничего не потерялось." : "Ничего не потерялось."} Проверьте
+            интернет и отправьте ещё раз.
+          </Problem>
         )}
+        {error && <Problem title={error} className="mx-5 mb-4" />}
       </section>
 
       <aside className="flex flex-col gap-4 self-start" aria-label="Что уже понятно">

@@ -15,6 +15,7 @@ import {
   type ProcessDsl,
   type Step,
 } from "@/lib/results";
+import { cn } from "@/lib/utils";
 
 const WAITS = new Set(["timer", "message"]);
 const TASKS = new Set(["task", "user_task", "service_task"]);
@@ -119,7 +120,7 @@ function StepItem({ step, dsl, graph }: { step: Step; dsl: ProcessDsl; graph: Gr
       <p className="m-0 flex flex-wrap items-center gap-2">
         {step.via && <span className="text-sm text-amber-text">если «{step.via}»:</span>}
         {element.lane && (
-          <Badge tone={element.type === "user_task" ? "coral" : "neutral"} className={element.type === "user_task" ? undefined : "ring-1 ring-line-2 ring-inset"}>
+          <Badge tone={element.type === "user_task" ? "coral" : "neutral"} className={cn("ring-1 ring-inset", element.type === "user_task" ? "bg-transparent ring-coral-line" : "ring-line-2")}>
             {element.lane}
           </Badge>
         )}

@@ -58,7 +58,7 @@ export function TzSheet({
           <ol className="m-0 list-none p-0">
             {sections.map((s, i) => (
               <li key={s.kind}>
-                <a href={`#tz-${s.kind}`} className="text-[#a8401c]">
+                <a href={`#tz-${s.kind}`} className="inline-block py-1 text-[#a8401c]">
                   {i + 1}. {s.title}
                 </a>
               </li>

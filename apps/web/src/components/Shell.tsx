@@ -18,7 +18,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [usage, setUsage] = useState<Usage | null>(null);
-  const { key, setKey } = useOwnKey();
+  const { key, setKey, asking, ask } = useOwnKey();
 
   useEffect(() => {
     let alive = true;
@@ -69,7 +69,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 : `осталось прогонов сегодня: ${Math.max(0, left ?? 0)} из ${usage.runs_limit}`}
           </span>
           <span className="flex-1 sm:hidden" aria-hidden="true" />
-          <Dialog>
+          <Dialog open={asking} onOpenChange={ask}>
             <DialogTrigger asChild>
               <Button variant="quiet" size="sm" aria-label="Свой ключ OpenRouter">
                 <KeyRound aria-hidden="true" />

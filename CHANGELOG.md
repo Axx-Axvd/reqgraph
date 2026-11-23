@@ -26,6 +26,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   a mini map; zoom and «fit» on BPMN; UML, C4 and ER pictures of the last export. Check remarks one card at a
   time with a «разобрано N из M» ring and the check groups. The ТЗ sheet with contents where an item shows
   where it came from; files by document (ТЗ · SRS · Схемы · ReqIF) and a week-long link for the contractor.
+- Errors that say what to do (T-512): the demo limit offers the own key, an answer that did not reach the
+  analyst stays in the box with «Повторить», no connection, a page for a wrong address and for a broken page.
+  e2e on the mocked API, now also in CI: widths 1440…320 on every screen, «break it» cases, axe (WCAG 2.1 A and
+  AA) in both themes, reduced motion. The main fonts are preloaded; the heavy graph loads only when opened.
 
 ### Fixed
 
