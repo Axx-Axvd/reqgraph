@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Shell } from "@/components/Shell";
 import { Loading } from "@/components/ui/skeleton";
 import { api, errorText, type Project } from "@/lib/api";
+import { START_KEY } from "@/lib/example";
 
 export default function Projects() {
   return (
@@ -18,9 +19,18 @@ export default function Projects() {
 function ProjectList() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[] | null>(null);
-  const [name, setName] = useState("");
-  const [brief, setBrief] = useState("");
   const [error, setError] = useState("");
+
+  // what the visitor typed on the landing page waits in sessionStorage across the sign-in
+  const [started] = useState(() => {
+    try {
+      return (typeof window === "undefined" ? null : sessionStorage.getItem(START_KEY)) ?? "";
+    } catch {
+      return "";
+    }
+  });
+  const [name, setName] = useState(() => started.split(/[,.;]/)[0].slice(0, 80));
+  const [brief, setBrief] = useState(started);
 
   useEffect(() => {
     api()
@@ -37,6 +47,11 @@ function ProjectList() {
     if (error || !data) {
       setError(errorText(error));
       return;
+    }
+    try {
+      sessionStorage.removeItem(START_KEY);
+    } catch {
+      // nothing kept
     }
     router.push(`/projects/${data.id}`);
   }
