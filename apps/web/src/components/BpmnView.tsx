@@ -4,10 +4,13 @@
 import "bpmn-js/dist/assets/diagram-js.css";
 import "bpmn-js/dist/assets/bpmn-js.css";
 
+import { Maximize, Minus, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+
 type Canvas = {
-  zoom: (level: "fit-viewport" | number, center?: "auto") => void;
+  zoom: ((level: "fit-viewport" | number, center?: "auto") => void) & (() => number);
   addMarker: (id: string, marker: string) => void;
   scrollToElement: (element: unknown) => void;
 };
@@ -15,6 +18,7 @@ type Registry = { get: (id: string) => unknown };
 
 export function BpmnView({ xml, focus }: { xml: string; focus: string | null }) {
   const box = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<Canvas | null>(null);
   const [error, setError] = useState("");
   const [missing, setMissing] = useState(false);
 
@@ -32,6 +36,7 @@ export function BpmnView({ xml, focus }: { xml: string; focus: string | null }) 
       }
       const canvas = viewer!.get("canvas") as Canvas;
       canvas.zoom("fit-viewport", "auto");
+      canvasRef.current = canvas;
       if (focus) {
         const element = (viewer!.get("elementRegistry") as Registry).get(focus);
         if (element) {
@@ -44,9 +49,15 @@ export function BpmnView({ xml, focus }: { xml: string; focus: string | null }) 
     });
     return () => {
       alive = false;
+      canvasRef.current = null;
       viewer?.destroy();
     };
   }, [xml, focus]);
+
+  function zoomBy(factor: number) {
+    const canvas = canvasRef.current;
+    if (canvas) canvas.zoom(Math.min(4, Math.max(0.2, canvas.zoom() * factor)));
+  }
 
   return (
     <>
@@ -56,6 +67,19 @@ export function BpmnView({ xml, focus }: { xml: string; focus: string | null }) 
           Шага {focus} нет на этой схеме.
         </p>
       )}
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Масштаб схемы">
+        <Button variant="secondary" size="icon" aria-label="Уменьшить" onClick={() => zoomBy(1 / 1.25)}>
+          <Minus aria-hidden="true" />
+        </Button>
+        <Button variant="secondary" size="icon" aria-label="Увеличить" onClick={() => zoomBy(1.25)}>
+          <Plus aria-hidden="true" />
+        </Button>
+        <Button variant="secondary" size="sm" onClick={() => canvasRef.current?.zoom("fit-viewport", "auto")}>
+          <Maximize aria-hidden="true" />
+          Вписать
+        </Button>
+        <span className="text-sm text-dim">или колесо мыши и перетаскивание</span>
+      </div>
       <div ref={box} className="bpmn-canvas" data-testid="bpmn" />
     </>
   );

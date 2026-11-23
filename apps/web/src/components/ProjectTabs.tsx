@@ -15,7 +15,10 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
   return (
     <nav className="tabs" aria-label="Разделы проекта">
       {tabs.map((t) => {
-        const current = t.href === base ? path === base || path.startsWith(`${base}/interview`) : path.startsWith(t.href);
+        const current =
+          t.href === base
+            ? path === base || path.startsWith(`${base}/interview`)
+            : path.startsWith(t.href) || (t.label === "Схемы" && path.startsWith(`${base}/processes`));
         return (
           <Link key={t.href} href={t.href} aria-current={current ? "page" : undefined}>
             {t.label}

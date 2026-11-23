@@ -7,6 +7,7 @@ import dagre from "@dagrejs/dagre";
 import {
   Background,
   Controls,
+  MiniMap,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
@@ -29,6 +30,22 @@ import {
 const WIDTH = 190;
 const HEIGHT = 64;
 const SKIP = new Set(["id", "kind", "status", "assumption", "dsl"]);
+
+/** The colour of a kind: the left border of its nodes, its swatch in the legend, its dot on the mini map. */
+const KIND_COLOR: Record<string, string> = {
+  BR: "var(--coral)",
+  UR: "var(--coral)",
+  FR: "#8fc7ff",
+  NFR: "#8fc7ff",
+  CON: "#8fc7ff",
+  ACT: "var(--mint)",
+  UC: "var(--mint)",
+  PRC: "var(--amber)",
+  ENT: "var(--amber)",
+  C4: "var(--amber)",
+  TURN: "var(--dim)",
+  SEC: "var(--dim)",
+};
 
 /** An edge to a process step (PRC-01.T03) goes to its process node. */
 function target(id: string): string {
@@ -127,10 +144,11 @@ function GraphCanvas({ graph, projectId, focus }: { graph: Graph; projectId: str
         </p>
       )}
       <fieldset className="filters">
-        <legend>Показывать</legend>
+        <legend>Показывать · цвет полосы — вид узла</legend>
         {present.map((kind) => (
           <label key={kind} className="check">
             <input type="checkbox" checked={shown.has(kind)} onChange={() => toggle(kind)} />
+            <span aria-hidden="true" className="inline-block h-3 w-1 rounded-sm" style={{ background: KIND_COLOR[kind] }} />
             {KINDS[kind]}
           </label>
         ))}
@@ -149,6 +167,14 @@ function GraphCanvas({ graph, projectId, focus }: { graph: Graph; projectId: str
           >
             <Background />
             <Controls showInteractive={false} />
+            <MiniMap
+              pannable
+              zoomable
+              ariaLabel="Мини-карта графа"
+              nodeColor={(n) => KIND_COLOR[graph.nodes[n.id]?.kind ?? ""] ?? "var(--dim)"}
+              bgColor="var(--bg)"
+              maskColor="color-mix(in srgb, var(--bg) 60%, transparent)"
+            />
           </ReactFlow>
         </div>
         {current && <NodePanel node={current} graph={graph} projectId={projectId} />}
