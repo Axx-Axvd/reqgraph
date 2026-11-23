@@ -10,6 +10,7 @@ import "@fontsource/pt-serif/700.css";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { OwnKeyProvider } from "@/lib/own-key";
 
+import { PRELOAD_FONTS } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,6 +30,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ru" data-theme="dark" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {PRELOAD_FONTS.map((href) => (
+          <link key={href} rel="preload" href={href} as="font" type="font/woff2" crossOrigin="" />
+        ))}
       </head>
       <body>
         <OwnKeyProvider>{children}</OwnKeyProvider>

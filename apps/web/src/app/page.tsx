@@ -24,7 +24,7 @@ export default function Home() {
       <SiteHeader />
       <main>
         <section className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-12 px-5 pt-8 pb-20 sm:px-6">
-          <div className="sg-rise flex min-w-0 flex-[1_1_480px] flex-col gap-6">
+          <div className="sg-lift flex min-w-0 flex-[1_1_480px] flex-col gap-6">
             <h1 className="m-0 font-display hyphens-auto text-[clamp(32px,8.2vw,54px)] leading-[1.04] font-extrabold tracking-[-0.035em]">
               Расскажите о своём деле. <span className="text-coral">Техническое задание</span> мы напишем сами.
             </h1>

@@ -149,6 +149,8 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      animation-delay: 0s !important;
+      transition-delay: 0s !important;
     }
   }
 }
@@ -165,9 +167,23 @@
   }
 }
 
+/* The hero moves without fading: text with opacity 0 is not painted, and the page's largest paint waits. */
+@keyframes sg-lift {
+  from {
+    transform: translateY(12px);
+  }
+  to {
+    transform: none;
+  }
+}
+
 @layer components {
   .sg-rise {
     animation: sg-rise 0.6s var(--ease-out-soft) both;
+  }
+
+  .sg-lift {
+    animation: sg-lift 0.6s var(--ease-out-soft) both;
   }
 
   .sg-press {

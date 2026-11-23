@@ -1,6 +1,7 @@
 // T-509: the landing page starts a project from what the visitor typed; public pages fit a phone.
 import { expect, test } from "@playwright/test";
 
+import { expectNoHorizontalScroll } from "./layout";
 import { installMock } from "./mock";
 import { fakeSession, signIn } from "./session";
 
@@ -37,17 +38,7 @@ test.describe("landing", () => {
     test(`${path} has no horizontal scroll at 320 px`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 640 });
       await page.goto(path);
-      await page.evaluate(() => document.fonts.ready);
-      const { overflow, offenders } = await page.evaluate(() => {
-        const de = document.documentElement;
-        const vw = de.clientWidth;
-        const offenders = [...document.querySelectorAll("body *")]
-          .filter((e) => e.getBoundingClientRect().right > vw + 0.5 && !e.parentElement?.closest(".overflow-hidden"))
-          .slice(0, 5)
-          .map((e) => `${e.tagName}.${String(e.className).slice(0, 60)}`);
-        return { overflow: de.scrollWidth - vw, offenders };
-      });
-      expect(overflow, offenders.join(" | ")).toBeLessThanOrEqual(0);
+      await expectNoHorizontalScroll(page, path);
     });
   }
 });
