@@ -21,6 +21,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   ТЗ» list during the interview; topic coverage; the stages of putting the ТЗ together after the interview.
   The worker writes a `drafts` run event while it waits for an answer (the requirements derived from the last
   answer; the graph itself is still saved when the run ends).
+- Schemes, checks and documents in the «Сигнал» look (T-511): «how it will work» — each process as steps in
+  plain words with the client's words; the requirements graph as «the scheme for developers» with a legend and
+  a mini map; zoom and «fit» on BPMN; UML, C4 and ER pictures of the last export. Check remarks one card at a
+  time with a «разобрано N из M» ring and the check groups. The ТЗ sheet with contents where an item shows
+  where it came from; files by document (ТЗ · SRS · Схемы · ReqIF) and a week-long link for the contractor.
 
 ### Fixed
 
