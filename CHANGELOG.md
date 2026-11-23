@@ -16,6 +16,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - The landing and sign-in pages in the «Сигнал» look (T-509): the start form carries «what do you do» across the
   sign-in into the new project; a CSS demo of an answer becoming a draft requirement; «what the client said →
   the ТЗ item» and an example ТЗ page, both from the reference project `examples/garage61`.
+- Projects, interview and the build of the ТЗ in the «Сигнал» look (T-510): «where you stopped», project cards
+  with the next step, a new project from one field; draft requirements under the client's answer and a «draft
+  ТЗ» list during the interview; topic coverage; the stages of putting the ТЗ together after the interview.
+  The worker writes a `drafts` run event while it waits for an answer (the requirements derived from the last
+  answer; the graph itself is still saved when the run ends).
 
 ### Fixed
 

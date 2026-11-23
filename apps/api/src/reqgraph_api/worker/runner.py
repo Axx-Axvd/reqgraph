@@ -25,6 +25,7 @@ from reqgraph.agents.nodes import DONE
 from reqgraph.agents.run import summarize
 from reqgraph.agents.runtime import RunContext, checkpoint_serde
 from reqgraph.agents.state import BudgetState, Mode, RunState
+from reqgraph.graph.graph import ArtifactGraph
 from reqgraph.graph.store.formats import BRIEF_FILE
 from reqgraph.llm.router import provider_keys
 
@@ -32,6 +33,7 @@ from reqgraph_api import store
 from reqgraph_api.db import Database
 from reqgraph_api.keys import RunKeys
 from reqgraph_api.worker import queue
+from reqgraph_api.worker.drafts import drafts_of
 from reqgraph_api.worker.events import PgEvents
 
 FINISHED = ("succeeded", "failed", "cancelled")
@@ -268,7 +270,15 @@ class Runner:
         coverage = result.get("coverage")
         covered = None if coverage is None else coverage.model_dump(mode="json")
         await self._turn(run_id, "agent", str(pending["question"]), covered)
+        graph = result.get("graph")
+        drafts = drafts_of(graph) if isinstance(graph, ArtifactGraph) else None
         async with self.db.as_service() as conn:
+            if drafts and drafts["items"]:  # T-510: shown under the answer they came from
+                await conn.execute(
+                    "insert into public.run_events (run_id, type, payload) "
+                    "values (%s, 'drafts', %s)",
+                    [run_id, Jsonb(drafts)],
+                )
             await conn.execute(
                 "update public.runs set status = 'waiting_input' "
                 "where id = %s and status = 'running'",

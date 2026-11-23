@@ -18,8 +18,10 @@ test.describe("landing", () => {
     await page.getByRole("button", { name: "автосервис" }).click();
     await page.getByRole("button", { name: "Начать" }).click();
     await expect(page).toHaveURL(/\/projects$/);
-    await expect(page.getByLabel("Название")).toHaveValue("Автосервис");
-    await expect(page.getByLabel(/Бриф/)).toHaveValue(/4 мастера/);
+    const dialog = page.getByRole("dialog", { name: "Новый проект" });
+    await expect(dialog.getByLabel("Чем вы занимаетесь?")).toHaveValue(/Автосервис, 4 мастера/);
+    await dialog.getByRole("button", { name: "Создать проект" }).click();
+    await expect(page.getByRole("heading", { name: "Автосервис" })).toBeVisible();
   });
 
   test("the example ТЗ opens and closes with Escape", async ({ page }) => {

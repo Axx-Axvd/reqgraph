@@ -20,9 +20,9 @@ test("create a project and answer 3 interview questions", async ({ page }, testI
   await page.goto("/projects");
   await expect(page.getByRole("heading", { name: "Проекты" })).toBeVisible();
   await expect(page.getByTestId("usage")).toContainText("осталось прогонов сегодня");
-  await page.getByLabel("Название").fill("Стоматология e2e");
-  await page.getByLabel(/Бриф/).fill("Стоматологическая клиника, 3 кресла. Пациенты записываются по телефону.");
-  await page.getByRole("button", { name: "Создать" }).click();
+  await page.getByRole("button", { name: "Новый проект" }).first().click();
+  await page.getByLabel("Чем вы занимаетесь?").fill("Стоматология e2e, 3 кресла. Пациенты записываются по телефону.");
+  await page.getByRole("button", { name: "Создать проект" }).click();
 
   await expect(page.getByRole("heading", { name: "Стоматология e2e" })).toBeVisible();
   await page.getByRole("button", { name: "Начать интервью" }).click();
@@ -34,6 +34,11 @@ test("create a project and answer 3 interview questions", async ({ page }, testI
     await page.getByLabel("Ваш ответ").fill(`Ответ ${n}: по телефону, записи в тетради.`);
     await page.getByRole("button", { name: "Ответить" }).click();
     await expect(page.locator('[data-role="client"]').nth(n - 1)).toContainText(`Ответ ${n}`);
+    if (process.env.E2E_MOCK === "1") {
+      // T-510: the draft requirement shows under the answer it came from, and in «Черновик ТЗ»
+      await expect(page.locator('[data-role="client"]').nth(n - 1)).toContainText("Черновик требования");
+      await expect(page.getByRole("region", { name: "Черновик ТЗ" })).toContainText(`Требование ${n}`);
+    }
   }
   await expect(page.locator('[data-role="agent"]').nth(3)).toContainText("Вопрос 4", { timeout: 60_000 });
   if (process.env.E2E_SHOTS) {
