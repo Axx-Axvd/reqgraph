@@ -5,7 +5,7 @@
 (процессы, ERD, UML, C4) -> детерминированные проверки (CI) -> SRS (ISO/IEC/IEEE 29148)
 и ТЗ (ГОСТ 34.602-2020).
 - План по разделам: docs/tech-design/*.md. PDF-снимок плана от 20.10 и обзоры для диплома хранятся у автора приватно, не в репозитории.
-- Решения: docs/adr/ (001-017; готовые средства — ADR-013, 014, 016; ADR-015 отклонён). Задачи и Definition of Done: docs/backlog.md.
+- Решения: docs/adr/ (001-018; готовые средства — ADR-013, 014, 016; ADR-015 отклонён; внешний вид сайта — ADR-018). Задачи и Definition of Done: docs/backlog.md.
 - Эталонный проект: examples/garage61 (соглашения — в его REVIEW.md).
 - Постоянные инструкции сессий: docs/prompts/ (preflight, task, review, debug, plans); дневник — docs/journal.md.
 - Состояние: S0 закрыт (T-001…T-006); S1 сделан (T-101…T-107: граф, FileStore, DSL → BPMN, модели и Kroki, 20 проверок и `reqgraph check`; TPL-001 — в T-204); S2 сделан (T-201…T-206: граф прогона на LangGraph, агенты Analyst, Modeler, Standards, Reviewer, цикл ремонта с детектором повторов, `reqgraph init` и `reqgraph run`, демо M2 — docs/demo/m2.md), S3: T-301 (`reqgraph interview`: покрытие, пауза и продолжение) сделан, дальше T-303 (сценарии), T-302 (симулятор), T-304 (метрики).

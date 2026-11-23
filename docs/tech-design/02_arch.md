@@ -77,7 +77,7 @@ flowchart TB
 | `Экспорт` | Jinja2, pypandoc-binary (pandoc), reqif | Markdown → DOCX по reference.docx (ADR-016), ReqIF 1.2 (`exporters/reqif.py`, T-403: профиль StrictDoc, текст — XHTML) |
 | `API` | FastAPI, uvicorn, pydantic-settings, PyJWT | REST, проверка JWT Supabase |
 | `CLI` | typer, rich | reqgraph init / interview / run / check / export / probe |
-| `Frontend` | Next.js (App Router, TS), свой CSS, supabase-js, openapi-fetch, bpmn-js, @xyflow/react, @dagrejs/dagre | интервью, граф, BPMN, отчёт CI, выгрузка (T-504, T-505; Tailwind, shadcn/ui и TanStack Query не понадобились) |
+| `Frontend` | Next.js (App Router, TS), Tailwind CSS и shadcn/ui (ADR-018, с E5b; до него свой CSS), supabase-js, openapi-fetch, bpmn-js, @xyflow/react, @dagrejs/dagre | интервью, граф, BPMN, отчёт CI, выгрузка (T-504, T-505); стиль «Сигнал», светлая и тёмная темы (T-508…T-512); TanStack Query не понадобился |
 | `Данные` | Supabase: Postgres + pgvector, Auth, Storage, Realtime; Supabase CLI | облако и такой же локальный стек |
 | `Тесты` | pytest, pytest-recording (VCR), pytest-socket, hypothesis | LLM-ответы записаны в кассеты, сеть в юнит-тестах закрыта |
 | `Эксперименты` | pydantic-evals, scipy, statsmodels | probe, харнес, метрики, LLM-судья, статистика |

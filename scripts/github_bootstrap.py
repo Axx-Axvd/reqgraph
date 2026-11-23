@@ -110,6 +110,14 @@ CLASSIFY: dict[str, tuple[str, str | None]] = {
     "T-505": ("feature", "web"),
     "T-506": ("infra", "infra"),
     "T-507": ("infra", "infra"),
+    "T-508": ("feature", "web"),
+    "T-509": ("feature", "web"),
+    "T-510": ("feature", "web"),
+    "T-511": ("feature", "web"),
+    "T-512": ("feature", "web"),
+    "T-513": ("feature", "agents"),
+    "T-514": ("research", "agents"),
+    "T-515": ("feature", "api"),
     "T-601": ("research", "evals"),
     "T-602": ("research", "evals"),
     "T-603": ("research", "evals"),
@@ -168,6 +176,7 @@ TASK_DOCS: dict[str, list[str]] = {
     "T-505": ["docs/adr/010-diagrams.md"],
     "T-506": ["docs/adr/008-deploy.md", "docs/setup/accounts.md"],
     "T-507": ["docs/setup/offline.md"],
+    "T-508": ["docs/adr/018-web-look-signal.md"],
 }
 
 MARKER = "<!-- reqgraph-bootstrap:{tid} -->"
