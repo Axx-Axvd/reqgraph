@@ -4,9 +4,9 @@
 
 [![ci](https://github.com/Axx-Axvd/reqgraph/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Axx-Axvd/reqgraph/actions/workflows/ci.yml)
 
-reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by several AI agents, but everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
+reqgraph takes a short description of what a client needs, interviews the client and produces the system requirements, process and data diagrams, and then two documents: a software requirements specification (SRS) under ISO/IEC/IEEE 29148 and a technical specification under the Russian standard GOST 34.602-2020. The work is done by a pipeline of specialised AI agents coordinated by code, and everything they produce goes through deterministic checks that involve no AI. Errors go back to the agents for fixing until the requirements and diagrams are consistent.
 
-The project is developed as a thesis. As of 22 November 2026, sprints S0–S5 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is built and published: the API, the background worker, demo limits, sign-in, the interview in the browser, the requirements graph, BPMN diagrams, the check report and document download; the public demo runs at **https://reqgraph-sigma.vercel.app** (sign in with GitHub or an email link). Version 1.0 is due on 21 February 2027.
+The project is developed as a thesis. As of 26 November 2026, sprints S0–S5 are complete: the core, the agents, the interview with a simulated client, the metrics, document export and the baseline methods for comparison. The command line covers the whole path from a brief to the SRS and the GOST specifications. The web interface (S5) is built and published: the API, the background worker, demo limits, sign-in, the interview in the browser, the requirements graph, BPMN diagrams, the check report and document download; the public demo runs at **https://reqgraph-sigma.vercel.app** (sign in with GitHub or an email link). The site has a new look («Signal») with light and dark themes. Next is S6: first checking the evaluation itself (the judge, the simulator), then the final comparison of methods. Version 1.0 is due on 21 February 2027.
 
 ## Contents
 
@@ -88,13 +88,18 @@ The approach has to be confirmed by measurement. Four hypotheses are tested:
 - H1: an interviewer with a coverage tracker uncovers more requirements that the client knows but does not volunteer;
 - H2: checks with a repair loop yield more correct diagrams than the same agents without checks;
 - H3: traceability checks keep the text and the diagrams from drifting apart;
-- H4: the documents are no worse than a junior analyst's draft and take a tenth of the time. Three experts rate them blind.
+- H4 (product line, outside the thesis): the documents are no worse than a junior analyst's draft and take a tenth of the time. For the thesis, a requirements specialist reviews one package of documents instead.
 
 For a fair comparison, all methods use the same model, the same inputs and the same budget.
 
-The main difficulty is measuring "uncovers more". Hundreds of interviews with a real client are not feasible, so a simulator plays the client. Each scenario has a short brief and a closed list of 25–60 requirements known only to the simulator. The simulator reveals a requirement only when the question actually concerns it, so the interviewer that asks better questions finds more. The simulator and the judge that matches found requirements against the closed list run on a different model family than the agents, so that the system does not grade itself. In addition, 20% of the judge's decisions are checked manually.
+The main difficulty is measuring "uncovers more". Hundreds of interviews with a real client are not feasible, so a simulator plays the client. Each scenario has a short brief and a closed list of 25–60 requirements known only to the simulator. The simulator reveals a requirement only when the question actually concerns it, so the interviewer that asks better questions finds more. The simulator and the judge that matches found requirements against the closed list run on a different model family than the agents, so that the system does not grade itself.
 
-Target values:
+How far the evaluation itself can be trusted is checked too:
+- **The judge.** So far its agreement with the author's manual labels is measured on 43 pairs: Cohen's kappa 0.815, 95% interval 0.63–0.95. There is one rater, and all pairs come from one method. Before the final comparison there will be about 200 pairs from two blind raters, with intervals and per method, and the judge will be of another family than the simulator.
+- **The simulator.** In the single pilot session a real person working from the same card gave 0% recall, the simulator 80%. Hence 8–10 sessions with people are planned to calibrate the simulator's characters.
+- **What else is added:** a measure of how well the recorded requirements are grounded in the conversation, a comparison of methods at an equal number of questions, and an analysis plan fixed before the run.
+
+Target values (to be revised with the analysis plan: the main result is the comparison of methods with effect sizes, not absolute thresholds):
 
 | Metric | Minimum (MVP) | Thesis target |
 |---|---|---|
@@ -118,7 +123,7 @@ The full method is described in [docs/tech-design/09_eval.md](docs/tech-design/0
 | S3 | 30.11–13.12 | interviewer with coverage, simulator, 15 scenarios, metrics | complete |
 | S4 | 14.12–27.12 | SRS, GOST specifications, ReqIF, baseline methods, first run, version 0.5 | complete |
 | S5 | 11.01–24.01.2027 | web interface: sign-in, interview in the browser, graph, BPMN, report, download, deployment | complete (the offline defence stand moved to S7) |
-| S6 | 25.01–07.02 | full comparison, ablations, expert verification on one example, statistics | planned |
+| S6 | 25.01–07.02 | checking the evaluation (judge, simulator, groundedness, equal question budget, analysis plan), then the full comparison, ablations, expert verification on one example, statistics | planned |
 | S7 | 08.02–21.02 | version 1.0, technical report, video, thesis chapters | planned |
 
 The project is ahead of schedule: by the plan, S5 starts on 11 January and S6 on 25 January. Implemented so far:
@@ -126,16 +131,24 @@ The project is ahead of schedule: by the plan, S5 starts on 11 January and S6 on
 - the core: the graph and its storage in project files, the process format with a compiler to BPMN 2.0, data models in DBML, use case diagrams in PlantUML and C4 in Structurizr, diagram rendering through Kroki, 23 checks and the `reqgraph check` command;
 - the agents: the run graph on LangGraph, the Analyst, Modeler, Standards and Reviewer agents, a repair loop that detects repeated errors, the `reqgraph init` and `reqgraph run` commands ([demo](docs/demo/m2.md));
 - the interview: `reqgraph interview` with pause and resume, 15 scenarios with hidden requirements, a simulated client with three characters (cooperative, vague, contradictory) and four levels of IT literacy, which reveals a requirement only when asked about its topic;
-- metrics computed by a script: recall through embeddings and a judge model of another family than the agents, plus ambiguity, validity, soundness and traceability from the checks. The judge agrees with the author's manual labelling with Cohen's kappa 0.858 against the required 0.8 ([report](evals/reports/labels/agreement-results-2026-10-28-free-check-dev03.md));
+- metrics computed by a script: recall through embeddings and a judge model of another family than the agents, plus ambiguity, validity, soundness and traceability from the checks. The judge agrees with the author's manual labels with Cohen's kappa 0.815 on 43 pairs (95% interval 0.63–0.95; 0.858 on the dev-03 subset, [report](evals/reports/labels/agreement-results-2026-10-28-free-check-dev03.md)); a check on 200 pairs is ahead;
 - export: `reqgraph export` writes the SRS, both GOST specifications (Markdown and Word through pandoc, each BPMN diagram on its own landscape page) and ReqIF, which opens in StrictDoc;
 - the experiment harness: the method matrix (M2 with coverage and checks, M1 without coverage, B1 a single prompt, B2 without checks, B3 a fixed questionnaire) with a dollar limit per launch and a report with charts;
-- the web part: an API on FastAPI with Supabase sign-in, a worker that runs agents from a queue in Postgres and resumes a run after a restart, demo limits of three runs per day or the user's own OpenRouter key, and a Next.js site with sign-in, projects and the interview chat with live updates. Project pages show the requirements graph, BPMN diagrams, the check report (a click on an error highlights the node) and document download from a private storage bucket.
+- the web part: an API on FastAPI with Supabase sign-in, a worker that runs agents from a queue in Postgres and resumes a run after a restart, demo limits of three runs per day or the user's own OpenRouter key, and a Next.js site with sign-in, projects and the interview chat with live updates. Project pages show:
+  - the processes in plain words with the client's words under each step;
+  - the requirements graph for developers and BPMN diagrams;
+  - check remarks one at a time;
+  - the specification sheet where a click shows which answer an item came from;
+  - document download and a link for the contractor.
+
+  Browser tests cover every screen at widths from 320 to 1440 px, «break it» cases and accessibility (axe) in both themes.
 
 Measurements so far, all on the three tuning scenarios:
 
 - The first full matrix (45 runs, $2.23): the interviewer with coverage (M2) found 38% of hidden requirements, the fixed questionnaire (B3) 47%. With one repeat per case this is not a test of H1, but it showed why: M2 ended the interview early once every area had one answer ([results](evals/reports/results-2026-11-05-cheap-dev-v1-cheap.md)).
 - Two fixes followed, each accepted by a decision rule written before the measurement: the interview no longer ends before every area has been asked about, and an area closes only after two answers with nothing new. The second fix, with 20 questions, raised recall from 47.2% to 58.3% for clients with little IT knowledge and from 60.9% to 69.2% for IT-literate clients ([results](evals/reports/results-2026-11-18-cheap-t319-after.md)).
 - Two attempts to adapt the interviewer's language to the client's IT level made recall worse and were rejected; both are recorded in the [work log](docs/journal.md).
+- The pilot «a person instead of the simulator» (one session): 0% recall with the person, 80% with the simulator on the same scenario. The person answered like a real client, without the numbers from the card. This is a signal, not a conclusion; a check with 8–10 people is planned.
 - How much of a real specification is typical: in 180 requirements sampled from 12 public documents of the PURE dataset, 148 (82%, 95% interval 76–87%) are typical, and all non-functional requirements are ([report](evals/reports/pure-groups-2026-11-18.md)). This is the share the system can be expected to cover from domain knowledge; the rest has to come from the client.
 
 Tasks with acceptance criteria are listed in [docs/backlog.md](docs/backlog.md); decisions and their rationale are in [docs/adr/](docs/adr/README.md).
@@ -200,10 +213,10 @@ reqgraph does not generate application code and does not estimate effort. It doe
 
 ## Stack
 
-Python 3.12, LangGraph, pydantic-ai, pydantic-evals, FastAPI, PM4Py, Kroki, pandoc, Next.js, Supabase (Postgres, Auth, Storage, Realtime), React Flow, bpmn-js, Playwright. Open-weight models are used through OpenRouter, Groq and Google AI Studio, and through Ollama for offline work.
+Python 3.12, LangGraph, pydantic-ai, pydantic-evals, FastAPI, PM4Py, Kroki, pandoc, Next.js, Tailwind CSS with shadcn/ui components, Supabase (Postgres, Auth, Storage, Realtime), React Flow, bpmn-js, Playwright and axe. Open-weight models are used through OpenRouter, Groq and Google AI Studio, and through Ollama for offline work.
 
 ## License
 
 [MIT](LICENSE). The texts of ISO and GOST standards are not part of the repository.
 
-The check that a process can always complete is built on [pm4py](https://pypi.org/project/pm4py/), licensed under AGPL-3.0-or-later, so a build or a public demo that includes pm4py is distributed under the AGPL; all sources are open in this repository (ADR-014). bpmn-js is distributed under MIT with the condition that the bpmn.io watermark stays visible. Other dependencies are MIT, BSD, Apache-2.0, LGPL (psycopg) and MPL-2.0 (hypothesis, tests only). A new dependency is added only with a justification in its pull request.
+The check that a process can always complete is built on [pm4py](https://pypi.org/project/pm4py/), licensed under AGPL-3.0-or-later, so a build or a public demo that includes pm4py is distributed under the AGPL; all sources are open in this repository (ADR-014). bpmn-js is distributed under MIT with the condition that the bpmn.io watermark stays visible. Other dependencies are MIT, BSD, Apache-2.0, LGPL (psycopg) and MPL-2.0 (hypothesis and @axe-core/playwright, tests only). A new dependency is added only with a justification in its pull request.
