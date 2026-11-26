@@ -1,5 +1,6 @@
 # CI: ruff, mypy, pytest (no network), web lint and build, migrations + RLS tests, the web e2e.
-# Runs on every push and PR.
+# Runs on every push and PR. A PR that changes only documentation (docs/, evals/reports/, *.md in the
+# root) skips the jobs; Windows runs on pushes to main, not on every PR (author's decision 23.11).
 # Branch protection for main requires the single aggregate check "ci" (see the last job).
 name: ci
 
@@ -16,13 +17,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Does the change touch anything but documentation? Pushes to main always run everything.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then echo "code=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only "$BASE...$HEAD")
+          echo "$files"
+          other=$(echo "$files" | grep -Ev '^(docs/|evals/reports/|[^/]+\.md$|\.github/pull_request_template\.md$)' || true)
+          if [ -n "$other" ]; then echo "code=true" >> "$GITHUB_OUTPUT"; else echo "code=false" >> "$GITHUB_OUTPUT"; fi
+
   python:
     name: python (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: ${{ github.event_name == 'push' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
@@ -39,11 +63,13 @@ jobs:
 
   web:
     name: web (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: ${{ github.event_name == 'push' && fromJSON('["ubuntu-latest", "windows-latest"]') || fromJSON('["ubuntu-latest"]') }}
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
@@ -74,6 +100,8 @@ jobs:
 
   db:
     name: db (supabase)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -103,6 +131,8 @@ jobs:
   # its worker on stub models (no network, no money), the built site, Playwright in Chromium.
   e2e:
     name: e2e (web + api + supabase)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     env:
       NEXT_TELEMETRY_DISABLED: "1"
@@ -174,6 +204,8 @@ jobs:
   # The image Render runs (T-506): it builds, starts without a database and has pandoc and pm4py.
   docker:
     name: docker (api image)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -200,17 +232,20 @@ jobs:
         if: failure()
         run: docker logs api || true
 
-  # One stable check name for branch protection, whatever the matrix looks like.
+  # One stable check name for branch protection, whatever the matrix looks like. A documentation-only
+  # PR skips the jobs, and «skipped» counts as passed only then.
   ci:
     if: always()
-    needs: [python, web, db, e2e, docker]
+    needs: [changes, python, web, db, e2e, docker]
     runs-on: ubuntu-latest
     steps:
       - name: all jobs must succeed
+        env:
+          CODE: ${{ needs.changes.outputs.code }}
+          CHANGES: ${{ needs.changes.result }}
+          RESULTS: ${{ needs.python.result }} ${{ needs.web.result }} ${{ needs.db.result }} ${{ needs.e2e.result }} ${{ needs.docker.result }}
         run: |
-          echo "python: ${{ needs.python.result }}, web: ${{ needs.web.result }}, db: ${{ needs.db.result }}, e2e: ${{ needs.e2e.result }}, docker: ${{ needs.docker.result }}"
-          test "${{ needs.python.result }}" = "success"
-          test "${{ needs.web.result }}" = "success"
-          test "${{ needs.db.result }}" = "success"
-          test "${{ needs.e2e.result }}" = "success"
-          test "${{ needs.docker.result }}" = "success"
+          echo "changes: $CHANGES (code=$CODE); python web db e2e docker: $RESULTS"
+          test "$CHANGES" = "success"
+          if [ "$CODE" = "true" ]; then ok=success; else ok=skipped; fi
+          for r in $RESULTS; do test "$r" = "$ok"; done
